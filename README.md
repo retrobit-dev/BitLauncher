@@ -4,6 +4,8 @@ Launcher Android minimalis yang menggabungkan **ketenangan Niagara Launcher** de
 
 Dibangun dengan Kotlin + Jetpack Compose, tanpa iklan, tanpa analytics, dan tanpa izin yang tidak perlu.
 
+[![Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml/badge.svg)](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml)
+
 ---
 
 ## Konsep desain
@@ -123,7 +125,7 @@ Ini fondasi yang serius, bukan launcher yang sudah selesai. Yang **belum** ada (
 | Double-tap untuk matikan layar | Butuh Device Admin / Accessibility, sengaja ditunda |
 | Recents kustom | Tidak mungkin sejak Android 5 (API dihapus) |
 
-Detail rencana ada di [docs/ROADMAP.md](docs/ROADMAP.md).
+Detail rencana ada di [docs/ROADMAP.md](docs/ROADMAP.md), sedangkan wireframe dan token desain ada di [docs/DESIGN.md](docs/DESIGN.md).
 
 ---
 
