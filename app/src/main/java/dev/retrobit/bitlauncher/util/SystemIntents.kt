@@ -1,6 +1,6 @@
 package dev.retrobit.bitlauncher.util
 
-import android.app.RoleManager
+import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri

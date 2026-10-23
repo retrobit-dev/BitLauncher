@@ -112,7 +112,7 @@ class LauncherRepository(private val context: Context) {
                         LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED,
                 )
             launcher.getShortcuts(query, app.user)
-        }.getOrDefault(emptyList())
+        }.getOrNull().orEmpty()
     }
 
     fun launchShortcut(app: LaunchableApp, shortcut: ShortcutInfo) {

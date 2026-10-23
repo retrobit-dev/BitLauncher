@@ -1,5 +1,7 @@
 package dev.retrobit.bitlauncher.ui.components
 
+import android.content.Context
+import android.content.pm.LauncherApps
 import android.content.pm.ShortcutInfo
 import android.util.LruCache
 import androidx.compose.foundation.Image
@@ -49,14 +51,17 @@ private suspend fun loadAppIcon(app: LaunchableApp, sizePx: Int): ImageBitmap? =
     }
 
 private suspend fun loadShortcutIcon(
+    context: Context,
     shortcut: ShortcutInfo,
     densityDpi: Int,
     sizePx: Int,
 ): ImageBitmap? = withContext(Dispatchers.IO) {
-    val key = "shortcut:${shortcut.packageName}:${shortcut.id}:$sizePx"
+    val key = "shortcut:${shortcut.getPackage()}:${shortcut.id}:$sizePx"
     IconCache.get(key)?.let { return@withContext it }
-    val drawable = runCatching { shortcut.getIcon(densityDpi) }.getOrNull()
-        ?: return@withContext null
+    val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps
+    val drawable = runCatching {
+        launcherApps?.getShortcutBadgedIconDrawable(shortcut, densityDpi)
+    }.getOrNull() ?: return@withContext null
     runCatching {
         val side = sizePx.coerceAtLeast(1)
         drawable.toBitmap(side, side).asImageBitmap().also { IconCache.put(key, it) }
@@ -94,9 +99,9 @@ fun ShortcutIcon(
     val context = LocalContext.current
     val densityDpi = context.resources.displayMetrics.densityDpi
     val sizePx = with(LocalDensity.current) { size.roundToPx() }
-    val key = "shortcut:${shortcut.packageName}:${shortcut.id}:$sizePx"
+    val key = "shortcut:${shortcut.getPackage()}:${shortcut.id}:$sizePx"
     val bitmap by produceState<ImageBitmap?>(initialValue = IconCache.get(key), key, sizePx) {
-        if (value == null) value = loadShortcutIcon(shortcut, densityDpi, sizePx)
+        if (value == null) value = loadShortcutIcon(context, shortcut, densityDpi, sizePx)
     }
     Box(modifier = modifier.size(size)) {
         bitmap?.let {
