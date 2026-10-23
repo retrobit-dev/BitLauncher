@@ -91,6 +91,7 @@ fun AppDrawerScreen(
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
+    val loading by viewModel.loading.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
     val keyboard = LocalSoftwareKeyboardController.current
 
@@ -261,7 +262,7 @@ fun AppDrawerScreen(
 
             if (filtered.isEmpty()) {
                 Text(
-                    text = "Tidak ada aplikasi yang cocok",
+                    text = if (loading) "Memuat aplikasi…" else "Tidak ada aplikasi yang cocok",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier

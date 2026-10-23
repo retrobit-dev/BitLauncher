@@ -7,6 +7,7 @@ import android.graphics.Rect
 import android.os.Process
 import android.os.UserHandle
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +68,7 @@ class LauncherRepository(private val context: Context) {
     fun stop() {
         runCatching { launcherApps?.unregisterCallback(callback) }
         started = false
+        scope.cancel()
     }
 
     fun refresh() {

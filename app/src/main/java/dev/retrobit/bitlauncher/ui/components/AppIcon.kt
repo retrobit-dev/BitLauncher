@@ -41,12 +41,12 @@ private object IconCache {
 
 private suspend fun loadAppIcon(app: LaunchableApp, sizePx: Int): ImageBitmap? =
     withContext(Dispatchers.IO) {
-        IconCache.get(app.key)?.let { return@withContext it }
+        IconCache.get(app.iconKey)?.let { return@withContext it }
         val drawable = runCatching { app.info.getBadgedIcon(0) }.getOrNull()
             ?: return@withContext null
         runCatching {
             val side = sizePx.coerceAtLeast(1)
-            drawable.toBitmap(side, side).asImageBitmap().also { IconCache.put(app.key, it) }
+            drawable.toBitmap(side, side).asImageBitmap().also { IconCache.put(app.iconKey, it) }
         }.getOrNull()
     }
 
@@ -75,7 +75,7 @@ fun AppIcon(
     modifier: Modifier = Modifier,
 ) {
     val sizePx = with(LocalDensity.current) { size.roundToPx() }
-    val bitmap by produceState<ImageBitmap?>(initialValue = IconCache.get(app.key), app.key, sizePx) {
+    val bitmap by produceState<ImageBitmap?>(initialValue = IconCache.get(app.iconKey), app.iconKey, sizePx) {
         if (value == null) value = loadAppIcon(app, sizePx)
     }
     Box(modifier = modifier.size(size)) {

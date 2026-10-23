@@ -80,4 +80,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun exportBackup(): String = settingsRepository.exportJson()
 
     fun importBackup(raw: String): Boolean = settingsRepository.importJson(raw)
+
+    override fun onCleared() {
+        repository.stop()
+        super.onCleared()
+    }
 }

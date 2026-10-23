@@ -26,6 +26,9 @@ data class LaunchableApp(
     /** Lower-cased label used for sorting and matching. */
     val sortKey: String get() = label.trim().lowercase()
 
+    /** Changes when the app is updated, so cached icons are invalidated automatically. */
+    val iconKey: String get() = "$key#${info.applicationInfo.lastUpdateTime}"
+
     val sectionLetter: Char
         get() = sortKey.firstOrNull()?.uppercaseChar()?.takeIf { it.isLetterOrDigit() } ?: '#'
 }
