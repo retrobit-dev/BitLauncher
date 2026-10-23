@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * Single source of truth for installed / launchable apps.
@@ -89,6 +90,9 @@ class LauncherRepository(private val context: Context) {
                         result += LaunchableApp(
                             info = activityInfo,
                             isWorkProfile = user != myUser,
+                            iconVersion = runCatching {
+                                File(activityInfo.applicationInfo.sourceDir).lastModified()
+                            }.getOrDefault(0L),
                         )
                     }
             }

@@ -13,6 +13,8 @@ import android.os.UserHandle
 data class LaunchableApp(
     val info: LauncherActivityInfo,
     val isWorkProfile: Boolean,
+    /** Modification time of the installed APK; used purely for icon cache invalidation. */
+    val iconVersion: Long = 0L,
 ) {
     val label: String get() = info.label.toString()
     val component: ComponentName get() = info.componentName
@@ -27,7 +29,7 @@ data class LaunchableApp(
     val sortKey: String get() = label.trim().lowercase()
 
     /** Changes when the app is updated, so cached icons are invalidated automatically. */
-    val iconKey: String get() = "$key#${info.applicationInfo.lastUpdateTime}"
+    val iconKey: String get() = "$key#$iconVersion"
 
     val sectionLetter: Char
         get() = sortKey.firstOrNull()?.uppercaseChar()?.takeIf { it.isLetterOrDigit() } ?: '#'
