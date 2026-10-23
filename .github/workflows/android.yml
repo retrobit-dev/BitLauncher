@@ -42,8 +42,11 @@ jobs:
           ./gradlew :app:assembleDebug --stacktrace > build.log 2>&1
           status=$?
           if [ "$status" -ne 0 ]; then
-            tail -n 80 build.log | sed 's/%/%25/g; s/\r//g' | while IFS= read -r line; do
-              echo "::error title=gradle::${line}"
+            grep -E "^e: |^FAILURE:|^> Task .* FAILED|error:" build.log | head -n 60 | sed 's/%/%25/g; s/\r//g' | while IFS= read -r line; do
+              echo "::error title=build::${line}"
+            done
+            tail -n 15 build.log | sed 's/%/%25/g; s/\r//g' | while IFS= read -r line; do
+              echo "::error title=tail::${line}"
             done
             exit "$status"
           fi

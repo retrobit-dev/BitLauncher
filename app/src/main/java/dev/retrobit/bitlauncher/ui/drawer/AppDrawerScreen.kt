@@ -28,7 +28,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewAgenda
@@ -181,7 +181,7 @@ fun AppDrawerScreen(
                 },
             ) {
                 Icon(
-                    imageVector = if (isGrid) Icons.Outlined.ViewAgenda else Icons.Outlined.GridView,
+                    imageVector = if (isGrid) Icons.Outlined.ViewAgenda else Icons.Outlined.Apps,
                     contentDescription = if (isGrid) "Tampilan daftar" else "Tampilan kisi",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
