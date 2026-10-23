@@ -8,6 +8,29 @@ Dibangun dengan Kotlin + Jetpack Compose, tanpa iklan, tanpa analytics, dan tanp
 
 ---
 
+## Pratinjau tampilan
+
+Karena launcher ini belum dipasang di perangkat, tampilannya bisa dilihat lewat **prototipe UI interaktif** di folder [`preview/`](preview/index.html). Prototipe ini memakai token warna, ukuran tipografi, jarak, dan gestur yang sama dengan kode Compose, sehingga hasilnya mendekati APK.
+
+```bash
+python3 -m http.server 8080 --directory preview
+# buka http://localhost:8080
+```
+
+Yang bisa dicoba di prototipe:
+
+- Ganti tema **Terang / Gelap / AMOLED** dan lihat efeknya ke laci & pengaturan (beranda tetap putih di atas wallpaper, sama seperti APK).
+- Beralih **Daftar / Kisi** dan jumlah kolom 3–6.
+- **Tekan lama** aplikasi untuk membuka lembar aksi (shortcut, pin, sembunyikan, info, uninstall).
+- **Ketuk** aplikasi untuk melihat umpan balik peluncuran.
+- **Geser ke atas** pada grabber bawah atau **ketuk dua kali** beranda untuk membuka laci.
+- **Tekan lama** area kosong beranda untuk menu ala Nova.
+- Pencarian berperingkat, rel alfabet, dan manajer aplikasi tersembunyi (3 aplikasi contoh sudah disembunyikan).
+
+> Prototipe ini HTML murni tanpa dependensi, bukan emulator Android. Perilaku Android asli (ikon aplikasi sungguhan, shortcut dinamis, profil kerja) hanya bisa dilihat dari APK di artifact CI.
+
+---
+
 ## Konsep desain
 
 | Lapisan | Inspirasi | Wujud di BitLauncher |
