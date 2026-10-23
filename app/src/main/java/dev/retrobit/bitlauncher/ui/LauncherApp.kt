@@ -1,23 +1,31 @@
 package dev.retrobit.bitlauncher.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
+import dev.retrobit.bitlauncher.data.ThemeMode
 import dev.retrobit.bitlauncher.ui.drawer.AppDrawerScreen
 import dev.retrobit.bitlauncher.ui.home.HomeScreen
 import dev.retrobit.bitlauncher.ui.settings.SettingsScreen
@@ -29,6 +37,7 @@ fun LauncherApp(viewModel: LauncherViewModel) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var focusSearch by remember { mutableStateOf(false) }
     val homeSignal by viewModel.homeRequests.collectAsStateWithLifecycle()
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
 
     LaunchedEffect(homeSignal) {
         if (homeSignal > 0) {
@@ -42,6 +51,25 @@ fun LauncherApp(viewModel: LauncherViewModel) {
     }
     BackHandler(enabled = screen == Screen.HOME) {
         // Launchers stay on the home screen when the user presses back.
+    }
+
+    // Home is drawn over the wallpaper, so it always needs light system bar icons. Drawer and
+    // settings follow the theme.
+    val systemDark = isSystemInDarkTheme()
+    val darkTheme = when (settings.themeMode) {
+        ThemeMode.SYSTEM -> systemDark
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK, ThemeMode.AMOLED -> true
+    }
+    val lightSystemBars = screen == Screen.HOME || !darkTheme
+    val view = LocalView.current
+    val activity = view.context.findActivity()
+    SideEffect {
+        val window = activity?.window ?: return@SideEffect
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !lightSystemBars
+            isAppearanceLightNavigationBars = !lightSystemBars
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -84,4 +112,13 @@ fun LauncherApp(viewModel: LauncherViewModel) {
             )
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
 }

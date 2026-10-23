@@ -37,11 +37,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -62,14 +64,16 @@ import dev.retrobit.bitlauncher.ui.components.AppIcon
 import dev.retrobit.bitlauncher.ui.components.ClockHeader
 import dev.retrobit.bitlauncher.ui.components.HomeMenuSheet
 import dev.retrobit.bitlauncher.util.SystemIntents
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val HomeTextShadow = Shadow(
-    color = Color.Black.copy(alpha = 0.55f),
+    color = Color.Black.copy(alpha = 0.6f),
     offset = Offset(0f, 2f),
-    blurRadius = 10f,
+    blurRadius = 12f,
 )
+
+private val HomeBarColor = Color.Black.copy(alpha = 0.42f)
 
 /**
  * Niagara-style vertical home: a huge clock, a single scrollable column of pinned apps and a
@@ -91,7 +95,7 @@ fun HomeScreen(
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     var isDefaultLauncher by remember { mutableStateOf(SystemIntents.isDefaultLauncher(context)) }
 
-    val shortcuts by androidx.compose.runtime.produceState(
+    val shortcuts by produceState(
         initialValue = emptyList<android.content.pm.ShortcutInfo>(),
         selectedApp?.key,
     ) {
@@ -109,6 +113,20 @@ fun HomeScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Scrim keeps white text readable on any wallpaper.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.38f),
+                        0.30f to Color.Black.copy(alpha = 0.10f),
+                        0.68f to Color.Transparent,
+                        1f to Color.Black.copy(alpha = 0.58f),
+                    ),
+                ),
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -134,6 +152,7 @@ fun HomeScreen(
                 ClockHeader(
                     use24Hour = settings.use24Hour,
                     showDate = settings.showDate,
+                    color = Color.White,
                     onClick = { SystemIntents.openAlarms(context) },
                 )
             }
@@ -240,14 +259,14 @@ private fun DefaultLauncherBanner(onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+        color = HomeBarColor,
+        contentColor = Color.White,
         modifier = Modifier.padding(start = 24.dp, top = 8.dp),
     ) {
         Text(
             text = "Jadikan BitLauncher launcher default  ›",
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -261,19 +280,19 @@ private fun EmptyFavorites(modifier: Modifier, onOpenDrawer: () -> Unit) {
         Text(
             text = "Beranda masih kosong",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = Color.White,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = "Buka laci aplikasi, lalu tekan lama sebuah aplikasi untuk mem-pin ke beranda.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f),
+            color = Color.White.copy(alpha = 0.72f),
         )
         Spacer(Modifier.height(20.dp))
         Text(
             text = "Buka laci aplikasi  ›",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = Color.White,
             modifier = Modifier.clickable(onClick = onOpenDrawer),
         )
     }
@@ -304,7 +323,7 @@ private fun FavoriteRow(
                     fontWeight = FontWeight.Light,
                     shadow = HomeTextShadow,
                 ),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -312,7 +331,7 @@ private fun FavoriteRow(
                 Text(
                     text = "Profil kerja",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    color = Color.White.copy(alpha = 0.62f),
                 )
             }
         }
@@ -344,10 +363,7 @@ private fun HomeBottomBar(
             Box(
                 modifier = Modifier
                     .size(width = 40.dp, height = 4.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
-                        shape = CircleShape,
-                    ),
+                    .background(color = Color.White.copy(alpha = 0.45f), shape = CircleShape),
             )
         }
 
@@ -361,7 +377,8 @@ private fun HomeBottomBar(
             Surface(
                 onClick = onSearch,
                 shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f),
+                color = HomeBarColor,
+                contentColor = Color.White,
                 modifier = Modifier.weight(1f),
             ) {
                 Row(
@@ -372,20 +389,20 @@ private fun HomeBottomBar(
                         imageVector = Icons.Outlined.Search,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        tint = Color.White.copy(alpha = 0.8f),
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
                         text = "Cari aplikasi",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        color = Color.White.copy(alpha = 0.8f),
                         modifier = Modifier.weight(1f),
                     )
                     Icon(
                         imageVector = Icons.Outlined.KeyboardArrowUp,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        tint = Color.White.copy(alpha = 0.8f),
                     )
                 }
             }
@@ -395,6 +412,7 @@ private fun HomeBottomBar(
                     imageVector = Icons.Outlined.Tune,
                     contentDescription = "Pengaturan launcher",
                     modifier = Modifier.size(20.dp),
+                    tint = Color.White,
                 )
             }
         }
@@ -406,7 +424,8 @@ private fun CircleButton(onClick: () -> Unit, content: @Composable () -> Unit) {
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f),
+        color = HomeBarColor,
+        contentColor = Color.White,
     ) {
         Box(
             modifier = Modifier.size(48.dp),

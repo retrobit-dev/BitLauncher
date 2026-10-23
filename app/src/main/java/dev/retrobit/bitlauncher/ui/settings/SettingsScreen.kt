@@ -290,7 +290,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = "Impor pengaturan",
                         description = "Pulihkan dari file backup BitLauncher",
-                        onClick = { importLauncher.launch(arrayOf("application/json")) },
+                        onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
                     )
                 }
             }

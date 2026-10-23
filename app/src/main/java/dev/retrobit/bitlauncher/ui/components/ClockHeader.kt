@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ fun ClockHeader(
     use24Hour: Boolean,
     showDate: Boolean,
     modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onBackground,
     onClick: () -> Unit = {},
 ) {
     val now = rememberMinuteTick()
@@ -52,7 +54,7 @@ fun ClockHeader(
     val dateFormatter = remember(locale) {
         SimpleDateFormat("EEEE, d MMMM", locale)
     }
-    val shadow = Shadow(color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f), offset = Offset(0f, 2f), blurRadius = 10f)
+    val shadow = Shadow(color = Color.Black.copy(alpha = 0.5f), offset = Offset(0f, 2f), blurRadius = 10f)
 
     Column(
         modifier = modifier
@@ -66,7 +68,7 @@ fun ClockHeader(
                 fontWeight = FontWeight.Light,
                 shadow = shadow,
             ),
-            color = MaterialTheme.colorScheme.onBackground,
+            color = color,
         )
         if (showDate) {
             Text(
@@ -75,7 +77,7 @@ fun ClockHeader(
                     fontWeight = FontWeight.Normal,
                     shadow = shadow,
                 ),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.82f),
+                color = color.copy(alpha = 0.82f),
             )
         }
     }
