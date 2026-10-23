@@ -17,6 +17,27 @@ python3 -m http.server 8080 --directory preview
 # buka http://localhost:8080
 ```
 
+### Tangkapan layar
+
+| Beranda | Laci aplikasi |
+|---|---|
+| ![Beranda](docs/preview-home.jpg) | ![Laci aplikasi](docs/preview-drawer.jpg) |
+
+| Pengaturan | Aksi aplikasi (tekan lama) |
+|---|---|
+| ![Pengaturan](docs/preview-settings.jpg) | ![Aksi aplikasi](docs/preview-app-actions.jpg) |
+
+| Tema terang | Tema AMOLED |
+|---|---|
+| ![Tema terang](docs/preview-theme-light.jpg) | ![Tema AMOLED](docs/preview-theme-amoled.jpg) |
+
+Gambar di atas dirender oleh [`tools/render_previews.py`](tools/render_previews.py) memakai palet, ukuran, dan jarak yang sama dengan Compose. Untuk membuat ulang:
+
+```bash
+pip install pillow
+python3 tools/render_previews.py
+```
+
 Yang bisa dicoba di prototipe:
 
 - Ganti tema **Terang / Gelap / AMOLED** dan lihat efeknya ke laci & pengaturan (beranda tetap putih di atas wallpaper, sama seperti APK).
