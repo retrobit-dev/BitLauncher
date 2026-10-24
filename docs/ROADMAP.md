@@ -83,17 +83,18 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 
 ## 2. Fase pengembangan
 
-### 0.1–0.2 — Fondasi + kustomisasi awal (rilis saat ini)
+### 0.1–0.3 — Fondasi + kustomisasi awal (rilis saat ini)
 - Launcher default, daftar aplikasi `LauncherApps`, multi-profil.
 - Beranda vertikal, laci dengan pencarian, rel alfabet, daftar/kisi.
 - Shortcut, pin, sembunyikan, info, uninstall.
 - Tema, AMOLED, dynamic color, pengaturan dasar, backup JSON.
 - Beranda folio berita: foto, artikel dengan shortcut aplikasi, ringkasan jumlah notifikasi, pencarian masthead, gestur, serta kartu Kalender/Catatan.
+- Pemilih aplikasi artikel: mode Otomatis/kustom/kosong, chip shortcut dan badge shelf, serta filter notifikasi artikel tanpa mengubah badge global.
 - Pemetaan tujuh gestur, aksi kunci layar/recents/pengaturan cepat/screenshot, kontrol artikel/tautan, dan badge ikon.
 - Enam pilihan gaya font, gambar artikel kustom dengan caption/reset, dan APK release test-signed untuk sideload.
 - Paket Ikon tema, penemuan icon pack pihak ketiga, parser appfilter, kalender harian, dan fallback ikon asli.
 
-### 0.2 — Beranda yang terasa "Niagara"
+### Berikutnya — Beranda yang terasa "Niagara"
 - Widget host (`AppWidgetHost` + `AppWidgetManager`) dan penempatan widget.
 - Generator ikon pack untuk aplikasi tanpa pemetaan (`iconback`, `iconupon`, `iconmask`, dan scale).
 - Double-tap area kosong dapat dikonfigurasi (buka laci / kunci layar).
@@ -101,7 +102,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Header "at a glance": cuaca opsional + event kalender (izin terpisah).
 - Animasi masuk/keluar ikon yang lebih halus (shared element).
 
-### 0.3 — Kedalaman ala Nova
+### Selanjutnya — Kedalaman ala Nova
 - Folder (di beranda dan dock).
 - Gestur per ikon (geser untuk buka shortcut tertentu).
 - Penyaringan kategori notifikasi yang lebih rinci.
@@ -109,7 +110,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Profil launcher (mis. "Kerja" 09.00–17.00, "Malam" setelah 20.00).
 - Multi-halaman beranda + indikator + wallpaper scroll.
 
-### 0.4 — Tablet, foldable, dan performa
+### Kemudian — Tablet, foldable, dan performa
 - Layout adaptif berdasarkan `WindowSizeClass` (grid berbeda per postur).
 - Baseline Profile + startup tracing (target < 300 ms cold start).
 - Cache ikon persisten (disk) agar tidak reload setelah proses mati.

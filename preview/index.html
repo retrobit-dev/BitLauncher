@@ -907,6 +907,25 @@
     text-underline-offset: 2px;
     cursor: pointer;
   }
+  .news-app-shelf {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+    padding: 0 20px 6px;
+  }
+  .news-app-chip, .news-app-empty {
+    min-width: 0; min-height: 48px; padding: 6px;
+    border: 1px solid var(--outline-variant); border-radius: 2px;
+    background: transparent; color: var(--on-surface);
+    display: flex; align-items: center; gap: 6px; text-align: left;
+  }
+  .news-app-chip { cursor: pointer; }
+  .news-app-chip:disabled { cursor: default; opacity: 0.78; }
+  .news-app-chip > .label {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: var(--serif); font-size: 11px;
+  }
+  .news-app-empty { width: calc(100% - 40px); margin: 6px 20px; padding: 12px; cursor: pointer; }
+  .news-app-choice { cursor: pointer; }
+  .news-app-check { width: 24px; color: var(--primary); font-size: 20px; text-align: center; }
   .news-widgets {
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
     padding: 10px 20px;
@@ -1231,6 +1250,19 @@
         <div id="hidden-list" style="max-height:420px; overflow:auto; padding-bottom:12px"></div>
       </div>
 
+      <div class="sheet" id="news-apps-sheet">
+        <div class="sheet-handle"></div>
+        <div class="hidden-head">
+          <h3>Aplikasi di artikel</h3>
+          <p>Hanya aplikasi terpilih yang menjadi shortcut dan sumber notifikasi artikel.</p>
+        </div>
+        <div class="hidden-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="news-apps-search" placeholder="Cari aplikasi" />
+        </div>
+        <div id="news-apps-list" style="max-height:420px; overflow:auto; padding-bottom:12px"></div>
+      </div>
+
       <div class="toast" id="toast">Membuka aplikasi</div>
 
       <div class="navbar"><i></i></div>
@@ -1319,7 +1351,7 @@
     </div>
 
     <p class="note">
-      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.2.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
+      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.3.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
     </p>
 
     <div class="hint-keys">
@@ -1404,6 +1436,7 @@ const state = {
   showNewsArticle: true,
   showNewsAppLinks: true,
   showNewsUnread: true,
+  newsApps: null,
   showNewsPhoto: true,
   newsImage: "",
   fontChoice: "STYLE_DEFAULT",
@@ -1594,34 +1627,36 @@ function buildNewsArticle(entries, shortcutApps) {
   if (!state.showNewsUnread) {
     body += `${time}, ringkasan notifikasi tidak ditampilkan. `;
     body += shortcutApps.length
-      ? `Aplikasi ${articleAppLinks(shortcutApps)} tercantum tanpa jumlah notifikasi.`
-      : "Arsip aplikasi tetap dapat dibuka dengan gestur yang dipilih.";
+      ? `Aplikasi ${articleAppLinks(shortcutApps.slice(0, 3))} tercantum tanpa jumlah notifikasi.`
+      : "Belum ada aplikasi yang dipilih. Tambahkan aplikasi melalui Pengaturan.";
     return finish(body);
   }
 
   if (!state.notificationAccess) {
     body += `${time}, halaman ini belum dapat membaca jumlah pesan. Aktifkan akses notifikasi untuk kabar terbaru. `;
     body += shortcutApps.length
-      ? `Sementara itu, ${articleAppLinks(shortcutApps)} siap dibuka dari artikel ini.`
-      : "Arsip aplikasi dapat dibuka dengan gestur geser ke atas.";
+      ? `Sementara itu, ${articleAppLinks(shortcutApps.slice(0, 3))} siap dibuka dari artikel ini.`
+      : "Pilih aplikasi di Pengaturan agar kabar tidak bercampur dengan aplikasi lain.";
     return finish(body);
   }
 
   if (!entries.length) {
     body += `${time}, tidak ada pesan baru yang menanti. Suasana redaksi tenang. `;
     body += shortcutApps.length
-      ? `Namun ${articleAppLinks(shortcutApps)} tetap dapat dibuka dengan satu ketukan.`
-      : "Arsip aplikasi dapat dibuka dengan gestur geser ke atas.";
+      ? `Namun ${articleAppLinks(shortcutApps.slice(0, 3))} tetap dapat dibuka dengan satu ketukan.`
+      : "Belum ada aplikasi yang dipilih. Tambahkan aplikasi melalui Pengaturan.";
     return finish(body);
   }
 
-  const lead = entries[0];
+  // Prose stays concise; the shelf below still contains every selected app.
+  const proseEntries = entries.slice(0, 3);
+  const lead = proseEntries[0];
   body += `${time} terjadi sebuah fenomena aneh: ada ${articleLink(lead.app, `${lead.count} ${newsNoun(lead.app)} belum dibaca di ${lead.app.name}`)}.`;
-  entries.slice(1).forEach((entry) => {
+  proseEntries.slice(1).forEach((entry) => {
     body += ` Kabar lain datang dari ${articleLink(entry.app, `${entry.app.name}, dengan ${entry.count} ${newsNoun(entry.app)} yang menanti`)}.`;
   });
-  const additional = shortcutApps.filter((app) => !entries.some((entry) => entry.app.name === app.name));
-  if (additional.length) body += ` Untuk kabar berikutnya, buka ${articleAppLinks(additional)}.`;
+  const additional = shortcutApps.filter((app) => !proseEntries.some((entry) => entry.app.name === app.name));
+  if (additional.length) body += ` Untuk kabar berikutnya, buka ${articleAppLinks(additional.slice(0, 3 - proseEntries.length))}.`;
   return finish(body);
 }
 
@@ -1644,16 +1679,20 @@ function renderFolioHome() {
   home.dataset.style = "folio";
   const favorites = state.favoriteNames.map(appByName).filter(Boolean);
   const available = visibleApps();
-  const entries = (state.showNewsUnread ? available : [])
+  const articleApps = state.newsApps === null
+    ? (favorites.length ? favorites : available).slice(0, 3)
+    : state.newsApps.map(appByName).filter(Boolean);
+  const entries = (state.showNewsUnread && state.notificationAccess ? articleApps : [])
     .filter((app) => (state.notifications[app.name] || 0) > 0)
     .map((app) => ({ app, count: state.notifications[app.name] }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
-  const shortcutApps = (favorites.length ? favorites : available).slice(0, 3);
+    .sort((a, b) => b.count - a.count);
+  const shortcutApps = articleApps;
   const lead = entries[0];
-  const headline = lead
-    ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
-    : state.notificationAccess && state.showNewsUnread ? "Tidak ada kabar baru hari ini" : "Kabar dari aplikasi Anda";
+  const headline = state.newsApps !== null && !articleApps.length
+    ? "Pilih aplikasi untuk artikel Anda"
+    : lead
+      ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
+      : state.notificationAccess && state.showNewsUnread ? "Tidak ada kabar dari aplikasi pilihan" : "Kabar dari aplikasi pilihan";
   const homeResults = state.homeQuery.trim()
     ? available.filter((app) => matches(app, state.homeQuery.trim().toLowerCase())).slice(0, 6)
     : [];
@@ -1683,6 +1722,17 @@ function renderFolioHome() {
   const article = state.showNewsArticle
     ? `<p class="news-article">${buildNewsArticle(entries, shortcutApps)}</p>`
     : "";
+  const appShelf = state.showNewsArticle
+    ? `<div class="folio-section"><span>APLIKASI DALAM ARTIKEL</span><span>${articleApps.length} APLIKASI</span></div>
+       ${articleApps.length
+         ? `<div class="news-app-shelf">${articleApps.map((app) => {
+             const unread = state.showNewsUnread && state.notificationAccess ? (state.notifications[app.name] || 0) : 0;
+             return `<button type="button" class="news-app-chip" data-app="${escapeHtml(app.name)}" ${state.showNewsAppLinks ? "" : "disabled"}>
+               ${iconHtml(app, 24, 6, unread)}<span class="label">${escapeHtml(app.name)}</span>
+             </button>`;
+           }).join("")}</div>`
+         : '<button type="button" class="news-app-empty" data-open-settings>Pilih aplikasi untuk menjadi shortcut dan sumber notifikasi artikel</button>'}`
+    : "";
   const searchContent = state.homeQuery.trim()
     ? `<div class="news-search-results">
          <div class="folio-section"><span>HASIL PENCARIAN</span><span>${homeResults.length} APLIKASI</span></div>
@@ -1700,6 +1750,7 @@ function renderFolioHome() {
        <h2 class="news-headline">${escapeHtml(headline)}</h2>
        ${photo}
        ${article}
+       ${appShelf}
        ${accessNotice}${widgets}`;
   const mastheadControl = state.homeSearchExpanded
     ? `<input id="home-search-input" class="masthead-search" value="${escapeHtml(state.homeQuery)}" placeholder="Cari aplikasi" autocomplete="off" aria-label="Cari aplikasi" />`
@@ -1729,6 +1780,9 @@ function renderFolioHome() {
   });
   home.querySelectorAll("[data-open-notes]").forEach((el) => {
     el.onclick = () => performGesture("OPEN_NOTES");
+  });
+  home.querySelectorAll("[data-open-settings]").forEach((el) => {
+    el.onclick = () => openSettings();
   });
   home.querySelectorAll("[data-enable-notifications]").forEach((el) => {
     el.onclick = () => {
@@ -2095,7 +2149,7 @@ function openSheet(id) {
 
 function closeSheets() {
   $("sheet-scrim").classList.remove("show");
-  ["app-sheet", "home-sheet", "hidden-sheet"].forEach((id) => $(id).classList.remove("show"));
+  ["app-sheet", "home-sheet", "hidden-sheet", "news-apps-sheet"].forEach((id) => $(id).classList.remove("show"));
 }
 
 /* --------------------------------------------------------- long press binder */
@@ -2311,6 +2365,10 @@ function renderSettings() {
           <div class="text"><div class="t">Artikel berita</div><div class="d">Teks berita otomatis di halaman depan</div></div>
           <div class="sw ${state.showNewsArticle ? "on" : ""}" data-sw="showNewsArticle"></div>
         </div>
+        <div class="action-row" data-news-apps>
+          <div class="text"><div class="t">Aplikasi di artikel</div><div class="d">Hanya aplikasi ini yang menjadi shortcut dan sumber notifikasi</div></div>
+          <div class="v">${state.newsApps === null ? "Otomatis" : `${state.newsApps.length} dipilih`}</div>
+        </div>
         <div class="switch-row">
           <div class="text"><div class="t">Shortcut aplikasi di artikel</div><div class="d">Nama aplikasi dapat diketuk</div></div>
           <div class="sw ${state.showNewsAppLinks ? "on" : ""}" data-sw="showNewsAppLinks"></div>
@@ -2414,7 +2472,7 @@ function renderSettings() {
       <div class="card">
         <div class="action-row">
           <div class="text">
-            <div class="t">BitLauncher 0.2.0</div>
+            <div class="t">BitLauncher 0.3.0</div>
             <div class="d" style="margin-top:4px; line-height:16px">Folio koran di atas kertas Kaleido, atau minimalis ala Niagara + Minima.</div>
           </div>
         </div>
@@ -2496,6 +2554,11 @@ function renderSettings() {
     renderSettings();
     toast("Gambar bawaan dipulihkan");
   };
+  const newsAppsRow = $("settings-body").querySelector("[data-news-apps]");
+  if (newsAppsRow) newsAppsRow.onclick = () => {
+    renderNewsAppsList();
+    openSheet("news-apps-sheet");
+  };
   const notesRow = $("settings-body").querySelector("[data-notes-app]");
   if (notesRow) notesRow.onclick = () => {
     state.notesApp = state.notesApp === "Catatan" ? "Notion" : "Catatan";
@@ -2505,6 +2568,40 @@ function renderSettings() {
   };
   const hiddenRow = $("settings-body").querySelector("[data-open-hidden]");
   if (hiddenRow) hiddenRow.onclick = () => openSheet("hidden-sheet");
+}
+
+function automaticNewsAppNames() {
+  const favorites = state.favoriteNames.map(appByName).filter(Boolean);
+  return (favorites.length ? favorites : visibleApps()).slice(0, 3).map((app) => app.name);
+}
+
+function renderNewsAppsList() {
+  const query = $("news-apps-search").value.trim().toLowerCase();
+  const effective = state.newsApps === null ? automaticNewsAppNames() : state.newsApps;
+  const choices = APPS.filter((app) => !query || app.name.toLowerCase().includes(query));
+  $("news-apps-list").innerHTML = `
+    <div class="hidden-row news-app-choice" data-news-apps-auto>
+      <div class="label">Otomatis<div class="d">Favorit atau tiga aplikasi pertama</div></div>
+      <span class="news-app-check">${state.newsApps === null ? "✓" : ""}</span>
+    </div>
+    ${choices.map((app) => `
+      <div class="hidden-row news-app-choice" data-news-app-toggle="${escapeHtml(app.name)}">
+        ${iconHtml(app, 32, 9)}
+        <div class="label">${escapeHtml(app.name)}</div>
+        <span class="news-app-check">${effective.includes(app.name) ? "✓" : ""}</span>
+      </div>`).join("")}`;
+  $("news-apps-list").querySelector("[data-news-apps-auto]").onclick = () => {
+    state.newsApps = null;
+    renderNewsAppsList(); renderHome(); renderSettings();
+  };
+  $("news-apps-list").querySelectorAll("[data-news-app-toggle]").forEach((row) => {
+    row.onclick = () => {
+      const name = row.dataset.newsAppToggle;
+      const current = (state.newsApps === null ? automaticNewsAppNames() : [...state.newsApps]);
+      state.newsApps = current.includes(name) ? current.filter((item) => item !== name) : [...current, name];
+      renderNewsAppsList(); renderHome(); renderSettings();
+    };
+  });
 }
 
 function renderHiddenList() {
@@ -2835,6 +2932,7 @@ HOME_MINIMAL = $("home").innerHTML;
 DRAWER_MINIMAL = $("drawer").innerHTML;
 applyStyle(state.style);
 renderHiddenList();
+$("news-apps-search").addEventListener("input", renderNewsAppsList);
 </script>
 </body>
 </html>

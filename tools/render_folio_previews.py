@@ -239,24 +239,38 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
     article = [
         [("Pada pukul 09.41 terjadi sebuah fenomena", "regular")],
         [("aneh: ada ", "regular"), ("3 pesan belum dibaca di WhatsApp.", "link")],
-        [("Kabar lain datang dari ", "regular"), ("Gmail, dengan 2 pesan", "link")],
-        [("yang menanti. ", "link"), ("Untuk kabar berikutnya, buka", "regular")],
-        [("Spotify", "link"), (" dan ", "regular"), ("Kamera", "link"), (".", "regular")],
+        [("Buka juga ", "regular"), ("Spotify", "link"), (" dan ", "regular"), ("Kamera", "link"), (".", "regular")],
         [("Untuk mencatat kabar ini, buka ", "regular"), ("Catatan.", "link")],
     ]
     for index, line in enumerate(article):
         draw_article_line(draw, 20, 472 + index * 26, line, palette)
 
+    # User-selected article apps. Gmail's unread count is deliberately absent.
+    tracked_text(draw, 20, 584, "APLIKASI DALAM ARTIKEL", font(9, "SemiBold"), ink, 1.3)
+    tracked_text(draw, 373, 584, "3 APLIKASI", font(8.5, "Medium"), soft, 1.2, "right")
+    shelf_apps = [app for app in APPS if app[0] in {"WhatsApp", "Spotify", "Kamera"}]
+    shelf_apps.sort(key=lambda app: ["WhatsApp", "Spotify", "Kamera"].index(app[0]))
+    cell_w, gap = 113.67, 6
+    for column, app in enumerate(shelf_apps):
+        x = 20 + column * (cell_w + gap)
+        rounded_rect(img, (x, 596, x + cell_w, 640), 2, outline=color(palette["outline_variant"]))
+        paper_tile(img, (x + 8, 606, x + 32, 630), 6, app[1], app[2], app[3], palette)
+        draw = ImageDraw.Draw(img)
+        draw.text((px(x + 40), px(623)), app[0], font=serif(11.5), fill=ink, anchor="ls")
+        if app[0] == "WhatsApp":
+            draw.rounded_rectangle([px(x + 25), px(600), px(x + 39), px(614)], radius=px(2), fill=color(palette["primary"]))
+            draw.text((px(x + 32), px(607)), "3", font=font(7.5, "Bold"), fill=color(palette["bg"]), anchor="mm")
+
     # Interactive editorial cards, not a general Android AppWidgetHost.
-    rounded_rect(img, (20, 620, 177, 738), 2, outline=color(palette["outline"]))
-    rounded_rect(img, (185, 620, 373, 738), 2, outline=color(palette["outline"]))
+    rounded_rect(img, (20, 656, 177, 764), 2, outline=color(palette["outline"]))
+    rounded_rect(img, (185, 656, 373, 764), 2, outline=color(palette["outline"]))
     draw = ImageDraw.Draw(img)
-    tracked_text(draw, 34, 643, "KALENDER", font(10, "SemiBold"), soft, 1.6)
-    draw.text((px(34), px(690)), "24", font=serif(36), fill=ink, anchor="ls")
-    tracked_text(draw, 34, 719, "OKTOBER 2026", font(8, "Medium"), soft, 1.0)
-    tracked_text(draw, 199, 643, "CATATAN", font(10, "SemiBold"), soft, 1.6)
-    draw.text((px(199), px(685)), "Catatan", font=serif(20), fill=ink, anchor="ls")
-    tracked_text(draw, 199, 719, "KETUK UNTUK MEMBUKA", font(8, "Medium"), soft, 1.0)
+    tracked_text(draw, 34, 678, "KALENDER", font(10, "SemiBold"), soft, 1.6)
+    draw.text((px(34), px(718)), "24", font=serif(32), fill=ink, anchor="ls")
+    tracked_text(draw, 34, 746, "OKTOBER 2026", font(8, "Medium"), soft, 1.0)
+    tracked_text(draw, 199, 678, "CATATAN", font(10, "SemiBold"), soft, 1.6)
+    draw.text((px(199), px(716)), "Catatan", font=serif(20), fill=ink, anchor="ls")
+    tracked_text(draw, 199, 746, "KETUK UNTUK MEMBUKA", font(8, "Medium"), soft, 1.0)
 
     # The archive is gesture-only; the small grabber is not a navigation button.
     draw.rounded_rectangle([px(176), px(778), px(216), px(781)], radius=px(1.5), fill=color(palette["outline"]))
@@ -393,13 +407,16 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
         draw.text((px(359), px(y + 29)), value, font=font(10, "Medium"), fill=soft, anchor="rs")
 
     tracked_text(draw, 20, 528, "HALAMAN BERITA & APLIKASI", font(10, "SemiBold"), ink, 1.6)
-    rounded_rect(img, (20, 540, 373, 758), 2, outline=outline)
-    switches = ["Artikel berita", "Shortcut aplikasi di artikel", "Ringkasan notifikasi", "Badge notifikasi"]
+    rounded_rect(img, (20, 540, 373, 810), 2, outline=outline)
+    switches = ["Aplikasi di artikel", "Artikel berita", "Shortcut aplikasi di artikel", "Ringkasan notifikasi", "Badge notifikasi"]
     for index, label in enumerate(switches):
         y = 548 + index * 52
         if index:
             draw.line([(px(32), px(y)), (px(361), px(y))], fill=outline, width=max(1, px(0.6)))
         draw.text((px(34), px(y + 31)), label, font=serif(14), fill=ink, anchor="ls")
+        if index == 0:
+            draw.text((px(359), px(y + 30)), "Otomatis · 3  ›", font=font(10, "Medium"), fill=soft, anchor="rs")
+            continue
         draw.rounded_rectangle(
             [px(329), px(y + 16), px(359), px(y + 34)],
             radius=px(2),

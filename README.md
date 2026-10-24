@@ -61,6 +61,7 @@ Yang bisa dicoba di prototipe:
 
 - Ganti gaya **Folio koran / Minimalis** dan tema **Kaleido / Kaleido malam / Terang / Gelap / AMOLED** secara langsung.
 - Simulasikan **3 pesan baru**, tandai semua dibaca, atau matikan akses notifikasi untuk melihat perubahan artikel.
+- Buka **Pengaturan → Aplikasi di artikel**, lalu pilih aplikasi sendiri. Notifikasi aplikasi di luar daftar tidak masuk ke headline, prosa, maupun badge chip; daftar kosong dan mode **Otomatis** juga dapat dicoba.
 - Ketuk frasa bergaris bawah seperti **“3 pesan belum dibaca di WhatsApp”** untuk membuka aplikasi.
 - Ganti kota dateline, tampilkan/sembunyikan foto dan widget, serta pilih aplikasi catatan dari pengaturan prototipe.
 - Pilih **Ikon sistem / Ikon tema / Pack pihak ketiga (simulasi)** dan lihat perubahan pada seluruh ikon aplikasi.
@@ -95,12 +96,14 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 
 ---
 
-## Fitur yang sudah berjalan (0.2.0-alpha)
+## Fitur yang sudah berjalan (0.3.0-alpha)
 
 ### Beranda
 - [x] **Gaya folio koran** dengan masthead, headline, foto monokrom, dan artikel yang dapat digulir
 - [x] Frasa di dalam artikel menjadi **shortcut aplikasi** yang dapat diketuk
 - [x] Jumlah pesan/notifikasi dirangkai menjadi berita melalui `NotificationListenerService`
+- [x] Pengguna memilih sendiri aplikasi dalam artikel; headline, prosa, chip shortcut, dan badge artikel hanya memakai aplikasi tersebut
+- [x] Mode **Otomatis**, pilihan kustom (termasuk aplikasi tersembunyi), dan daftar kosong eksplisit; seluruh pilihan tampil pada shelf, prosa dibatasi tiga nama
 - [x] Kota dateline dapat diubah; foto berita dapat diganti dengan gambar lokal atau dimatikan; widget editorial dapat dimatikan
 - [x] Ikon cari membuka kolom di samping masthead; tidak ada indeks aplikasi permanen di halaman depan
 - [x] Artikel, shortcut aplikasi dalam artikel, ringkasan notifikasi, foto, dan widget dapat diatur terpisah
@@ -143,6 +146,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Pemilih Ikon sistem / Ikon tema / icon pack pihak ketiga yang terpasang
 - [x] Enam pilihan gaya font: bawaan, Lora, Roboto, Typewriter, Pixel, dan Operator-style
 - [x] Pemilih gambar artikel via Storage Access Framework, tanpa izin storage luas
+- [x] Pemilih multi-select aplikasi artikel dengan pencarian, mode Otomatis, dan empty state yang dapat diatur
 - [x] Warna dinamis Material You (Android 12+)
 - [x] Toggle jam, tanggal, format 24 jam, baris ringkas
 - [x] Tata letak laci, jumlah kolom, rel alfabet, autofocus pencarian, getaran
@@ -186,6 +190,22 @@ app/src/main/java/dev/retrobit/bitlauncher/
     ├── DrawerItems.kt           # pengelompokan per huruf
     └── SystemIntents.kt         # intent sistem & cek launcher default
 ```
+
+---
+
+## Aplikasi dan notifikasi artikel
+
+Buka **Pengaturan → Halaman koran → Aplikasi di artikel**. Pemilih menyediakan pencarian dan multi-select untuk semua aplikasi yang terinstal, termasuk aplikasi yang disembunyikan dari laci.
+
+| Mode | Perilaku |
+|---|---|
+| **Otomatis** | Kompatibilitas perilaku lama: favorit terlebih dahulu, atau tiga aplikasi pertama bila belum ada favorit |
+| **Pilihan kustom** | Hanya aplikasi terpilih yang menjadi chip shortcut dan sumber headline, prosa, serta badge notifikasi artikel |
+| **Daftar kosong** | Tidak ada aplikasi atau notifikasi artikel; tidak ada fallback diam-diam, dan tersedia tombol menuju pengaturan |
+
+Shelf menampilkan seluruh aplikasi pilihan dalam baris tiga kolom, sedangkan paragraf editorial dibatasi maksimal tiga nama agar tetap terbaca. Filter ini khusus halaman artikel: badge global pada favorit minimal, pencarian, dan laci tetap mengikuti pengaturan badge seperti sebelumnya. Jika izin notifikasi dicabut, jumlah lama tidak dipakai untuk headline maupun ringkasan.
+
+Pilihan disimpan sebagai `newsApps` di preferensi dan backup JSON: `null` berarti Otomatis, array berisi kunci aplikasi berarti kustom, dan array kosong berarti tidak ada aplikasi artikel.
 
 ---
 
@@ -251,7 +271,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 adb shell cmd package set-home-activity dev.retrobit.bitlauncher/.MainActivity
 ```
 
-Jika versi debug atau APK dengan kunci berbeda sudah terpasang, hapus versi lama terlebih dahulu (pengaturan lokal ikut terhapus), lalu jalankan `adb install` tanpa `-r`. Untuk pemasangan tanpa ADB, unduh **`app-release.apk`** dari [prerelease v0.2.0-alpha](https://github.com/retrobit-dev/BitLauncher/releases/tag/v0.2.0-alpha) atau artifact **`bitlauncher-release`** dari workflow [Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml). Jika memakai artifact, ekstrak ZIP terlebih dahulu. Buka APK dan izinkan **Install unknown apps** bila diminta Android. Cocokkan berkas dengan SHA-256 yang disertakan.
+Jika versi debug atau APK dengan kunci berbeda sudah terpasang, hapus versi lama terlebih dahulu (pengaturan lokal ikut terhapus), lalu jalankan `adb install` tanpa `-r`. Untuk pemasangan tanpa ADB, unduh **`app-release.apk`** dari [prerelease v0.3.0-alpha](https://github.com/retrobit-dev/BitLauncher/releases/tag/v0.3.0-alpha) atau artifact **`bitlauncher-release`** dari workflow [Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml). Jika memakai artifact, ekstrak ZIP terlebih dahulu. Buka APK dan izinkan **Install unknown apps** bila diminta Android. Cocokkan berkas dengan SHA-256 yang disertakan.
 
 ---
 

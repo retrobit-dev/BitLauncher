@@ -86,6 +86,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.R
 import dev.retrobit.bitlauncher.data.LaunchableApp
+import dev.retrobit.bitlauncher.data.resolveArticleApps
 import dev.retrobit.bitlauncher.ui.components.AppIcon
 import dev.retrobit.bitlauncher.ui.components.EpaperColorFilter
 import dev.retrobit.bitlauncher.ui.components.HomeMenuSheet
@@ -159,14 +160,14 @@ fun FolioHomeScreen(
     val dateline = dateFormatter.format(now.time)
     val location = settings.newsLocation.trim().ifBlank { "Rembang" }.take(40)
 
-    val newsEntries = remember(apps, notificationCounts, settings.showNewsUnread) {
-        if (!settings.showNewsUnread) return@remember emptyList()
-        apps.distinctBy { it.packageName }.mapNotNull { app ->
-            notificationCounts[app.packageName]?.takeIf { it > 0 }?.let { NewsEntry(app, it) }
-        }.sortedByDescending { it.count }.take(3)
+    val articleApps = remember(apps, allApps, favorites, settings.newsApps) {
+        resolveArticleApps(apps, allApps, favorites, settings.newsApps)
     }
-    val shortcutApps = remember(favorites, apps) {
-        (if (favorites.isNotEmpty()) favorites else apps).distinctBy { it.packageName }.take(3)
+    val newsEntries = remember(articleApps, notificationCounts, settings.showNewsUnread, notificationAccess) {
+        if (!settings.showNewsUnread || !notificationAccess) return@remember emptyList()
+        articleApps.mapNotNull { app ->
+            notificationCounts[app.packageName]?.takeIf { it > 0 }?.let { NewsEntry(app, it) }
+        }.sortedByDescending { it.count }
     }
     val notesApp = remember(allApps, settings.notesPackage) {
         findNotesApp(allApps, settings.notesPackage)
@@ -175,13 +176,14 @@ fun FolioHomeScreen(
         if (searchQuery.isBlank()) emptyList() else AppSearch.filter(apps, searchQuery).take(6)
     }
     val headline = when {
-        !settings.showNewsUnread -> "Kabar dari aplikasi Anda"
+        settings.newsApps != null && articleApps.isEmpty() -> "Pilih aplikasi untuk artikel Anda"
+        !settings.showNewsUnread -> "Kabar dari aplikasi pilihan"
         newsEntries.isNotEmpty() -> {
             val lead = newsEntries.first()
             "${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.label}"
         }
-        notificationAccess -> "Tidak ada kabar baru hari ini"
-        else -> "Kabar dari aplikasi Anda"
+        notificationAccess -> "Tidak ada kabar dari aplikasi pilihan"
+        else -> "Kabar dari aplikasi pilihan"
     }
 
     fun openNotes() {
@@ -316,10 +318,20 @@ fun FolioHomeScreen(
                             unreadEnabled = settings.showNewsUnread,
                             appLinksEnabled = settings.showNewsAppLinks,
                             entries = newsEntries,
-                            shortcutApps = shortcutApps,
+                            shortcutApps = articleApps,
                             onOpenApp = { app -> viewModel.launch(app) },
                             onOpenCalendar = { SystemIntents.openCalendar(context) },
                             onOpenNotes = ::openNotes,
+                        )
+                    }
+                    item {
+                        NewsAppShelf(
+                            apps = articleApps,
+                            notificationCounts = notificationCounts,
+                            showUnread = settings.showNewsUnread && notificationAccess,
+                            linksEnabled = settings.showNewsAppLinks,
+                            onOpenApp = { app -> viewModel.launch(app) },
+                            onOpenSettings = onOpenSettings,
                         )
                     }
                 }
@@ -554,6 +566,77 @@ private fun decodeArticleImage(context: Context, rawUri: String): ImageBitmap? {
 }
 
 @Composable
+private fun NewsAppShelf(
+    apps: List<LaunchableApp>,
+    notificationCounts: Map<String, Int>,
+    showUnread: Boolean,
+    linksEnabled: Boolean,
+    onOpenApp: (LaunchableApp) -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SectionLabel(title = "APLIKASI DALAM ARTIKEL", trailing = "${apps.size} APLIKASI")
+        if (apps.isEmpty()) {
+            Surface(
+                onClick = onOpenSettings,
+                color = Color.Transparent,
+                contentColor = colors.onBackground,
+                shape = RoundedCornerShape(2.dp),
+                border = BorderStroke(1.dp, colors.outline),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = "Pilih aplikasi untuk menjadi shortcut dan sumber notifikasi artikel",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(14.dp),
+                )
+            }
+        } else {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                apps.chunked(3).forEach { rowApps ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        rowApps.forEach { app ->
+                            val unread = if (showUnread) notificationCounts[app.packageName] ?: 0 else 0
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .clickable(enabled = linksEnabled) { onOpenApp(app) },
+                                color = Color.Transparent,
+                                contentColor = colors.onBackground,
+                                shape = RoundedCornerShape(2.dp),
+                                border = BorderStroke(1.dp, colors.outlineVariant),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    AppIcon(app = app, size = 24.dp, badgeCount = unread)
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = app.label,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                        repeat(3 - rowApps.size) {
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun NewsArticle(
     location: String,
     date: String,
@@ -589,10 +672,10 @@ private fun NewsArticle(
             !unreadEnabled -> {
                 append("$time, ringkasan notifikasi tidak ditampilkan. ")
                 if (shortcutApps.isEmpty()) {
-                    append("Arsip aplikasi tetap dapat dibuka dengan gestur yang dipilih.")
+                    append("Belum ada aplikasi yang dipilih. Tambahkan aplikasi melalui Pengaturan.")
                 } else {
                     append("Aplikasi ")
-                    appendAppLinks(shortcutApps, linkStyle, appLinksEnabled)
+                    appendAppLinks(shortcutApps.take(3), linkStyle, appLinksEnabled)
                     append(" tercantum tanpa jumlah notifikasi.")
                 }
             }
@@ -600,25 +683,27 @@ private fun NewsArticle(
                 append("$timeClause, halaman ini belum dapat membaca jumlah pesan. ")
                 append("Aktifkan akses notifikasi untuk kabar terbaru. ")
                 if (shortcutApps.isEmpty()) {
-                    append("Arsip aplikasi dapat dibuka dengan gestur geser ke atas.")
+                    append("Pilih aplikasi di Pengaturan agar kabar tidak bercampur dengan aplikasi lain.")
                 } else {
                     append("Sementara itu, ")
-                    appendAppLinks(shortcutApps, linkStyle, appLinksEnabled)
+                    appendAppLinks(shortcutApps.take(3), linkStyle, appLinksEnabled)
                     append(" siap dibuka dari artikel ini.")
                 }
             }
             entries.isEmpty() -> {
                 append("$timeClause, tidak ada pesan baru yang menanti. Suasana redaksi tenang. ")
                 if (shortcutApps.isEmpty()) {
-                    append("Arsip aplikasi dapat dibuka dengan gestur geser ke atas.")
+                    append("Belum ada aplikasi yang dipilih. Tambahkan aplikasi melalui Pengaturan.")
                 } else {
                     append("Namun ")
-                    appendAppLinks(shortcutApps, linkStyle, appLinksEnabled)
+                    appendAppLinks(shortcutApps.take(3), linkStyle, appLinksEnabled)
                     append(" tetap dapat dibuka dengan satu ketukan.")
                 }
             }
             else -> {
-                val lead = entries.first()
+                // Keep the editorial paragraph readable; the shelf below still lists every selected app.
+                val proseEntries = entries.take(3)
+                val lead = proseEntries.first()
                 append("$timeClause terjadi sebuah fenomena aneh: ada ")
                 appendAppLink(
                     text = "${lead.count} ${newsNoun(lead.app)} belum dibaca di ${lead.app.label}",
@@ -627,7 +712,7 @@ private fun NewsArticle(
                     enabled = appLinksEnabled,
                 )
                 append(".")
-                entries.drop(1).forEach { entry ->
+                proseEntries.drop(1).forEach { entry ->
                     append(" Kabar lain datang dari ")
                     appendAppLink(
                         text = "${entry.app.label}, dengan ${entry.count} ${newsNoun(entry.app)} yang menanti",
@@ -637,7 +722,9 @@ private fun NewsArticle(
                     )
                     append(".")
                 }
-                val additional = shortcutApps.filter { app -> entries.none { it.app.key == app.key } }
+                val additional = shortcutApps
+                    .filter { app -> proseEntries.none { it.app.key == app.key } }
+                    .take(3 - proseEntries.size)
                 if (additional.isNotEmpty()) {
                     append(" Untuk kabar berikutnya, buka ")
                     appendAppLinks(additional, linkStyle, appLinksEnabled)
@@ -788,7 +875,7 @@ private fun NotificationAccessNotice(onEnable: () -> Unit) {
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                 )
                 Text(
-                    text = "Hanya jumlah notifikasi aktif yang digunakan; isi pesan tidak disimpan.",
+                    text = "Hanya jumlah dari aplikasi dalam artikel yang digunakan; isi pesan tidak disimpan.",
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.onSurfaceVariant,
                 )

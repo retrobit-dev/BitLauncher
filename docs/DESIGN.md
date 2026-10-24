@@ -6,7 +6,7 @@ Tujuan visual: **tenang, satu tangan, tanpa kebisingan.** Gaya utama adalah **fo
 
 ## Gaya utama — Folio koran + E Ink Kaleido
 
-Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead dengan pencarian yang dapat dibuka, headline, foto, artikel dengan tautan aplikasi, lalu kartu editorial Kalender dan Catatan. Tidak ada indeks aplikasi permanen atau tombol navigasi di bagian bawah.
+Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead dengan pencarian yang dapat dibuka, headline, foto, artikel dengan tautan aplikasi, shelf aplikasi pilihan, lalu kartu editorial Kalender dan Catatan. Tidak ada indeks aplikasi permanen atau tombol navigasi di bagian bawah.
 
 ```
 ┌──────────────────────────────┐
@@ -22,6 +22,8 @@ Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai dereta
 │ Pada pukul 09.41 terjadi ... │
 │ ada 3 pesan belum dibaca di  │
 │ WhatsApp. Buka Catatan.      │  ← frasa bergaris bawah = app
+│ APLIKASI DALAM ARTIKEL       │
+│ [W WhatsApp] [S Spotify] [K]│  ← chip + badge hanya app pilihan
 │ ┌────────────┐ ┌───────────┐ │
 │ │ KALENDER   │ │ CATATAN   │ │  ← kartu editorial interaktif
 │ │ 24         │ │ Catatan   │ │
@@ -34,7 +36,9 @@ Foto artikel dapat diganti melalui pemilih dokumen sistem. Decode dilakukan di l
 
 Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal dengan garis bawah dan dapat diketuk. Tanggal membuka kalender sistem; tautan dan kartu **Catatan** membuka aplikasi catatan yang terdeteksi otomatis atau dipilih di pengaturan. Kedua kartu dapat disembunyikan. Kartu ini adalah alat editorial internal, bukan host untuk widget pihak ketiga.
 
-Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android.
+Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android; jumlah lama tidak tetap tampil di headline.
+
+**Aplikasi di artikel** adalah daftar yang dipilih pengguna, bukan daftar favorit yang dipaksakan. Satu resolver memasok aplikasi yang sama ke headline, prosa, chip shortcut, dan badge shelf. Mode Otomatis mempertahankan perilaku lama; pilihan kustom dapat mencakup aplikasi tersembunyi; daftar kosong berarti benar-benar tanpa aplikasi/notifikasi artikel. Shelf menampilkan semua pilihan dalam grid tiga kolom, sedangkan prosa menyebut maksimal tiga aplikasi. Filter tidak mengubah badge global pada pencarian atau laci.
 
 Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian bergaris tinta, huruf seksi dengan rule, dan nomor entri berkelanjutan. Mode kisi memakai sel persegi dengan garis tipis, bukan kartu membulat.
 
@@ -201,7 +205,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 
 Semua gestur di atas dapat dipetakan ke pencarian, arsip, pengaturan, menu, kalender, catatan, panel notifikasi, pengaturan cepat, recents, kunci layar, screenshot, atau **Tidak ada**. Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk aksi yang sedang dipilih.
 
-Artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
+Artikel, daftar aplikasi artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
 
 ---
 

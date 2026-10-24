@@ -56,6 +56,8 @@ data class LauncherSettings(
     val showNewsArticle: Boolean = true,
     val showNewsAppLinks: Boolean = true,
     val showNewsUnread: Boolean = true,
+    /** Null = automatic favorites/top-three mode; empty = deliberately no article apps. */
+    val newsApps: List<String>? = null,
     val showNewsPhoto: Boolean = true,
     val newsImageUri: String = "",
     val showNewsWidgets: Boolean = true,
@@ -123,6 +125,14 @@ class SettingsRepository(context: Context) {
             showNewsArticle = prefs.getBoolean(KEY_NEWS_ARTICLE, true),
             showNewsAppLinks = prefs.getBoolean(KEY_NEWS_APP_LINKS, true),
             showNewsUnread = prefs.getBoolean(KEY_NEWS_UNREAD, true),
+            newsApps = if (prefs.contains(KEY_NEWS_APPS)) {
+                prefs.getString(KEY_NEWS_APPS, "")
+                    ?.split(SEPARATOR)
+                    ?.filter { it.isNotBlank() }
+                    .orEmpty()
+            } else {
+                null
+            },
             showNewsPhoto = prefs.getBoolean(KEY_NEWS_PHOTO, true),
             newsImageUri = prefs.getString(KEY_NEWS_IMAGE, "") ?: "",
             showNewsWidgets = prefs.getBoolean(KEY_NEWS_WIDGETS, true),
@@ -160,6 +170,7 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_NEWS_ARTICLE, settings.showNewsArticle)
             .putBoolean(KEY_NEWS_APP_LINKS, settings.showNewsAppLinks)
             .putBoolean(KEY_NEWS_UNREAD, settings.showNewsUnread)
+            .putString(KEY_NEWS_APPS, settings.newsApps?.joinToString(SEPARATOR))
             .putBoolean(KEY_NEWS_PHOTO, settings.showNewsPhoto)
             .putString(KEY_NEWS_IMAGE, settings.newsImageUri)
             .putBoolean(KEY_NEWS_WIDGETS, settings.showNewsWidgets)
@@ -224,6 +235,7 @@ class SettingsRepository(context: Context) {
         root.put("showNewsArticle", settings.showNewsArticle)
         root.put("showNewsAppLinks", settings.showNewsAppLinks)
         root.put("showNewsUnread", settings.showNewsUnread)
+        root.put("newsApps", settings.newsApps?.let { JSONArray(it) } ?: JSONObject.NULL)
         root.put("showNewsPhoto", settings.showNewsPhoto)
         root.put("newsImageUri", settings.newsImageUri)
         root.put("showNewsWidgets", settings.showNewsWidgets)
@@ -252,6 +264,13 @@ class SettingsRepository(context: Context) {
         val hidden = root.optJSONArray("hidden")?.let { array ->
             (0 until array.length()).mapNotNull { array.optString(it, null) }.toSet()
         } ?: current.hidden
+        val newsApps = when {
+            !root.has("newsApps") -> current.newsApps
+            root.isNull("newsApps") -> null
+            else -> root.optJSONArray("newsApps")?.let { array ->
+                (0 until array.length()).mapNotNull { array.optString(it, null) }
+            } ?: current.newsApps
+        }
         fun restoredGesture(key: String, default: GestureAction) = runCatching {
             GestureAction.valueOf(root.optString(key, default.name))
         }.getOrDefault(default)
@@ -283,6 +302,7 @@ class SettingsRepository(context: Context) {
             showNewsArticle = root.optBoolean("showNewsArticle", current.showNewsArticle),
             showNewsAppLinks = root.optBoolean("showNewsAppLinks", current.showNewsAppLinks),
             showNewsUnread = root.optBoolean("showNewsUnread", current.showNewsUnread),
+            newsApps = newsApps,
             showNewsPhoto = root.optBoolean("showNewsPhoto", current.showNewsPhoto),
             newsImageUri = root.optString("newsImageUri", current.newsImageUri),
             showNewsWidgets = root.optBoolean("showNewsWidgets", current.showNewsWidgets),
@@ -329,6 +349,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_NEWS_ARTICLE = "news_article"
         private const val KEY_NEWS_APP_LINKS = "news_app_links"
         private const val KEY_NEWS_UNREAD = "news_unread"
+        private const val KEY_NEWS_APPS = "news_apps"
         private const val KEY_NEWS_PHOTO = "news_photo"
         private const val KEY_NEWS_IMAGE = "news_image_uri"
         private const val KEY_NEWS_WIDGETS = "news_widgets"

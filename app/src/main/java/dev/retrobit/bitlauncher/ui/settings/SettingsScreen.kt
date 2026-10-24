@@ -45,6 +45,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.data.AppLayout
+import dev.retrobit.bitlauncher.data.automaticArticleApps
+import dev.retrobit.bitlauncher.data.resolveArticleApps
 import dev.retrobit.bitlauncher.data.GestureAction
 import dev.retrobit.bitlauncher.data.IconPackInfo
 import dev.retrobit.bitlauncher.data.IconPackRepository
@@ -56,6 +58,7 @@ import dev.retrobit.bitlauncher.data.ThemeMode
 import dev.retrobit.bitlauncher.ui.components.GestureActionSheet
 import dev.retrobit.bitlauncher.ui.components.HiddenAppsSheet
 import dev.retrobit.bitlauncher.ui.components.IconPackSheet
+import dev.retrobit.bitlauncher.ui.components.NewsAppsSheet
 import dev.retrobit.bitlauncher.ui.components.NotesAppSheet
 import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.util.SystemIntents
@@ -81,11 +84,14 @@ fun SettingsScreen(
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val allApps by viewModel.allApps.collectAsStateWithLifecycle()
+    val apps by viewModel.apps.collectAsStateWithLifecycle()
+    val favorites by viewModel.favorites.collectAsStateWithLifecycle()
     val notificationAccess by viewModel.notificationAccess.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     var showHiddenApps by remember { mutableStateOf(false) }
     var showNotesPicker by remember { mutableStateOf(false) }
+    var showNewsAppsPicker by remember { mutableStateOf(false) }
     var showIconPackPicker by remember { mutableStateOf(false) }
     var iconPackRefresh by remember { mutableStateOf(0) }
     var gestureSlot by remember { mutableStateOf<GestureSlot?>(null) }
@@ -110,6 +116,10 @@ fun SettingsScreen(
         }
     }
     val iconPacks = discoveredIconPacks ?: IconPackRepository.builtInIconPacks()
+    val automaticNewsApps = remember(apps, favorites) { automaticArticleApps(apps, favorites) }
+    val articleApps = remember(apps, allApps, favorites, settings.newsApps) {
+        resolveArticleApps(apps, allApps, favorites, settings.newsApps)
+    }
     LaunchedEffect(discoveredIconPacks, settings.iconPack) {
         val packs = discoveredIconPacks
         if (
@@ -438,6 +448,16 @@ fun SettingsScreen(
                             viewModel.updateSettings { it.copy(showNewsArticle = enabled) }
                         },
                     )
+                    ActionRow(
+                        title = "Aplikasi di artikel",
+                        value = if (settings.newsApps == null) {
+                            "Otomatis · ${articleApps.size}"
+                        } else {
+                            "${articleApps.size} dipilih"
+                        },
+                        description = "Hanya aplikasi ini yang menjadi shortcut dan sumber notifikasi artikel",
+                        onClick = { showNewsAppsPicker = true },
+                    )
                     SwitchRow(
                         title = "Shortcut aplikasi di artikel",
                         checked = settings.showNewsAppLinks,
@@ -577,7 +597,7 @@ fun SettingsScreen(
                     Box(Modifier.padding(vertical = 8.dp)) {
                         Column {
                             Text(
-                                text = "BitLauncher 0.2.0",
+                                text = "BitLauncher 0.3.0",
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
@@ -622,6 +642,18 @@ fun SettingsScreen(
                 gestureSlot = null
             },
             onDismiss = { gestureSlot = null },
+        )
+    }
+
+    if (showNewsAppsPicker) {
+        NewsAppsSheet(
+            apps = allApps,
+            selectedKeys = settings.newsApps,
+            automaticKeys = automaticNewsApps.map { it.key },
+            onSelectionChange = { selection ->
+                viewModel.updateSettings { it.copy(newsApps = selection) }
+            },
+            onDismiss = { showNewsAppsPicker = false },
         )
     }
 
