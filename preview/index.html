@@ -729,8 +729,8 @@
 
 
   /* Newspaper e-paper: retain only a trace of chroma in app and shortcut icons. */
-  .screen[data-theme="kaleido"] .icon,
-  .screen[data-theme="kaleido-night"] .icon,
+  .screen[data-theme="kaleido"] .icon:not(.icon-pack),
+  .screen[data-theme="kaleido-night"] .icon:not(.icon-pack),
   .screen[data-theme="kaleido"] .shortcut .sq,
   .screen[data-theme="kaleido-night"] .shortcut .sq {
     filter: saturate(0.08);
@@ -1319,7 +1319,7 @@
     </div>
 
     <p class="note">
-      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan bisa diunduh dari artifact <b>bitlauncher-debug</b>.
+      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.2.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
     </p>
 
     <div class="hint-keys">
@@ -1388,6 +1388,12 @@ const FONT_CHOICES = {
   OPERATOR: { label: "Operator", stack: '"Space Mono", monospace', description: "Space Mono bergaya Operator/terminal, open-source." },
 };
 
+const ICON_PACK_CHOICES = {
+  SYSTEM: { label: "Ikon sistem", description: "Ikon asli aplikasi dengan penyesuaian e-paper bila aktif." },
+  THEME: { label: "Ikon tema", description: "Glyph monochrome dengan tinta dan bentuk yang mengikuti tema." },
+  THIRD_PARTY: { label: "Pack pihak ketiga", description: "Simulasi appfilter.xml; APK menampilkan pack yang benar-benar terpasang." },
+};
+
 const state = {
   theme: "kaleido",
   style: "folio",
@@ -1401,6 +1407,7 @@ const state = {
   showNewsPhoto: true,
   newsImage: "",
   fontChoice: "STYLE_DEFAULT",
+  iconPack: "SYSTEM",
   showNewsWidgets: true,
   showNotificationBadges: true,
   doubleTapAction: "OPEN_SEARCH",
@@ -1441,7 +1448,20 @@ function iconStyle(app, radius) {
 
 function iconHtml(app, size, radius, badge = 0) {
   const badgeHtml = badge > 0 ? `<span class="icon-badge">${badge > 99 ? "99+" : badge}</span>` : "";
-  return `<div class="icon" style="width:${size}px;height:${size}px;${iconStyle(app, radius)}"><span>${app.i}</span>${badgeHtml}</div>`;
+  let className = "icon";
+  let style = iconStyle(app, radius);
+  let glyphStyle = "";
+  if (state.iconPack === "THEME") {
+    className += " icon-themed";
+    const themedRadius = state.style === "folio" ? 2 : size / 2;
+    style = `background:var(--surface-variant);color:var(--primary);border:1px solid var(--outline);border-radius:${themedRadius}px;`;
+    glyphStyle = `font-size:${Math.max(10, Math.round(size * 0.4))}px`;
+  } else if (state.iconPack === "THIRD_PARTY") {
+    className += " icon-pack";
+    style = `background:var(--bg);color:${app.c1};border:2px solid ${app.c1};border-radius:${radius}px;box-shadow:inset 0 0 0 2px var(--bg);`;
+    glyphStyle = `font-size:${Math.max(10, Math.round(size * 0.4))}px`;
+  }
+  return `<div class="${className}" data-icon-mode="${state.iconPack}" style="width:${size}px;height:${size}px;${style}"><span style="${glyphStyle}">${app.i}</span>${badgeHtml}</div>`;
 }
 
 function clockNow() {
@@ -2226,6 +2246,8 @@ function renderSettings() {
     `<button class="chip ${state.style === value ? "on" : ""}" data-set-style="${value}">${label}</button>`;
   const fontChip = (value) => `
     <button class="chip ${state.fontChoice === value ? "on" : ""}" data-set-font="${value}">${FONT_CHOICES[value].label}</button>`;
+  const iconPackChip = (value) => `
+    <button class="chip ${state.iconPack === value ? "on" : ""}" data-set-icon-pack="${value}">${ICON_PACK_CHOICES[value].label}</button>`;
   const gestureRow = (slot, label) => `
     <div class="gesture-setting"><label>${label}</label>
       <select class="gesture-select" data-gesture-slot="${slot}" aria-label="${label}">
@@ -2242,6 +2264,9 @@ function renderSettings() {
         <div class="sub">Jenis font</div>
         <div class="chips">${Object.keys(FONT_CHOICES).map(fontChip).join("")}</div>
         <div class="sub">${FONT_CHOICES[state.fontChoice].description}</div>
+        <div class="sub">Paket ikon</div>
+        <div class="chips">${Object.keys(ICON_PACK_CHOICES).map(iconPackChip).join("")}</div>
+        <div class="sub">${ICON_PACK_CHOICES[state.iconPack].description}</div>
         <div class="sub">Tema</div>
         <div class="chips">${themeChip("kaleido", "Kaleido")}${themeChip("kaleido-night", "Kaleido malam")}${themeChip("light", "Terang")}${themeChip("dark", "Gelap")}${themeChip("amoled", "AMOLED")}</div>
         <div class="switch-row">
@@ -2389,7 +2414,7 @@ function renderSettings() {
       <div class="card">
         <div class="action-row">
           <div class="text">
-            <div class="t">BitLauncher 0.1.0</div>
+            <div class="t">BitLauncher 0.2.0</div>
             <div class="d" style="margin-top:4px; line-height:16px">Folio koran di atas kertas Kaleido, atau minimalis ala Niagara + Minima.</div>
           </div>
         </div>
@@ -2401,6 +2426,9 @@ function renderSettings() {
   });
   $("settings-body").querySelectorAll("[data-set-font]").forEach((b) => {
     b.onclick = () => setFontChoice(b.dataset.setFont);
+  });
+  $("settings-body").querySelectorAll("[data-set-icon-pack]").forEach((b) => {
+    b.onclick = () => setIconPack(b.dataset.setIconPack);
   });
   $("settings-body").querySelectorAll("[data-set-theme]").forEach((b) => {
     b.onclick = () => {
@@ -2516,6 +2544,16 @@ function setFontChoice(choice) {
   state.fontChoice = choice;
   updateFontVariables();
   renderSettings();
+}
+
+function setIconPack(choice) {
+  if (!ICON_PACK_CHOICES[choice]) return;
+  state.iconPack = choice;
+  renderHome();
+  renderDrawer();
+  renderHiddenList();
+  renderSettings();
+  toast(`${ICON_PACK_CHOICES[choice].label} dipilih`);
 }
 
 function applyTheme(theme) {

@@ -51,6 +51,13 @@ Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian berga
 
 Aksen metadata arsip hanya memakai tiga tingkat abu-abu hangat. Ikon aplikasi dan shortcut digambar dengan **8% chroma** (92% menuju luminance abu-abu), seperti foto berwarna yang dicetak sangat lemah pada e-paper. Bitmap asli tetap disimpan di cache, sehingga warna langsung pulih saat pengguna keluar dari tema Kaleido.
 
+### Paket ikon
+
+- **Ikon tema** memakai foreground adaptive icon atau glyph monochrome sebagai alpha mask. Warna primer menjadi tinta, `surfaceVariant` menjadi bidang, dan garis `outline` memberi batas.
+- Folio memakai sudut **2dp** seperti potongan kolom koran; Minimal memakai lingkaran. Ikon sistem mempertahankan bitmap asli dan filter 8% chroma pada Kaleido.
+- Pack pihak ketiga tidak ditinta ulang agar desain pembuatnya tetap utuh. Aplikasi tanpa pemetaan kembali ke ikon asli, sehingga tidak ada placeholder kosong.
+- Pilihan pack berlaku pada seluruh permukaan ikon dan diperbarui melalui composition local tanpa menyalin bitmap ke preferensi.
+
 ### Tipografi dan bentuk
 
 - Secara default, headline, artikel, dan nama aplikasi memakai **serif**; metadata memakai sans uppercase dengan tracking 1.2–3.4sp.
@@ -194,7 +201,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 
 Semua gestur di atas dapat dipetakan ke pencarian, arsip, pengaturan, menu, kalender, catatan, panel notifikasi, pengaturan cepat, recents, kunci layar, screenshot, atau **Tidak ada**. Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk aksi yang sedang dipilih.
 
-Artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, dan badge ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
+Artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
 
 ---
 

@@ -38,6 +38,7 @@ TYPEWRITER_BOLD = Path(__file__).resolve().parent.parent / "preview" / "assets" 
 ACTIVE_SERIF_FILE = SERIF_FILE
 ACTIVE_SERIF_BOLD_FILE = SERIF_FILE
 ACTIVE_SERIF_SCALE = 1.0
+ACTIVE_ICON_MODE = "SYSTEM"
 NEWS_PHOTO = Path(__file__).resolve().parent.parent / "app" / "src" / "main" / "res" / "drawable" / "news_hero.jpg"
 
 KALEIDO = {
@@ -75,8 +76,26 @@ def paper_hex(value: str) -> str:
     return "#" + "".join(f"{channel:02x}" for channel in channels)
 
 
-def paper_tile(img, box, radius, c1, c2, glyph="") -> None:
-    app_tile(img, box, radius, paper_hex(c1), paper_hex(c2), glyph)
+def paper_tile(img, box, radius, c1, c2, glyph="", palette: dict = KALEIDO) -> None:
+    if ACTIVE_ICON_MODE == "THEME":
+        draw = ImageDraw.Draw(img)
+        draw.rounded_rectangle(
+            [px(box[0]), px(box[1]), px(box[2]), px(box[3])],
+            radius=px(2),
+            fill=color(palette["surface_variant"]),
+            outline=color(palette["outline"]),
+            width=max(1, px(0.7)),
+        )
+        face = font((box[2] - box[0]) * 0.4, "SemiBold")
+        draw.text(
+            (px((box[0] + box[2]) / 2), px((box[1] + box[3]) / 2)),
+            glyph,
+            font=face,
+            fill=color(palette["primary"]),
+            anchor="mm",
+        )
+    else:
+        app_tile(img, box, radius, paper_hex(c1), paper_hex(c2), glyph)
 
 
 def serif(size: float, weight: str = "Regular") -> ImageFont.FreeTypeFont:
@@ -150,7 +169,7 @@ def editorial_row(
 
     icon_size = 26 if large else 28
     icon_y = y + (10 if large else 9)
-    paper_tile(img, (48, icon_y, 48 + icon_size, icon_y + icon_size), 6, c1, c2, glyph)
+    paper_tile(img, (48, icon_y, 48 + icon_size, icon_y + icon_size), 6, c1, c2, glyph, palette)
     draw = ImageDraw.Draw(img)
 
     label_face = serif(23 if large else 18)
@@ -331,7 +350,7 @@ def render_folio_grid(palette: dict = KALEIDO) -> Image.Image:
             for column, app in enumerate(group[start : start + 4]):
                 x = 20 + column * (cell_w + gap)
                 rounded_rect(img, (x, y, x + cell_w, y + cell_h), 2, outline=color(palette["outline_variant"]))
-                paper_tile(img, (x + cell_w / 2 - 20, y + 10, x + cell_w / 2 + 20, y + 50), 8, app[1], app[2], app[3])
+                paper_tile(img, (x + cell_w / 2 - 20, y + 10, x + cell_w / 2 + 20, y + 50), 8, app[1], app[2], app[3], palette)
                 draw = ImageDraw.Draw(img)
                 draw.text((px(x + cell_w / 2), px(y + 68)), app[0], font=serif(11), fill=color(palette["on_surface"]), anchor="mm")
             y += cell_h + gap
@@ -392,7 +411,7 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
     return img
 
 def main() -> None:
-    global ACTIVE_SERIF_FILE, ACTIVE_SERIF_BOLD_FILE, ACTIVE_SERIF_SCALE
+    global ACTIVE_SERIF_FILE, ACTIVE_SERIF_BOLD_FILE, ACTIVE_SERIF_SCALE, ACTIVE_ICON_MODE
     save(framed(render_folio_home()), "folio-home")
     save(framed(render_folio_archive()), "folio-archive")
     save(framed(render_folio_grid()), "folio-grid")
@@ -406,6 +425,10 @@ def main() -> None:
     ACTIVE_SERIF_FILE = SERIF_FILE
     ACTIVE_SERIF_BOLD_FILE = SERIF_FILE
     ACTIVE_SERIF_SCALE = 1.0
+
+    ACTIVE_ICON_MODE = "THEME"
+    save(framed(render_folio_grid()), "folio-icon-theme")
+    ACTIVE_ICON_MODE = "SYSTEM"
 
 
 if __name__ == "__main__":

@@ -58,7 +58,8 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 |---|---|---|---|---|
 | Tema terang/gelap/AMOLED | ✅ | ✅ | ✅ | ✅ |
 | Material You (dynamic color) | ✅ | ✅ | — | ✅ |
-| Icon pack | 📋 | ✅ | — | ✅ |
+| Icon pack pihak ketiga | ✅ (`appfilter.xml` + fallback) | ✅ | — | ✅ |
+| Ikon yang mengikuti tema | ✅ (adaptive/monochrome) | ✅ | — | ✅ |
 | Bentuk ikon / mask | 📋 | — | — | ✅ |
 | Pilihan gaya font | ✅ (6 pilihan, lokal) | — | — | ✅ |
 | Skala/ukuran font kustom | 📋 | — | — | ✅ |
@@ -82,7 +83,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 
 ## 2. Fase pengembangan
 
-### 0.1 — Fondasi (rilis saat ini)
+### 0.1–0.2 — Fondasi + kustomisasi awal (rilis saat ini)
 - Launcher default, daftar aplikasi `LauncherApps`, multi-profil.
 - Beranda vertikal, laci dengan pencarian, rel alfabet, daftar/kisi.
 - Shortcut, pin, sembunyikan, info, uninstall.
@@ -90,10 +91,11 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Beranda folio berita: foto, artikel dengan shortcut aplikasi, ringkasan jumlah notifikasi, pencarian masthead, gestur, serta kartu Kalender/Catatan.
 - Pemetaan tujuh gestur, aksi kunci layar/recents/pengaturan cepat/screenshot, kontrol artikel/tautan, dan badge ikon.
 - Enam pilihan gaya font, gambar artikel kustom dengan caption/reset, dan APK release test-signed untuk sideload.
+- Paket Ikon tema, penemuan icon pack pihak ketiga, parser appfilter, kalender harian, dan fallback ikon asli.
 
 ### 0.2 — Beranda yang terasa "Niagara"
 - Widget host (`AppWidgetHost` + `AppWidgetManager`) dan penempatan widget.
-- Ikon adaptif & icon pack (parsing `appfilter.xml`, `IconPackHelper`).
+- Generator ikon pack untuk aplikasi tanpa pemetaan (`iconback`, `iconupon`, `iconmask`, dan scale).
 - Double-tap area kosong dapat dikonfigurasi (buka laci / kunci layar).
 - Drag & drop untuk menyusun ulang favorit.
 - Header "at a glance": cuaca opsional + event kalender (izin terpisah).
@@ -133,6 +135,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 | Backup | JSON via SAF (`CreateDocument`/`OpenDocument`) | Tanpa izin storage, ramah scoped storage |
 | Font | TTF lokal + lisensi OFL di resource aplikasi | Bekerja offline, satu sumber aset untuk APK dan preview |
 | Gambar artikel | `OpenDocument` + persistable read URI + decode IO/downsample | Tidak menyalin file, tidak meminta storage luas, hemat memori |
+| Icon pack | Intent `<queries>` + `appfilter.xml` + cache berversi pack | Kompatibel dengan pack umum, visibilitas paket sempit, aman saat update/copot |
 | Release sideload | Release non-debuggable + test key terdokumentasi + SHA-256 | Dapat diinstal dan diverifikasi; dipisahkan tegas dari kunci produksi |
 | Navigasi | State enum + `AnimatedVisibility` | Tiga layar saja; Navigation-Compose menambah overhead & dependensi |
 

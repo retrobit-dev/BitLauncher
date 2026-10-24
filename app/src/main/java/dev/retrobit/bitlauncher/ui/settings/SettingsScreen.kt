@@ -28,10 +28,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,12 +46,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.data.AppLayout
 import dev.retrobit.bitlauncher.data.GestureAction
+import dev.retrobit.bitlauncher.data.IconPackInfo
+import dev.retrobit.bitlauncher.data.IconPackRepository
+import dev.retrobit.bitlauncher.data.IconPackSelection
 import dev.retrobit.bitlauncher.data.LauncherFont
 import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
 import dev.retrobit.bitlauncher.ui.components.GestureActionSheet
 import dev.retrobit.bitlauncher.ui.components.HiddenAppsSheet
+import dev.retrobit.bitlauncher.ui.components.IconPackSheet
 import dev.retrobit.bitlauncher.ui.components.NotesAppSheet
 import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.util.SystemIntents
@@ -80,6 +86,8 @@ fun SettingsScreen(
 
     var showHiddenApps by remember { mutableStateOf(false) }
     var showNotesPicker by remember { mutableStateOf(false) }
+    var showIconPackPicker by remember { mutableStateOf(false) }
+    var iconPackRefresh by remember { mutableStateOf(0) }
     var gestureSlot by remember { mutableStateOf<GestureSlot?>(null) }
     var isDefaultLauncher by remember { mutableStateOf(SystemIntents.isDefaultLauncher(context)) }
     var gestureServiceEnabled by remember {
@@ -89,6 +97,28 @@ fun SettingsScreen(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         isDefaultLauncher = SystemIntents.isDefaultLauncher(context)
         gestureServiceEnabled = SystemIntents.isGestureServiceEnabled(context)
+        iconPackRefresh += 1
+    }
+
+    val discoveredIconPacks by produceState<List<IconPackInfo>?>(
+        initialValue = null,
+        allApps,
+        iconPackRefresh,
+    ) {
+        value = withContext(Dispatchers.IO) {
+            IconPackRepository.get(context).availableIconPacks()
+        }
+    }
+    val iconPacks = discoveredIconPacks ?: IconPackRepository.builtInIconPacks()
+    LaunchedEffect(discoveredIconPacks, settings.iconPack) {
+        val packs = discoveredIconPacks
+        if (
+            packs != null &&
+            IconPackSelection.isExternal(settings.iconPack) &&
+            packs.none { it.id == settings.iconPack }
+        ) {
+            viewModel.updateSettings { it.copy(iconPack = IconPackSelection.THEME) }
+        }
     }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -231,6 +261,12 @@ fun SettingsScreen(
                             LauncherFont.PIXEL -> "Silkscreen, gaya bitmap/pixel untuk seluruh tampilan."
                             LauncherFont.OPERATOR -> "Space Mono, alternatif open-source bergaya Operator/terminal."
                         },
+                    )
+                    ActionRow(
+                        title = "Paket ikon",
+                        value = iconPacks.firstOrNull { it.id == settings.iconPack }?.label ?: "Tidak ditemukan",
+                        description = "Ikon tema bawaan atau icon pack pihak ketiga yang terpasang",
+                        onClick = { showIconPackPicker = true },
                     )
                     SettingsSubtitle("Tema")
                     ChoiceRow(
@@ -541,7 +577,7 @@ fun SettingsScreen(
                     Box(Modifier.padding(vertical = 8.dp)) {
                         Column {
                             Text(
-                                text = "BitLauncher 0.1.0",
+                                text = "BitLauncher 0.2.0",
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
@@ -586,6 +622,18 @@ fun SettingsScreen(
                 gestureSlot = null
             },
             onDismiss = { gestureSlot = null },
+        )
+    }
+
+    if (showIconPackPicker) {
+        IconPackSheet(
+            packs = iconPacks,
+            selectedPack = settings.iconPack,
+            onSelect = { pack ->
+                viewModel.updateSettings { it.copy(iconPack = pack) }
+                showIconPackPicker = false
+            },
+            onDismiss = { showIconPackPicker = false },
         )
     }
 

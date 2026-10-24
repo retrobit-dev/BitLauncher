@@ -42,6 +42,7 @@ data class LauncherSettings(
     val themeMode: ThemeMode = ThemeMode.KALEIDO,
     val dynamicColor: Boolean = true,
     val fontChoice: LauncherFont = LauncherFont.STYLE_DEFAULT,
+    val iconPack: String = IconPackSelection.SYSTEM,
     val showClock: Boolean = true,
     val showDate: Boolean = true,
     val use24Hour: Boolean = false,
@@ -107,6 +108,8 @@ class SettingsRepository(context: Context) {
             fontChoice = runCatching {
                 LauncherFont.valueOf(prefs.getString(KEY_FONT, LauncherFont.STYLE_DEFAULT.name)!!)
             }.getOrDefault(LauncherFont.STYLE_DEFAULT),
+            iconPack = prefs.getString(KEY_ICON_PACK, IconPackSelection.SYSTEM)
+                ?: IconPackSelection.SYSTEM,
             showClock = prefs.getBoolean(KEY_SHOW_CLOCK, true),
             showDate = prefs.getBoolean(KEY_SHOW_DATE, true),
             use24Hour = prefs.getBoolean(KEY_24H, systemUses24Hour),
@@ -143,6 +146,7 @@ class SettingsRepository(context: Context) {
             .putString(KEY_THEME, settings.themeMode.name)
             .putBoolean(KEY_DYNAMIC_COLOR, settings.dynamicColor)
             .putString(KEY_FONT, settings.fontChoice.name)
+            .putString(KEY_ICON_PACK, settings.iconPack)
             .putBoolean(KEY_SHOW_CLOCK, settings.showClock)
             .putBoolean(KEY_SHOW_DATE, settings.showDate)
             .putBoolean(KEY_24H, settings.use24Hour)
@@ -206,6 +210,7 @@ class SettingsRepository(context: Context) {
         root.put("themeMode", settings.themeMode.name)
         root.put("dynamicColor", settings.dynamicColor)
         root.put("fontChoice", settings.fontChoice.name)
+        root.put("iconPack", settings.iconPack)
         root.put("showClock", settings.showClock)
         root.put("showDate", settings.showDate)
         root.put("use24Hour", settings.use24Hour)
@@ -261,6 +266,7 @@ class SettingsRepository(context: Context) {
             fontChoice = runCatching {
                 LauncherFont.valueOf(root.optString("fontChoice", current.fontChoice.name))
             }.getOrDefault(current.fontChoice),
+            iconPack = root.optString("iconPack", current.iconPack),
             showClock = root.optBoolean("showClock", current.showClock),
             showDate = root.optBoolean("showDate", current.showDate),
             use24Hour = root.optBoolean("use24Hour", current.use24Hour),
@@ -309,6 +315,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_THEME = "theme"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_FONT = "font_choice"
+        private const val KEY_ICON_PACK = "icon_pack"
         private const val KEY_SHOW_CLOCK = "show_clock"
         private const val KEY_SHOW_DATE = "show_date"
         private const val KEY_24H = "use_24h"

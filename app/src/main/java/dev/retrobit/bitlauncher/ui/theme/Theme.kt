@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import dev.retrobit.bitlauncher.data.LauncherSettings
 import dev.retrobit.bitlauncher.R
 import dev.retrobit.bitlauncher.data.LauncherFont
+import dev.retrobit.bitlauncher.data.IconPackSelection
 import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.ThemeMode
 
@@ -130,6 +131,8 @@ private val KaleidoAccentsNight = listOf(
 
 /** True while an e-paper theme is active; used to desaturate app and shortcut icons. */
 val LocalEpaper = compositionLocalOf { false }
+val LocalIconPack = compositionLocalOf { IconPackSelection.SYSTEM }
+val LocalLauncherStyle = compositionLocalOf { LauncherStyle.FOLIO }
 
 @Composable
 fun folioAccent(index: Int): Color {
@@ -305,7 +308,11 @@ fun BitLauncherTheme(
         settings.themeMode == ThemeMode.KALEIDO_NIGHT
     val baseTypography = if (settings.style == LauncherStyle.FOLIO) FolioTypography else MinimalTypography
     val selectedFamily = settings.fontChoice.familyOrNull()
-    CompositionLocalProvider(LocalEpaper provides epaper) {
+    CompositionLocalProvider(
+        LocalEpaper provides epaper,
+        LocalIconPack provides settings.iconPack,
+        LocalLauncherStyle provides settings.style,
+    ) {
         MaterialTheme(
             colorScheme = scheme,
             typography = if (selectedFamily == null) baseTypography else baseTypography.withFontFamily(selectedFamily),

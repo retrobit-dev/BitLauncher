@@ -33,6 +33,10 @@ python3 -m http.server 8080 --directory preview
 |---|---|
 | ![Kaleido malam](docs/preview-folio-night.jpg) | ![Folio dengan font Typewriter](docs/preview-folio-typewriter.jpg) |
 
+| Paket ikon tema |
+|---|
+| ![Paket ikon tema Folio](docs/preview-folio-icon-theme.jpg) |
+
 ### Minimalis (gaya alternatif)
 
 | Beranda | Laci aplikasi |
@@ -59,6 +63,7 @@ Yang bisa dicoba di prototipe:
 - Simulasikan **3 pesan baru**, tandai semua dibaca, atau matikan akses notifikasi untuk melihat perubahan artikel.
 - Ketuk frasa bergaris bawah seperti **“3 pesan belum dibaca di WhatsApp”** untuk membuka aplikasi.
 - Ganti kota dateline, tampilkan/sembunyikan foto dan widget, serta pilih aplikasi catatan dari pengaturan prototipe.
+- Pilih **Ikon sistem / Ikon tema / Pack pihak ketiga (simulasi)** dan lihat perubahan pada seluruh ikon aplikasi.
 - Pilih enam gaya font; ganti foto artikel dengan gambar lokal (maksimum 10 MB di preview), lihat caption kustom, atau pulihkan gambar bawaan.
 - Ketuk tanggal untuk membuka kalender atau tautan/kartu **Catatan** untuk membuka aplikasi catatan.
 - Ketuk ikon cari di masthead untuk membuka kolom pencarian di samping label **BITLAUNCHER**.
@@ -90,7 +95,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 
 ---
 
-## Fitur yang sudah berjalan (0.1.0-alpha)
+## Fitur yang sudah berjalan (0.2.0-alpha)
 
 ### Beranda
 - [x] **Gaya folio koran** dengan masthead, headline, foto monokrom, dan artikel yang dapat digulir
@@ -102,6 +107,8 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Tujuh gestur dapat dipetakan ulang atau dimatikan, termasuk geser dua jari
 - [x] Aksi kunci layar, panel notifikasi, pengaturan cepat, recents, dan screenshot via gestur
 - [x] Badge jumlah notifikasi pada ikon favorit, hasil pencarian, dan laci (dapat dimatikan)
+- [x] Paket **Ikon tema** dengan glyph adaptif/monochrome, tinta tema, bentuk Folio 2dp atau Minimal melingkar
+- [x] Icon pack pihak ketiga melalui `appfilter.xml`, dengan fallback ikon asli untuk aplikasi yang tidak dipetakan
 - [x] Tanggal membuka kalender; tautan/kartu Catatan membuka aplikasi yang terdeteksi atau dipilih pengguna
 - [x] Kartu editorial Kalender dan Catatan (bukan `AppWidgetHost` pihak ketiga)
 - [x] Palet **Kaleido** dan **Kaleido malam** seperti koran e-paper, dengan ikon aplikasi yang didesaturasi
@@ -133,6 +140,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 
 ### Pengaturan
 - [x] Gaya Folio / Minimalis dan tema Kaleido / Kaleido malam / Sistem / Terang / Gelap / AMOLED
+- [x] Pemilih Ikon sistem / Ikon tema / icon pack pihak ketiga yang terpasang
 - [x] Enam pilihan gaya font: bawaan, Lora, Roboto, Typewriter, Pixel, dan Operator-style
 - [x] Pemilih gambar artikel via Storage Access Framework, tanpa izin storage luas
 - [x] Warna dinamis Material You (Android 12+)
@@ -149,6 +157,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Cache ikon `LruCache` (256 entri) agar scroll tetap 60 fps
 - [x] Clock hanya bangun sekali per menit, bukan per detik
 - [x] State terpusat di `ViewModel` + `StateFlow`, preferensi ringan via `SharedPreferences`
+- [x] Parser icon pack untuk resource XML/raw/assets, pemetaan komponen, dan kalender harian
 - [x] CI GitHub Actions yang membangun APK debug serta APK release test-signed, checksum, dan verifikasi tanda tangan
 
 ---
@@ -162,6 +171,7 @@ app/src/main/java/dev/retrobit/bitlauncher/
 ├── data/
 │   ├── LaunchableApp.kt         # model aplikasi (identitas stabil untuk favorit)
 │   ├── LauncherRepository.kt    # LauncherApps, profil, callback, shortcut
+│   ├── IconPackRepository.kt    # Penemuan pack, appfilter, resource dan cache ikon
 │   └── SettingsRepository.kt    # preferensi + backup JSON
 ├── ui/
 │   ├── LauncherApp.kt           # navigasi Beranda / Laci / Pengaturan
@@ -200,6 +210,24 @@ Font dikemas offline bersama lisensinya: `OFL-Lora.txt`, `OFL-Roboto.txt`, `OFL-
 
 ---
 
+## Paket ikon
+
+Buka **Pengaturan → Tampilan → Paket ikon**.
+
+| Pilihan | Perilaku |
+|---|---|
+| **Ikon sistem** | Ikon asli aplikasi; filter e-paper tetap diterapkan pada tema Kaleido |
+| **Ikon tema** | Foreground adaptive icon atau glyph monochrome Android 13+ diwarnai dengan warna primer tema, di atas permukaan dan bentuk yang mengikuti gaya launcher |
+| **Pack pihak ketiga** | Resource ikon dari pack yang terpasang; desain dan warna pack dipertahankan |
+
+Ikon diterapkan pada favorit, pencarian, arsip daftar/kisi, lembar aksi, pengelola aplikasi tersembunyi, dan shortcut yang memiliki pemetaan. Ikon aplikasi lama yang tidak menyediakan adaptive foreground tetap memakai ikon asli.
+
+Pack kompatibel menggunakan intent ikon Nova/ADW/Apex/GO/Lawnchair dan `appfilter.xml` di `res/xml`, `res/raw`, atau `assets`. Pemetaan komponen serta kalender harian didukung. Aplikasi tanpa pemetaan memakai ikon asli; pembentukan otomatis dengan `iconback`, `iconupon`, dan `iconmask` belum diterapkan.
+
+Pilihan ikut dalam backup JSON. Jika pack dicopot atau tidak tersedia setelah restore, pilihan kembali ke **Ikon tema**. Deteksi memakai deklarasi `<queries>` khusus intent icon pack, tanpa izin `QUERY_ALL_PACKAGES`.
+
+---
+
 ## Build
 
 Kebutuhan: JDK 17, Android SDK 35.
@@ -223,7 +251,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 adb shell cmd package set-home-activity dev.retrobit.bitlauncher/.MainActivity
 ```
 
-Jika versi debug atau APK dengan kunci berbeda sudah terpasang, hapus versi lama terlebih dahulu (pengaturan lokal ikut terhapus), lalu jalankan `adb install` tanpa `-r`. Untuk pemasangan tanpa ADB, unduh **`app-release.apk`** dari [prerelease v0.1.0-alpha](https://github.com/retrobit-dev/BitLauncher/releases/tag/v0.1.0-alpha) atau artifact **`bitlauncher-release`** dari workflow [Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml). Jika memakai artifact, ekstrak ZIP terlebih dahulu. Buka APK dan izinkan **Install unknown apps** bila diminta Android. Cocokkan berkas dengan SHA-256 yang disertakan.
+Jika versi debug atau APK dengan kunci berbeda sudah terpasang, hapus versi lama terlebih dahulu (pengaturan lokal ikut terhapus), lalu jalankan `adb install` tanpa `-r`. Untuk pemasangan tanpa ADB, unduh **`app-release.apk`** dari [prerelease v0.2.0-alpha](https://github.com/retrobit-dev/BitLauncher/releases/tag/v0.2.0-alpha) atau artifact **`bitlauncher-release`** dari workflow [Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml). Jika memakai artifact, ekstrak ZIP terlebih dahulu. Buka APK dan izinkan **Install unknown apps** bila diminta Android. Cocokkan berkas dengan SHA-256 yang disertakan.
 
 ---
 
@@ -234,7 +262,7 @@ Ini fondasi yang serius, bukan launcher yang sudah selesai. Yang **belum** ada (
 | Belum ada | Catatan |
 |---|---|
 | Widget pihak ketiga (`AppWidgetHost`) | Kartu Kalender/Catatan internal sudah ada; host widget umum butuh konfigurasi + persistensi |
-| Icon pack | Parsing `appfilter.xml` + masking ikon |
+| Generator ikon pack untuk aplikasi tanpa pemetaan | `appfilter.xml` eksplisit dan kalender didukung; `iconback`/`iconupon`/`iconmask` masih dalam roadmap |
 | Rel alfabet melompat ke seksi lengket | Saat ini header ikut ter-scroll |
 | Foto artikel dari backup | URI dokumen bersifat perangkat/aplikasi-spesifik; bila tidak lagi dapat diakses, foto bawaan digunakan |
 | Tanda tangan release | Test key untuk sideload; bukan kunci produksi dan bukan distribusi Play Store |

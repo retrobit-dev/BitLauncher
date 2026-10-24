@@ -5,6 +5,8 @@ import android.content.pm.ShortcutInfo
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.retrobit.bitlauncher.data.AppLayout
+import dev.retrobit.bitlauncher.data.IconPackRepository
+import dev.retrobit.bitlauncher.data.IconPackSelection
 import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.data.LauncherRepository
 import dev.retrobit.bitlauncher.data.LauncherSettings
@@ -17,7 +19,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -49,6 +55,25 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     init {
         repository.start()
         refreshNotificationAccess()
+        viewModelScope.launch {
+            repository.apps.collect {
+                val selected = settings.value.iconPack
+                if (IconPackSelection.isExternal(selected)) {
+                    val installed = withContext(Dispatchers.IO) {
+                        IconPackRepository.get(application).availableIconPacks()
+                    }
+                    if (installed.none { it.id == selected }) {
+                        updateSettings { current ->
+                            if (current.iconPack == selected) {
+                                current.copy(iconPack = IconPackSelection.THEME)
+                            } else {
+                                current
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun refreshNotificationAccess() {

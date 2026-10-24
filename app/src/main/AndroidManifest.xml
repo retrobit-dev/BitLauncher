@@ -10,6 +10,17 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.HOME" />
         </intent>
+
+        <!-- Installed third-party icon packs; no broad package visibility is requested. -->
+        <intent><action android:name="app.lawnchair.icons.THEMED_ICON" /></intent>
+        <intent><action android:name="com.novalauncher.THEME" /></intent>
+        <intent><action android:name="com.teslacoilsw.launcher.THEME" /></intent>
+        <intent><action android:name="org.adw.launcher.THEMES" /></intent>
+        <intent><action android:name="org.adw.ActivityStarter.THEMES" /></intent>
+        <intent><action android:name="com.anddoes.launcher.THEME" /></intent>
+        <intent><action android:name="com.gau.go.launcherex.theme" /></intent>
+        <intent><action android:name="com.fede.launcher.THEME_ICONPACK" /></intent>
+        <intent><action android:name="com.dlto.atom.launcher.THEME" /></intent>
     </queries>
 
     <application
