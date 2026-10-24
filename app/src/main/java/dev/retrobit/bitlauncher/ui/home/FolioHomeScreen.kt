@@ -3,8 +3,8 @@ package dev.retrobit.bitlauncher.ui.home
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -27,9 +27,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.HorizontalDivider
@@ -46,22 +48,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
+import dev.retrobit.bitlauncher.R
 import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.ui.components.AppActionsSheet
 import dev.retrobit.bitlauncher.ui.components.AppIcon
@@ -76,12 +88,13 @@ import java.util.Calendar
 import java.util.Locale
 
 private val EditorialLocale = Locale("id", "ID")
+private const val APP_LINK_TAG = "news-app"
+
+private data class NewsEntry(val app: LaunchableApp, val count: Int)
 
 /**
- * "Folio" home: the front page of a newspaper printed on e-paper.
- *
- * Masthead, double rule, dateline, serif clock and a dotted-leader index of pinned apps.
- * Everything is ink on paper — no wallpaper, no glass, no shadow.
+ * Folio front page: a newspaper whose article contains real app shortcuts and count-only
+ * notification summaries. The page scrolls naturally; the archive actions stay at the bottom.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -93,6 +106,9 @@ fun FolioHomeScreen(
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val favorites by viewModel.favorites.collectAsStateWithLifecycle()
+    val apps by viewModel.apps.collectAsStateWithLifecycle()
+    val notificationCounts by viewModel.notificationCounts.collectAsStateWithLifecycle()
+    val notificationAccess by viewModel.notificationAccess.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
 
@@ -115,16 +131,35 @@ fun FolioHomeScreen(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         isDefaultLauncher = SystemIntents.isDefaultLauncher(context)
+        viewModel.refreshNotificationAccess()
     }
 
     val now = rememberMinuteTick()
     val timeFormatter = remember(settings.use24Hour) {
-        SimpleDateFormat(if (settings.use24Hour) "HH:mm" else "h:mm", Locale.getDefault())
+        SimpleDateFormat(if (settings.use24Hour) "HH.mm" else "h.mm", Locale.getDefault())
     }
     val dateFormatter = remember { SimpleDateFormat("EEEE, d MMMM yyyy", EditorialLocale) }
     val edition = remember(now) { now.get(Calendar.DAY_OF_YEAR) }
     val timeText = timeFormatter.format(now.time)
-    val dateline = dateFormatter.format(now.time).uppercase(EditorialLocale)
+    val dateline = dateFormatter.format(now.time)
+    val location = settings.newsLocation.trim().ifBlank { "Rembang" }.take(40)
+
+    val newsEntries = remember(apps, notificationCounts) {
+        apps.distinctBy { it.packageName }.mapNotNull { app ->
+            notificationCounts[app.packageName]?.takeIf { it > 0 }?.let { NewsEntry(app, it) }
+        }.sortedByDescending { it.count }.take(3)
+    }
+    val shortcutApps = remember(favorites, apps) {
+        (if (favorites.isNotEmpty()) favorites else apps).distinctBy { it.packageName }.take(3)
+    }
+    val headline = when {
+        newsEntries.isNotEmpty() -> {
+            val lead = newsEntries.first()
+            "${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.label}"
+        }
+        notificationAccess -> "Tidak ada kabar baru hari ini"
+        else -> "Kabar dari aplikasi Anda"
+    }
 
     Column(
         modifier = Modifier
@@ -138,66 +173,83 @@ fun FolioHomeScreen(
                 )
             },
     ) {
-        Masthead(
-            edition = edition,
-            dateline = if (settings.showDate) dateline else "LAUNCHER EDITORIAL",
-        )
-
-        if (!isDefaultLauncher) {
-            DefaultLauncherNotice(
-                onClick = {
-                    runCatching { roleLauncher.launch(SystemIntents.defaultLauncherIntent(context)) }
-                },
-            )
-        }
-
-        // ------------------------------------------------------------ clock
-        if (settings.showClock) {
-        Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "WAKTU SETEMPAT",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSurfaceVariant,
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = if (settings.use24Hour) "FORMAT 24 JAM" else "FORMAT 12 JAM",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSurfaceVariant,
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentPadding = PaddingValues(bottom = 12.dp),
+        ) {
+            item {
+                Masthead(
+                    edition = edition,
+                    dateline = if (settings.showDate) {
+                        dateline.uppercase(EditorialLocale)
+                    } else {
+                        "LAUNCHER EDITORIAL"
+                    },
                 )
             }
-            Text(
-                text = timeText,
-                style = MaterialTheme.typography.displayLarge,
-                color = colors.onBackground,
-                maxLines = 1,
-            )
-        }
-        }
 
-        Spacer(Modifier.height(16.dp))
-        Hairline()
-        SectionLabel(
-            title = "INDEKS APLIKASI",
-            trailing = "${favorites.size.toString().padStart(2, '0')} ENTRI",
-        )
-        Hairline()
+            if (!isDefaultLauncher) {
+                item {
+                    DefaultLauncherNotice(
+                        onClick = {
+                            runCatching {
+                                roleLauncher.launch(SystemIntents.defaultLauncherIntent(context))
+                            }
+                        },
+                    )
+                }
+            }
 
-        if (favorites.isEmpty()) {
-            EmptyFolio(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                onOpenDrawer = { onOpenDrawer(false) },
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 6.dp),
-            ) {
+            item {
+                SectionLabel(title = "KABAR UTAMA", trailing = "HLM. 1")
+                Text(
+                    text = headline,
+                    style = MaterialTheme.typography.displaySmall,
+                    color = colors.onBackground,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+                Spacer(Modifier.height(10.dp))
+            }
+
+            if (settings.showNewsPhoto) {
+                item { NewsPhoto() }
+            }
+
+            item {
+                NewsArticle(
+                    location = location,
+                    date = if (settings.showDate) dateline else "",
+                    time = if (settings.showClock) timeText else "",
+                    notificationAccess = notificationAccess,
+                    entries = newsEntries,
+                    shortcutApps = shortcutApps,
+                    onOpenApp = { app -> viewModel.launch(app) },
+                )
+            }
+
+            if (!notificationAccess) {
+                item {
+                    NotificationAccessNotice(
+                        onEnable = { SystemIntents.openNotificationAccess(context) },
+                    )
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(14.dp))
+                Hairline()
+                SectionLabel(
+                    title = "INDEKS APLIKASI",
+                    trailing = "${favorites.size.toString().padStart(2, '0')} ENTRI",
+                )
+                Hairline()
+            }
+
+            if (favorites.isEmpty()) {
+                item { EmptyFolio(onOpenDrawer = { onOpenDrawer(false) }) }
+            } else {
                 itemsIndexed(favorites, key = { _, app -> app.key }) { index, app ->
                     FolioAppRow(
                         app = app,
@@ -279,6 +331,193 @@ fun FolioHomeScreen(
     }
 }
 
+// ---------------------------------------------------------------------- article
+
+@Composable
+private fun NewsPhoto() {
+    val colors = MaterialTheme.colorScheme
+    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+        Image(
+            painter = painterResource(R.drawable.news_hero),
+            contentDescription = "Ilustrasi suasana jalan di pagi hari",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(176.dp),
+        )
+        Hairline(color = colors.onBackground)
+        Text(
+            text = "ILUSTRASI · SUASANA PAGI",
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = 5.dp),
+        )
+    }
+}
+
+@Composable
+private fun NewsArticle(
+    location: String,
+    date: String,
+    time: String,
+    notificationAccess: Boolean,
+    entries: List<NewsEntry>,
+    shortcutApps: List<LaunchableApp>,
+    onOpenApp: (LaunchableApp) -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val linkStyle = SpanStyle(
+        color = colors.primary,
+        fontWeight = FontWeight.Bold,
+        textDecoration = TextDecoration.Underline,
+    )
+    val linkedApps = (entries.map { it.app } + shortcutApps).associateBy { it.key }
+    val article = buildAnnotatedString {
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(location)
+            if (date.isNotBlank()) append(", $date")
+            append(" — ")
+        }
+        val timeClause = if (time.isBlank()) "Pada edisi ini" else "Pada pukul $time"
+
+        when {
+            !notificationAccess -> {
+                append("$timeClause, halaman ini belum dapat membaca jumlah pesan. ")
+                append("Aktifkan akses notifikasi untuk kabar terbaru. ")
+                if (shortcutApps.isEmpty()) {
+                    append("Arsip aplikasi dapat dibuka dari tombol di bawah.")
+                } else {
+                    append("Sementara itu, ")
+                    appendAppLinks(shortcutApps, linkStyle)
+                    append(" siap dibuka dari artikel ini.")
+                }
+            }
+
+            entries.isEmpty() -> {
+                append("$timeClause, tidak ada pesan baru yang menanti. ")
+                append("Suasana redaksi tenang. ")
+                if (shortcutApps.isEmpty()) {
+                    append("Arsip aplikasi dapat dibuka dari tombol di bawah.")
+                } else {
+                    append("Namun ")
+                    appendAppLinks(shortcutApps, linkStyle)
+                    append(" tetap dapat dibuka dengan satu ketukan.")
+                }
+            }
+
+            else -> {
+                val lead = entries.first()
+                append("$timeClause terjadi sebuah fenomena aneh: ada ")
+                appendAppLink(
+                    text = "${lead.count} ${newsNoun(lead.app)} belum dibaca di ${lead.app.label}",
+                    app = lead.app,
+                    style = linkStyle,
+                )
+                append(".")
+                entries.drop(1).forEach { entry ->
+                    append(" Kabar lain datang dari ")
+                    appendAppLink(
+                        text = "${entry.app.label}, dengan ${entry.count} ${newsNoun(entry.app)} yang menanti",
+                        app = entry.app,
+                        style = linkStyle,
+                    )
+                    append(".")
+                }
+                val additional = shortcutApps.filter { app -> entries.none { it.app.key == app.key } }
+                if (additional.isNotEmpty()) {
+                    append(" Untuk kabar berikutnya, buka ")
+                    appendAppLinks(additional, linkStyle)
+                    append(".")
+                }
+            }
+        }
+    }
+
+    ClickableText(
+        text = article,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            color = colors.onBackground,
+            fontSize = 17.sp,
+            lineHeight = 26.sp,
+            textAlign = TextAlign.Justify,
+        ),
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+        onClick = { offset ->
+            article.getStringAnnotations(APP_LINK_TAG, offset, offset).firstOrNull()?.let { link ->
+                linkedApps[link.item]?.let(onOpenApp)
+            }
+        },
+    )
+}
+
+private fun AnnotatedString.Builder.appendAppLink(
+    text: String,
+    app: LaunchableApp,
+    style: SpanStyle,
+) {
+    val start = length
+    withStyle(style) { append(text) }
+    addStringAnnotation(APP_LINK_TAG, app.key, start, length)
+}
+
+private fun AnnotatedString.Builder.appendAppLinks(
+    apps: List<LaunchableApp>,
+    style: SpanStyle,
+) {
+    apps.forEachIndexed { index, app ->
+        when (index) {
+            0 -> Unit
+            apps.lastIndex -> append(" dan ")
+            else -> append(", ")
+        }
+        appendAppLink(app.label, app, style)
+    }
+}
+
+private fun newsNoun(app: LaunchableApp): String {
+    val messagingPackages = setOf(
+        "com.whatsapp", "com.whatsapp.w4b", "org.telegram.messenger",
+        "com.facebook.orca", "jp.naver.line.android", "com.google.android.gm",
+        "com.google.android.apps.messaging", "com.android.messaging",
+        "com.microsoft.office.outlook",
+    )
+    return if (app.packageName in messagingPackages) "pesan" else "notifikasi"
+}
+
+@Composable
+private fun NotificationAccessNotice(onEnable: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        onClick = onEnable,
+        color = Color.Transparent,
+        contentColor = colors.onBackground,
+        shape = RoundedCornerShape(2.dp),
+        border = BorderStroke(1.dp, colors.outline),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Outlined.Notifications, null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "AKTIFKAN AKSES NOTIFIKASI",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                )
+                Text(
+                    text = "Hanya jumlah notifikasi aktif yang digunakan; isi pesan tidak disimpan.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
 // ------------------------------------------------------------------ primitives
 
 @Composable
@@ -289,7 +528,6 @@ fun Hairline(
     HorizontalDivider(modifier = modifier, thickness = 1.dp, color = color)
 }
 
-/** Thick-thin rule used under the masthead, the classic newspaper double line. */
 @Composable
 fun DoubleRule(modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -316,11 +554,7 @@ fun SectionLabel(title: String, trailing: String? = null) {
         )
         Spacer(Modifier.weight(1f))
         if (trailing != null) {
-            Text(
-                text = trailing,
-                style = MaterialTheme.typography.labelSmall,
-                color = colors.onSurfaceVariant,
-            )
+            Text(text = trailing, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -354,9 +588,7 @@ private fun Masthead(edition: Int, dateline: String) {
             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.2.sp),
             color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 7.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
         )
         Hairline()
     }
@@ -378,11 +610,7 @@ private fun DefaultLauncherNotice(onClick: () -> Unit) {
             color = colors.secondary,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = "ATUR →",
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-            color = colors.secondary,
-        )
+        Text(text = "ATUR →", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), color = colors.secondary)
     }
     Hairline()
 }
@@ -422,70 +650,42 @@ private fun FolioAppRow(
                 overflow = TextOverflow.Ellipsis,
             )
             if (app.isWorkProfile) {
-                Text(
-                    text = "PROFIL KERJA",
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
-                    color = colors.onSurfaceVariant,
-                )
+                Text(text = "PROFIL KERJA", style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), color = colors.onSurfaceVariant)
             }
         }
-        DottedLeader(
-            color = colors.outline,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
-        )
-        Icon(
-            imageVector = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = colors.onSurfaceVariant,
-            modifier = Modifier.size(16.dp),
-        )
+        DottedLeader(color = colors.outline, modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
+        Icon(Icons.Outlined.ChevronRight, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
     }
 }
 
 @Composable
-fun DottedLeader(
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
-    val dash = with(LocalDensity.current) {
-        floatArrayOf(1.6.dp.toPx(), 5.dp.toPx())
-    }
+fun DottedLeader(color: Color, modifier: Modifier = Modifier) {
+    val dash = with(LocalDensity.current) { floatArrayOf(1.6.dp.toPx(), 5.dp.toPx()) }
     Box(
-        modifier = modifier
-            .height(10.dp)
-            .drawBehind {
-                drawLine(
-                    color = color,
-                    start = androidx.compose.ui.geometry.Offset(0f, size.height / 2f),
-                    end = androidx.compose.ui.geometry.Offset(size.width, size.height / 2f),
-                    strokeWidth = 1.dp.toPx() * 0.8f,
-                    pathEffect = PathEffect.dashPathEffect(dash),
-                )
-            },
+        modifier = modifier.height(10.dp).drawBehind {
+            drawLine(
+                color = color,
+                start = Offset(0f, size.height / 2f),
+                end = Offset(size.width, size.height / 2f),
+                strokeWidth = 1.dp.toPx() * 0.8f,
+                pathEffect = PathEffect.dashPathEffect(dash),
+            )
+        },
     )
 }
 
 @Composable
-private fun EmptyFolio(modifier: Modifier, onOpenDrawer: () -> Unit) {
+private fun EmptyFolio(onOpenDrawer: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = modifier.padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = "Belum ada entri hari ini",
-            style = MaterialTheme.typography.headlineSmall,
-            color = colors.onBackground,
-        )
+    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+        Text(text = "Belum ada entri di indeks", style = MaterialTheme.typography.headlineSmall, color = colors.onBackground)
         Spacer(Modifier.height(6.dp))
         Text(
-            text = "Buka arsip aplikasi, lalu tekan lama satu aplikasi untuk menaruhnya di halaman depan.",
+            text = "Tekan lama aplikasi di arsip untuk menaruhnya di halaman depan.",
             style = MaterialTheme.typography.bodyMedium,
             color = colors.onSurfaceVariant,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
         Text(
             text = "BUKA ARSIP →",
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
@@ -496,32 +696,22 @@ private fun EmptyFolio(modifier: Modifier, onOpenDrawer: () -> Unit) {
 }
 
 @Composable
-private fun FolioFooter(
-    onSearch: () -> Unit,
-    onOpenDrawer: () -> Unit,
-    onOpenSettings: () -> Unit,
-) {
+private fun FolioFooter(onSearch: () -> Unit, onOpenDrawer: () -> Unit, onOpenSettings: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = Modifier.navigationBarsPadding()) {
-        // Swipe up to open the archive, same gesture as the minimal home.
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(18.dp)
-                .pointerInput(Unit) {
-                    var total = 0f
-                    detectVerticalDragGestures(
-                        onDragStart = { total = 0f },
-                        onDragEnd = { if (total < -24f) onOpenDrawer() },
-                        onVerticalDrag = { _, delta -> total += delta },
-                    )
-                },
+            modifier = Modifier.fillMaxWidth().height(18.dp).pointerInput(Unit) {
+                var total = 0f
+                detectVerticalDragGestures(
+                    onDragStart = { total = 0f },
+                    onDragEnd = { if (total < -24f) onOpenDrawer() },
+                    onVerticalDrag = { _, delta -> total += delta },
+                )
+            },
         )
         Hairline(color = colors.onBackground)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -531,44 +721,29 @@ private fun FolioFooter(
                 contentColor = colors.onBackground,
                 shape = RoundedCornerShape(2.dp),
                 border = BorderStroke(1.dp, colors.onBackground),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(46.dp),
+                modifier = Modifier.weight(1f).height(46.dp),
             ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
+                Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     Icon(Icons.Outlined.Search, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = "CARI DI ARSIP",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    )
+                    Text(text = "CARI DI ARSIP", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
             }
-            FolioSquareButton(icon = Icons.Outlined.Apps, label = "Buka arsip", onClick = onOpenDrawer)
-            FolioSquareButton(icon = Icons.Outlined.Tune, label = "Pengaturan", onClick = onOpenSettings)
+            FolioSquareButton(Icons.Outlined.Apps, "Buka arsip", onOpenDrawer)
+            FolioSquareButton(Icons.Outlined.Tune, "Pengaturan", onOpenSettings)
         }
         Text(
             text = "BITLAUNCHER · LAUNCHER EDITORIAL · HLM. 1",
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, letterSpacing = 1.2.sp),
             color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 6.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
         )
     }
 }
 
 @Composable
-private fun FolioSquareButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
+private fun FolioSquareButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
@@ -581,13 +756,5 @@ private fun FolioSquareButton(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
         }
-    }
-}
-
-/** Kept for callers that need a plain newspaper rule inside other screens. */
-@Composable
-fun EditorialRule(color: Color = MaterialTheme.colorScheme.onBackground) {
-    Canvas(modifier = Modifier.fillMaxWidth().height(2.dp)) {
-        drawRect(color = color)
     }
 }

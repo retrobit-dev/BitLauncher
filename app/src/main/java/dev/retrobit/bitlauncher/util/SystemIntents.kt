@@ -46,6 +46,15 @@ object SystemIntents {
         }
     }
 
+    fun openNotificationAccess(context: Context) {
+        launchSafely(
+            context,
+            Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            },
+        )
+    }
+
     fun openHomeSettings(context: Context) {
         val intent = Intent(Settings.ACTION_HOME_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

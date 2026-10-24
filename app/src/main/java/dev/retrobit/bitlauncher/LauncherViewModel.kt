@@ -11,6 +11,7 @@ import dev.retrobit.bitlauncher.data.LauncherSettings
 import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
+import dev.retrobit.bitlauncher.notifications.NotificationCenter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val settings: StateFlow<LauncherSettings> = settingsRepository.settings
     val loading: StateFlow<Boolean> = repository.loading
+    val notificationCounts: StateFlow<Map<String, Int>> = NotificationCenter.counts
+    val notificationAccess: StateFlow<Boolean> = NotificationCenter.accessGranted
 
     /** Every launchable app, including hidden ones (needed by the hidden manager). */
     val allApps: StateFlow<List<LaunchableApp>> = repository.apps
@@ -45,6 +48,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     init {
         repository.start()
+        refreshNotificationAccess()
+    }
+
+    fun refreshNotificationAccess() {
+        NotificationCenter.refreshAccess(getApplication())
     }
 
     fun requestHome() {

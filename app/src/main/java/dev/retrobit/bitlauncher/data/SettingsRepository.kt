@@ -32,6 +32,8 @@ data class LauncherSettings(
     val showAlphabetRail: Boolean = true,
     val haptics: Boolean = true,
     val compactRows: Boolean = false,
+    val newsLocation: String = "Rembang",
+    val showNewsPhoto: Boolean = true,
     val favorites: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
 )
@@ -75,6 +77,8 @@ class SettingsRepository(context: Context) {
             showAlphabetRail = prefs.getBoolean(KEY_ALPHABET_RAIL, true),
             haptics = prefs.getBoolean(KEY_HAPTICS, true),
             compactRows = prefs.getBoolean(KEY_COMPACT, false),
+            newsLocation = prefs.getString(KEY_NEWS_LOCATION, "Rembang") ?: "Rembang",
+            showNewsPhoto = prefs.getBoolean(KEY_NEWS_PHOTO, true),
             favorites = favorites,
             hidden = prefs.getStringSet(KEY_HIDDEN, emptySet()) ?: emptySet(),
         )
@@ -94,6 +98,8 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_ALPHABET_RAIL, settings.showAlphabetRail)
             .putBoolean(KEY_HAPTICS, settings.haptics)
             .putBoolean(KEY_COMPACT, settings.compactRows)
+            .putString(KEY_NEWS_LOCATION, settings.newsLocation)
+            .putBoolean(KEY_NEWS_PHOTO, settings.showNewsPhoto)
             .putString(KEY_FAVORITES, settings.favorites.joinToString(SEPARATOR))
             .putStringSet(KEY_HIDDEN, settings.hidden)
             .apply()
@@ -140,6 +146,8 @@ class SettingsRepository(context: Context) {
         root.put("showAlphabetRail", settings.showAlphabetRail)
         root.put("haptics", settings.haptics)
         root.put("compactRows", settings.compactRows)
+        root.put("newsLocation", settings.newsLocation)
+        root.put("showNewsPhoto", settings.showNewsPhoto)
         root.put("favorites", JSONArray(settings.favorites))
         root.put("hidden", JSONArray(settings.hidden.toList()))
         return root.toString(2)
@@ -176,6 +184,8 @@ class SettingsRepository(context: Context) {
             showAlphabetRail = root.optBoolean("showAlphabetRail", current.showAlphabetRail),
             haptics = root.optBoolean("haptics", current.haptics),
             compactRows = root.optBoolean("compactRows", current.compactRows),
+            newsLocation = root.optString("newsLocation", current.newsLocation),
+            showNewsPhoto = root.optBoolean("showNewsPhoto", current.showNewsPhoto),
             favorites = favorites,
             hidden = hidden,
         )
@@ -204,6 +214,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_ALPHABET_RAIL = "alphabet_rail"
         private const val KEY_HAPTICS = "haptics"
         private const val KEY_COMPACT = "compact"
+        private const val KEY_NEWS_LOCATION = "news_location"
+        private const val KEY_NEWS_PHOTO = "news_photo"
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_HIDDEN = "hidden"
     }

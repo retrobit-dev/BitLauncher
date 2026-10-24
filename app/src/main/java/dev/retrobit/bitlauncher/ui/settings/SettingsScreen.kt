@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val allApps by viewModel.allApps.collectAsStateWithLifecycle()
+    val notificationAccess by viewModel.notificationAccess.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     var showHiddenApps by remember { mutableStateOf(false) }
@@ -257,6 +259,39 @@ fun SettingsScreen(
                         onCheckedChange = { enabled ->
                             viewModel.updateSettings { it.copy(haptics = enabled) }
                         },
+                    )
+                }
+            }
+
+            item {
+                SettingsCard("Halaman berita") {
+                    OutlinedTextField(
+                        value = settings.newsLocation,
+                        onValueChange = { value ->
+                            viewModel.updateSettings { it.copy(newsLocation = value.take(40)) }
+                        },
+                        label = { Text("Kota dateline") },
+                        placeholder = { Text("Rembang") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    SwitchRow(
+                        title = "Foto utama",
+                        checked = settings.showNewsPhoto,
+                        description = "Tampilkan foto monokrom di atas artikel",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNewsPhoto = enabled) }
+                        },
+                    )
+                    ActionRow(
+                        title = "Akses notifikasi",
+                        value = if (notificationAccess) "Aktif" else "Belum aktif",
+                        description = "Buka pengaturan khusus Android untuk membaca jumlah notifikasi aktif",
+                        onClick = { SystemIntents.openNotificationAccess(context) },
+                    )
+                    SettingsSubtitle(
+                        "Artikel hanya memakai jumlah dan nama aplikasi. Isi pesan tidak dibaca " +
+                            "atau disimpan. Jumlah pesan adalah estimasi dari notifikasi aktif.",
                     )
                 }
             }
