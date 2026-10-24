@@ -32,7 +32,7 @@ from render_previews import (
     status_bar,
 )
 
-SERIF_FILE = Path(__file__).resolve().parent / "Lora.ttf"
+SERIF_FILE = Path(__file__).resolve().parent.parent / "preview" / "assets" / "fonts" / "Lora.ttf"
 
 KALEIDO = {
     "bg": "#e9e4d8",

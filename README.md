@@ -47,6 +47,8 @@ python3 tools/render_previews.py
 python3 tools/render_folio_previews.py
 ```
 
+Font disimpan satu kali di `preview/assets/fonts/` dan dipakai bersama oleh preview maupun renderer, sehingga tidak ada aset ganda.
+
 Yang bisa dicoba di prototipe:
 
 - Ganti gaya **Folio koran / Minimalis** dan tema **Kaleido / Kaleido malam / Terang / Gelap / AMOLED** secara langsung.

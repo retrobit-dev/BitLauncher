@@ -13,3 +13,7 @@ captures/
 *.dex
 *.class
 .kotlin/
+
+# Local Python caches from the preview renderers
+__pycache__/
+*.py[cod]

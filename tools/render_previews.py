@@ -10,9 +10,8 @@ Usage:
     pip install pillow
     python3 tools/render_previews.py
 
-Fonts: put a Roboto variable font at tools/Roboto.ttf for the closest match
-(https://github.com/google/fonts/blob/main/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf).
-Falls back to DejaVu Sans when missing.
+The shared Roboto font lives at preview/assets/fonts/Roboto.ttf and is also
+used by the interactive preview. DejaVu Sans is the fallback when it is missing.
 """
 from __future__ import annotations
 
@@ -24,7 +23,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "preview" / "assets"
 OUT = ROOT / "docs"
-FONT_FILE = Path(__file__).resolve().parent / "Roboto.ttf"
+FONT_FILE = ROOT / "preview" / "assets" / "fonts" / "Roboto.ttf"
 
 S = 2  # render at 2x for crisp output
 W, H = 393 * S, 852 * S
@@ -544,8 +543,6 @@ def main() -> None:
     save(framed(render_drawer(DARK)), "drawer")
     save(framed(render_settings(DARK)), "settings")
     save(framed(render_sheet(DARK)), "app-actions")
-    save(framed(render_drawer(LIGHT)), "theme-light")
-    save(framed(render_drawer(AMOLED)), "theme-amoled")
 
 
 if __name__ == "__main__":
