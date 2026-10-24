@@ -760,7 +760,7 @@ private fun AnnotatedString.Builder.appendManualAppLinks(
     val labels = distinctApps.joinToString("|") { Regex.escape(it.label) }
     val pattern = Regex(
         "(?<![\\p{L}\\p{N}])($labels)(?![\\p{L}\\p{N}])",
-        setOf(RegexOption.IGNORE_CASE, RegexOption.UNICODE_CASE),
+        RegexOption.IGNORE_CASE,
     )
     var previousEnd = 0
     pattern.findAll(text).forEach { match ->
