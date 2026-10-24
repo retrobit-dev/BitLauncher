@@ -13,7 +13,7 @@ Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai dereta
 │ BITLAUNCHER    EDISI 297  ⌕ │  ← ⌕ membuka kolom di samping nama
 │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
 │     SABTU, 24 OKTOBER 2026   │
-│ KABAR UTAMA            HLM. 1│
+│ KABAR UTAMA      HLM. 1 · EDIT│
 │ 3 pesan menanti di WhatsApp  │  ← headline serif
 │ ┌──────────────────────────┐ │
 │ │      FOTO MONOKROM       │ │  ← foto utama
@@ -39,6 +39,8 @@ Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal deng
 Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android; jumlah lama tidak tetap tampil di headline.
 
 **Aplikasi di artikel** adalah daftar yang dipilih pengguna, bukan daftar favorit yang dipaksakan. Satu resolver memasok aplikasi yang sama ke headline, prosa, chip shortcut, dan badge shelf. Mode Otomatis mempertahankan perilaku lama; pilihan kustom dapat mencakup aplikasi tersembunyi; daftar kosong berarti benar-benar tanpa aplikasi/notifikasi artikel. Shelf menampilkan semua pilihan dalam grid tiga kolom, sedangkan prosa menyebut maksimal tiga aplikasi. Filter tidak mengubah badge global pada pencarian atau laci.
+
+**Artikel manual** mengganti headline dan isi utama dengan tulisan pengguna. Baris *Kabar Utama* menjadi target sentuh **EDIT**; pada mode manual label berubah menjadi **MANUAL · EDIT**. Editor memakai bottom sheet dengan field judul, area teks multiline, validasi, dan dua aksi eksplisit: aktifkan manual atau simpan draf sambil kembali ke otomatis. Dateline, Catatan, chip, dan badge tetap memakai komponen yang sama. Nama aplikasi pilihan ditautkan berdasarkan batas label utuh, bukan substring di dalam kata lain; teks lain selalu di-escape. Notifikasi tidak menimpa tulisan manual.
 
 Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian bergaris tinta, huruf seksi dengan rule, dan nomor entri berkelanjutan. Mode kisi memakai sel persegi dengan garis tipis, bukan kartu membulat.
 
@@ -205,7 +207,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 
 Semua gestur di atas dapat dipetakan ke pencarian, arsip, pengaturan, menu, kalender, catatan, panel notifikasi, pengaturan cepat, recents, kunci layar, screenshot, atau **Tidak ada**. Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk aksi yang sedang dipilih.
 
-Artikel, daftar aplikasi artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
+Artikel, mode/draf manual, daftar aplikasi artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
 
 ---
 

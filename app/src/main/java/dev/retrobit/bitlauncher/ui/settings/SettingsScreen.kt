@@ -59,6 +59,7 @@ import dev.retrobit.bitlauncher.ui.components.GestureActionSheet
 import dev.retrobit.bitlauncher.ui.components.HiddenAppsSheet
 import dev.retrobit.bitlauncher.ui.components.IconPackSheet
 import dev.retrobit.bitlauncher.ui.components.NewsAppsSheet
+import dev.retrobit.bitlauncher.ui.components.NewsArticleEditorSheet
 import dev.retrobit.bitlauncher.ui.components.NotesAppSheet
 import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.util.SystemIntents
@@ -92,6 +93,7 @@ fun SettingsScreen(
     var showHiddenApps by remember { mutableStateOf(false) }
     var showNotesPicker by remember { mutableStateOf(false) }
     var showNewsAppsPicker by remember { mutableStateOf(false) }
+    var showNewsArticleEditor by remember { mutableStateOf(false) }
     var showIconPackPicker by remember { mutableStateOf(false) }
     var iconPackRefresh by remember { mutableStateOf(0) }
     var gestureSlot by remember { mutableStateOf<GestureSlot?>(null) }
@@ -443,10 +445,20 @@ fun SettingsScreen(
                     SwitchRow(
                         title = "Artikel berita",
                         checked = settings.showNewsArticle,
-                        description = "Tampilkan teks berita otomatis di halaman depan",
+                        description = "Tampilkan artikel otomatis atau manual di halaman depan",
                         onCheckedChange = { enabled ->
                             viewModel.updateSettings { it.copy(showNewsArticle = enabled) }
                         },
+                    )
+                    ActionRow(
+                        title = "Edit artikel manual",
+                        value = when {
+                            settings.newsManualEnabled -> "Manual aktif"
+                            settings.newsManualHeadline.isNotBlank() || settings.newsManualBody.isNotBlank() -> "Draf tersimpan"
+                            else -> "Otomatis"
+                        },
+                        description = "Tulis judul dan isi sendiri tanpa ditimpa notifikasi",
+                        onClick = { showNewsArticleEditor = true },
                     )
                     ActionRow(
                         title = "Aplikasi di artikel",
@@ -597,7 +609,7 @@ fun SettingsScreen(
                     Box(Modifier.padding(vertical = 8.dp)) {
                         Column {
                             Text(
-                                text = "BitLauncher 0.3.0",
+                                text = "BitLauncher 0.4.0",
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
@@ -642,6 +654,26 @@ fun SettingsScreen(
                 gestureSlot = null
             },
             onDismiss = { gestureSlot = null },
+        )
+    }
+
+    if (showNewsArticleEditor) {
+        NewsArticleEditorSheet(
+            initialHeadline = settings.newsManualHeadline,
+            initialBody = settings.newsManualBody,
+            manualEnabled = settings.newsManualEnabled,
+            onSave = { manual, headline, body ->
+                viewModel.updateSettings {
+                    it.copy(
+                        showNewsArticle = if (manual) true else it.showNewsArticle,
+                        newsManualEnabled = manual,
+                        newsManualHeadline = headline,
+                        newsManualBody = body,
+                    )
+                }
+                showNewsArticleEditor = false
+            },
+            onDismiss = { showNewsArticleEditor = false },
         )
     }
 

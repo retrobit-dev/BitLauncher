@@ -58,6 +58,10 @@ data class LauncherSettings(
     val showNewsUnread: Boolean = true,
     /** Null = automatic favorites/top-three mode; empty = deliberately no article apps. */
     val newsApps: List<String>? = null,
+    /** Manual mode preserves the draft when the user returns to automatic mode. */
+    val newsManualEnabled: Boolean = false,
+    val newsManualHeadline: String = "",
+    val newsManualBody: String = "",
     val showNewsPhoto: Boolean = true,
     val newsImageUri: String = "",
     val showNewsWidgets: Boolean = true,
@@ -133,6 +137,11 @@ class SettingsRepository(context: Context) {
             } else {
                 null
             },
+            newsManualEnabled = prefs.getBoolean(KEY_NEWS_MANUAL_ENABLED, false),
+            newsManualHeadline = prefs.getString(KEY_NEWS_MANUAL_HEADLINE, "")
+                .orEmpty().take(MAX_MANUAL_HEADLINE),
+            newsManualBody = prefs.getString(KEY_NEWS_MANUAL_BODY, "")
+                .orEmpty().take(MAX_MANUAL_BODY),
             showNewsPhoto = prefs.getBoolean(KEY_NEWS_PHOTO, true),
             newsImageUri = prefs.getString(KEY_NEWS_IMAGE, "") ?: "",
             showNewsWidgets = prefs.getBoolean(KEY_NEWS_WIDGETS, true),
@@ -171,6 +180,9 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_NEWS_APP_LINKS, settings.showNewsAppLinks)
             .putBoolean(KEY_NEWS_UNREAD, settings.showNewsUnread)
             .putString(KEY_NEWS_APPS, settings.newsApps?.joinToString(SEPARATOR))
+            .putBoolean(KEY_NEWS_MANUAL_ENABLED, settings.newsManualEnabled)
+            .putString(KEY_NEWS_MANUAL_HEADLINE, settings.newsManualHeadline.take(MAX_MANUAL_HEADLINE))
+            .putString(KEY_NEWS_MANUAL_BODY, settings.newsManualBody.take(MAX_MANUAL_BODY))
             .putBoolean(KEY_NEWS_PHOTO, settings.showNewsPhoto)
             .putString(KEY_NEWS_IMAGE, settings.newsImageUri)
             .putBoolean(KEY_NEWS_WIDGETS, settings.showNewsWidgets)
@@ -236,6 +248,9 @@ class SettingsRepository(context: Context) {
         root.put("showNewsAppLinks", settings.showNewsAppLinks)
         root.put("showNewsUnread", settings.showNewsUnread)
         root.put("newsApps", settings.newsApps?.let { JSONArray(it) } ?: JSONObject.NULL)
+        root.put("newsManualEnabled", settings.newsManualEnabled)
+        root.put("newsManualHeadline", settings.newsManualHeadline)
+        root.put("newsManualBody", settings.newsManualBody)
         root.put("showNewsPhoto", settings.showNewsPhoto)
         root.put("newsImageUri", settings.newsImageUri)
         root.put("showNewsWidgets", settings.showNewsWidgets)
@@ -303,6 +318,11 @@ class SettingsRepository(context: Context) {
             showNewsAppLinks = root.optBoolean("showNewsAppLinks", current.showNewsAppLinks),
             showNewsUnread = root.optBoolean("showNewsUnread", current.showNewsUnread),
             newsApps = newsApps,
+            newsManualEnabled = root.optBoolean("newsManualEnabled", current.newsManualEnabled),
+            newsManualHeadline = root.optString("newsManualHeadline", current.newsManualHeadline)
+                .take(MAX_MANUAL_HEADLINE),
+            newsManualBody = root.optString("newsManualBody", current.newsManualBody)
+                .take(MAX_MANUAL_BODY),
             showNewsPhoto = root.optBoolean("showNewsPhoto", current.showNewsPhoto),
             newsImageUri = root.optString("newsImageUri", current.newsImageUri),
             showNewsWidgets = root.optBoolean("showNewsWidgets", current.showNewsWidgets),
@@ -327,6 +347,8 @@ class SettingsRepository(context: Context) {
         const val SCHEMA = 1
         const val MIN_COLUMNS = 3
         const val MAX_COLUMNS = 6
+        const val MAX_MANUAL_HEADLINE = 160
+        const val MAX_MANUAL_BODY = 6000
 
         private const val PREFS = "bitlauncher_settings"
         private const val SEPARATOR = "\u001f"
@@ -350,6 +372,9 @@ class SettingsRepository(context: Context) {
         private const val KEY_NEWS_APP_LINKS = "news_app_links"
         private const val KEY_NEWS_UNREAD = "news_unread"
         private const val KEY_NEWS_APPS = "news_apps"
+        private const val KEY_NEWS_MANUAL_ENABLED = "news_manual_enabled"
+        private const val KEY_NEWS_MANUAL_HEADLINE = "news_manual_headline"
+        private const val KEY_NEWS_MANUAL_BODY = "news_manual_body"
         private const val KEY_NEWS_PHOTO = "news_photo"
         private const val KEY_NEWS_IMAGE = "news_image_uri"
         private const val KEY_NEWS_WIDGETS = "news_widgets"

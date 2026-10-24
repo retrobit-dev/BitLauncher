@@ -203,7 +203,7 @@ def draw_article_line(
         x += width
 
 
-def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
+def render_folio_home(palette: dict = KALEIDO, manual: bool = False) -> Image.Image:
     img = Image.new("RGBA", (W, H), color(palette["bg"]))
     draw = ImageDraw.Draw(img)
     ink = color(palette["on_surface"])
@@ -217,9 +217,10 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
     rule(img, 107, palette)
 
     tracked_text(draw, 20, 132, "KABAR UTAMA", font(10, "SemiBold"), ink, 1.6)
-    tracked_text(draw, 373, 132, "HLM. 1", font(10, "Medium"), soft, 1.6, "right")
-    draw.text((px(20), px(172)), "3 pesan menanti di", font=serif(34), fill=ink, anchor="ls")
-    draw.text((px(20), px(210)), "WhatsApp", font=serif(34), fill=ink, anchor="ls")
+    tracked_text(draw, 373, 132, "MANUAL · EDIT" if manual else "HLM. 1 · EDIT", font(10, "Medium"), soft, 1.2, "right")
+    headline_lines = ("Catatan pagi dari", "meja redaksi") if manual else ("3 pesan menanti di", "WhatsApp")
+    draw.text((px(20), px(172)), headline_lines[0], font=serif(34), fill=ink, anchor="ls")
+    draw.text((px(20), px(210)), headline_lines[1], font=serif(34), fill=ink, anchor="ls")
 
     if NEWS_PHOTO.exists():
         photo = Image.open(NEWS_PHOTO).convert("RGB")
@@ -237,6 +238,11 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
         palette,
     )
     article = [
+        [("Pagi ini saya menulis kabar sendiri.", "regular")],
+        [("Buka ", "regular"), ("WhatsApp", "link"), (" untuk menyapa keluarga,", "regular")],
+        [("lalu ", "regular"), ("Spotify", "link"), (" untuk menemani membaca.", "regular")],
+        [("Untuk mencatat kabar ini, buka ", "regular"), ("Catatan.", "link")],
+    ] if manual else [
         [("Pada pukul 09.41 terjadi sebuah fenomena", "regular")],
         [("aneh: ada ", "regular"), ("3 pesan belum dibaca di WhatsApp.", "link")],
         [("Buka juga ", "regular"), ("Spotify", "link"), (" dan ", "regular"), ("Kamera", "link"), (".", "regular")],
@@ -408,14 +414,15 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
 
     tracked_text(draw, 20, 528, "HALAMAN BERITA & APLIKASI", font(10, "SemiBold"), ink, 1.6)
     rounded_rect(img, (20, 540, 373, 810), 2, outline=outline)
-    switches = ["Aplikasi di artikel", "Artikel berita", "Shortcut aplikasi di artikel", "Ringkasan notifikasi", "Badge notifikasi"]
+    switches = ["Edit artikel manual", "Aplikasi di artikel", "Artikel berita", "Shortcut aplikasi di artikel", "Ringkasan notifikasi"]
     for index, label in enumerate(switches):
         y = 548 + index * 52
         if index:
             draw.line([(px(32), px(y)), (px(361), px(y))], fill=outline, width=max(1, px(0.6)))
         draw.text((px(34), px(y + 31)), label, font=serif(14), fill=ink, anchor="ls")
-        if index == 0:
-            draw.text((px(359), px(y + 30)), "Otomatis · 3  ›", font=font(10, "Medium"), fill=soft, anchor="rs")
+        if index in {0, 1}:
+            value = "Otomatis  ›" if index == 0 else "Otomatis · 3  ›"
+            draw.text((px(359), px(y + 30)), value, font=font(10, "Medium"), fill=soft, anchor="rs")
             continue
         draw.rounded_rectangle(
             [px(329), px(y + 16), px(359), px(y + 34)],
@@ -430,6 +437,7 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
 def main() -> None:
     global ACTIVE_SERIF_FILE, ACTIVE_SERIF_BOLD_FILE, ACTIVE_SERIF_SCALE, ACTIVE_ICON_MODE
     save(framed(render_folio_home()), "folio-home")
+    save(framed(render_folio_home(manual=True)), "folio-manual")
     save(framed(render_folio_archive()), "folio-archive")
     save(framed(render_folio_grid()), "folio-grid")
     save(framed(render_folio_settings()), "folio-settings")

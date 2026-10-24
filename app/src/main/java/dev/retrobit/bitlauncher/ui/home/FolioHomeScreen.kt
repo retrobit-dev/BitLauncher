@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -90,6 +91,7 @@ import dev.retrobit.bitlauncher.data.resolveArticleApps
 import dev.retrobit.bitlauncher.ui.components.AppIcon
 import dev.retrobit.bitlauncher.ui.components.EpaperColorFilter
 import dev.retrobit.bitlauncher.ui.components.HomeMenuSheet
+import dev.retrobit.bitlauncher.ui.components.NewsArticleEditorSheet
 import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.ui.components.rememberMinuteTick
 import dev.retrobit.bitlauncher.ui.theme.LocalEpaper
@@ -125,6 +127,7 @@ fun FolioHomeScreen(
     val colors = MaterialTheme.colorScheme
 
     var showHomeMenu by remember { mutableStateOf(false) }
+    var showArticleEditor by rememberSaveable { mutableStateOf(false) }
     var isDefaultLauncher by remember { mutableStateOf(SystemIntents.isDefaultLauncher(context)) }
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -175,7 +178,9 @@ fun FolioHomeScreen(
     val searchResults = remember(apps, searchQuery) {
         if (searchQuery.isBlank()) emptyList() else AppSearch.filter(apps, searchQuery).take(6)
     }
-    val headline = when {
+    val headline = if (settings.newsManualEnabled) {
+        settings.newsManualHeadline.ifBlank { "Artikel manual" }
+    } else when {
         settings.newsApps != null && articleApps.isEmpty() -> "Pilih aplikasi untuk artikel Anda"
         !settings.showNewsUnread -> "Kabar dari aplikasi pilihan"
         newsEntries.isNotEmpty() -> {
@@ -294,7 +299,11 @@ fun FolioHomeScreen(
                 }
             } else {
                 item {
-                    SectionLabel(title = "KABAR UTAMA", trailing = "HLM. 1")
+                    SectionLabel(
+                        title = "KABAR UTAMA",
+                        trailing = if (settings.newsManualEnabled) "MANUAL · EDIT" else "HLM. 1 · EDIT",
+                        onClick = { showArticleEditor = true },
+                    )
                     Text(
                         text = headline,
                         style = MaterialTheme.typography.displaySmall,
@@ -310,19 +319,32 @@ fun FolioHomeScreen(
 
                 if (settings.showNewsArticle) {
                     item {
-                        NewsArticle(
-                            location = location,
-                            date = if (settings.showDate) dateline else "",
-                            time = if (settings.showClock) timeText else "",
-                            notificationAccess = notificationAccess,
-                            unreadEnabled = settings.showNewsUnread,
-                            appLinksEnabled = settings.showNewsAppLinks,
-                            entries = newsEntries,
-                            shortcutApps = articleApps,
-                            onOpenApp = { app -> viewModel.launch(app) },
-                            onOpenCalendar = { SystemIntents.openCalendar(context) },
-                            onOpenNotes = ::openNotes,
-                        )
+                        if (settings.newsManualEnabled) {
+                            ManualNewsArticle(
+                                location = location,
+                                date = if (settings.showDate) dateline else "",
+                                body = settings.newsManualBody,
+                                appLinksEnabled = settings.showNewsAppLinks,
+                                shortcutApps = articleApps,
+                                onOpenApp = { app -> viewModel.launch(app) },
+                                onOpenCalendar = { SystemIntents.openCalendar(context) },
+                                onOpenNotes = ::openNotes,
+                            )
+                        } else {
+                            NewsArticle(
+                                location = location,
+                                date = if (settings.showDate) dateline else "",
+                                time = if (settings.showClock) timeText else "",
+                                notificationAccess = notificationAccess,
+                                unreadEnabled = settings.showNewsUnread,
+                                appLinksEnabled = settings.showNewsAppLinks,
+                                entries = newsEntries,
+                                shortcutApps = articleApps,
+                                onOpenApp = { app -> viewModel.launch(app) },
+                                onOpenCalendar = { SystemIntents.openCalendar(context) },
+                                onOpenNotes = ::openNotes,
+                            )
+                        }
                     }
                     item {
                         NewsAppShelf(
@@ -357,6 +379,26 @@ fun FolioHomeScreen(
         FolioGestureFooter(
             gestureLabel = settings.swipeUpAction.label(),
             onAction = { performGesture(settings.swipeUpAction) },
+        )
+    }
+
+    if (showArticleEditor) {
+        NewsArticleEditorSheet(
+            initialHeadline = settings.newsManualHeadline,
+            initialBody = settings.newsManualBody,
+            manualEnabled = settings.newsManualEnabled,
+            onSave = { manual, headline, body ->
+                viewModel.updateSettings {
+                    it.copy(
+                        showNewsArticle = if (manual) true else it.showNewsArticle,
+                        newsManualEnabled = manual,
+                        newsManualHeadline = headline,
+                        newsManualBody = body,
+                    )
+                }
+                showArticleEditor = false
+            },
+            onDismiss = { showArticleEditor = false },
         )
     }
 
@@ -634,6 +676,104 @@ private fun NewsAppShelf(
             }
         }
     }
+}
+
+@Composable
+private fun ManualNewsArticle(
+    location: String,
+    date: String,
+    body: String,
+    appLinksEnabled: Boolean,
+    shortcutApps: List<LaunchableApp>,
+    onOpenApp: (LaunchableApp) -> Unit,
+    onOpenCalendar: () -> Unit,
+    onOpenNotes: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val linkStyle = SpanStyle(
+        color = colors.primary,
+        fontWeight = FontWeight.Bold,
+        textDecoration = TextDecoration.Underline,
+    )
+    val linkedApps = shortcutApps.associateBy { it.key }
+    val content = body.ifBlank { "Artikel manual masih kosong. Ketuk EDIT untuk menulis isi artikel." }
+    val article = buildAnnotatedString {
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(location) }
+        if (date.isNotBlank()) {
+            append(", ")
+            val start = length
+            withStyle(linkStyle) { append(date) }
+            addStringAnnotation(CALENDAR_LINK_TAG, "calendar", start, length)
+        }
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(" — ") }
+        appendManualAppLinks(content, shortcutApps, linkStyle, appLinksEnabled)
+        if (!content.endsWith('\n')) append(" ")
+        append("Untuk mencatat kabar ini, buka ")
+        val notesStart = length
+        withStyle(linkStyle) { append("Catatan") }
+        addStringAnnotation(NOTES_LINK_TAG, "notes", notesStart, length)
+        append(".")
+    }
+
+    ClickableText(
+        text = article,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            color = colors.onBackground,
+            fontSize = 17.sp,
+            lineHeight = 26.sp,
+            textAlign = TextAlign.Justify,
+        ),
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+        onClick = { offset ->
+            article.getStringAnnotations(APP_LINK_TAG, offset, offset).firstOrNull()?.let { link ->
+                linkedApps[link.item]?.let(onOpenApp)
+            }
+            if (article.getStringAnnotations(CALENDAR_LINK_TAG, offset, offset).isNotEmpty()) {
+                onOpenCalendar()
+            }
+            if (article.getStringAnnotations(NOTES_LINK_TAG, offset, offset).isNotEmpty()) {
+                onOpenNotes()
+            }
+        },
+    )
+}
+
+/** Link only exact, boundary-delimited labels of apps selected for the article. */
+private fun AnnotatedString.Builder.appendManualAppLinks(
+    text: String,
+    apps: List<LaunchableApp>,
+    style: SpanStyle,
+    enabled: Boolean,
+) {
+    if (!enabled || apps.isEmpty()) {
+        append(text)
+        return
+    }
+    val distinctApps = apps
+        .filter { it.label.isNotBlank() }
+        .distinctBy { it.label.lowercase(Locale.ROOT) }
+        .sortedByDescending { it.label.length }
+    if (distinctApps.isEmpty()) {
+        append(text)
+        return
+    }
+    val labels = distinctApps.joinToString("|") { Regex.escape(it.label) }
+    val pattern = Regex(
+        "(?<![\\p{L}\\p{N}])($labels)(?![\\p{L}\\p{N}])",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.UNICODE_CASE),
+    )
+    var previousEnd = 0
+    pattern.findAll(text).forEach { match ->
+        append(text.substring(previousEnd, match.range.first))
+        val app = distinctApps.firstOrNull { it.label.equals(match.value, ignoreCase = true) }
+        if (app == null) {
+            append(match.value)
+        } else {
+            appendAppLink(match.value, app, style, enabled = true)
+        }
+        previousEnd = match.range.last + 1
+    }
+    append(text.substring(previousEnd))
 }
 
 @Composable
@@ -933,10 +1073,19 @@ fun DoubleRule(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SectionLabel(title: String, trailing: String? = null) {
+fun SectionLabel(title: String, trailing: String? = null, onClick: (() -> Unit)? = null) {
     val colors = MaterialTheme.colorScheme
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.heightIn(min = 48.dp).clickable { onClick() }
+                } else {
+                    Modifier
+                },
+            )
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

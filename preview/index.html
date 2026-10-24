@@ -590,6 +590,25 @@
   .hidden-row .icon { width: 32px; height: 32px; border-radius: 9px; }
   .hidden-row .label { flex: 1; font-size: 16px; font-weight: 500; }
 
+  /* manual article editor */
+  .article-editor { padding: 4px 24px 12px; }
+  .article-editor h3 { margin: 0; font-size: 24px; font-weight: 400; }
+  .article-editor > p { margin: 4px 0 10px; font-size: 12px; color: var(--on-surface-variant); line-height: 17px; }
+  .editor-mode { color: var(--primary); font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .5px; }
+  .article-editor label { display: block; margin-top: 10px; font-family: var(--sans); font-size: 12px; color: var(--on-surface-variant); }
+  .article-editor input, .article-editor textarea {
+    display: block; box-sizing: border-box; width: 100%; margin-top: 6px;
+    border: 1px solid var(--outline); border-radius: 8px; background: var(--bg); color: var(--on-surface);
+    padding: 12px; font: inherit; font-size: 15px; outline: none;
+  }
+  .article-editor input:focus, .article-editor textarea:focus { border-color: var(--primary); }
+  .article-editor textarea { min-height: 190px; resize: vertical; line-height: 22px; }
+  .editor-meta { min-height: 17px; margin-top: 3px; text-align: right; font-size: 10px; color: var(--on-surface-variant); }
+  .editor-error { min-height: 18px; color: var(--error); font-size: 12px; }
+  .editor-save, .editor-auto { width: 100%; min-height: 44px; margin-top: 6px; cursor: pointer; font: inherit; font-weight: 600; }
+  .editor-save { border: 1px solid var(--primary); background: var(--primary); color: var(--surface); }
+  .editor-auto { border: 0; background: none; color: var(--primary); }
+
   /* toast */
   .toast {
     position: absolute; left: 50%; bottom: 108px; z-index: 60;
@@ -805,6 +824,12 @@
     border-top: 1px solid var(--outline-variant);
     border-bottom: 1px solid var(--outline-variant);
   }
+
+  .article-edit-trigger {
+    width: 100%; min-height: 48px; border-left: 0; border-right: 0;
+    background: none; color: inherit; cursor: pointer; text-align: left;
+  }
+  .article-edit-trigger:hover { background: color-mix(in srgb, var(--surface-variant) 45%, transparent); }
 
   .folio-row {
     display: flex; align-items: center; gap: 12px;
@@ -1250,6 +1275,27 @@
         <div id="hidden-list" style="max-height:420px; overflow:auto; padding-bottom:12px"></div>
       </div>
 
+      <div class="sheet" id="article-editor-sheet">
+        <div class="sheet-handle"></div>
+        <div class="article-editor">
+          <h3>Edit artikel manual</h3>
+          <p>Tulis judul dan isi sendiri. Perubahan notifikasi tidak menimpa teks manual; chip aplikasi dan badge tetap aktif.</p>
+          <div class="editor-mode" id="article-editor-status">Saat ini: artikel otomatis</div>
+          <label>Judul artikel
+            <input id="manual-headline" maxlength="160" placeholder="Tulis headline utama" autocomplete="off" />
+          </label>
+          <div class="editor-meta" id="manual-headline-count">0/160</div>
+          <label>Isi artikel
+            <textarea id="manual-body" maxlength="6000" placeholder="Tulis kabar Anda. Sebut nama aplikasi pilihan untuk membuat tautan."></textarea>
+          </label>
+          <div class="editor-meta" id="manual-body-count">0/6000 · Baris baru dipertahankan</div>
+          <div class="editor-error" id="article-editor-error" role="alert"></div>
+          <button type="button" class="editor-save" id="save-manual-article">Simpan &amp; gunakan artikel manual</button>
+          <button type="button" class="editor-auto" id="save-automatic-article">Simpan draf &amp; gunakan otomatis</button>
+          <p>Nama aplikasi menjadi tautan hanya jika dipilih untuk artikel dan shortcut diaktifkan.</p>
+        </div>
+      </div>
+
       <div class="sheet" id="news-apps-sheet">
         <div class="sheet-handle"></div>
         <div class="hidden-head">
@@ -1351,7 +1397,7 @@
     </div>
 
     <p class="note">
-      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.3.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
+      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.4.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
     </p>
 
     <div class="hint-keys">
@@ -1437,6 +1483,9 @@ const state = {
   showNewsAppLinks: true,
   showNewsUnread: true,
   newsApps: null,
+  newsManualEnabled: false,
+  newsManualHeadline: "",
+  newsManualBody: "",
   showNewsPhoto: true,
   newsImage: "",
   fontChoice: "STYLE_DEFAULT",
@@ -1660,6 +1709,73 @@ function buildNewsArticle(entries, shortcutApps) {
   return finish(body);
 }
 
+function escapeManualSegment(value) {
+  return escapeHtml(value).replace(/\r?\n/g, "<br>");
+}
+
+function regexEscape(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function manualAppLinks(text, apps) {
+  const choices = apps.filter((app, index) =>
+    apps.findIndex((other) => other.name.toLowerCase() === app.name.toLowerCase()) === index
+  ).sort((a, b) => b.name.length - a.name.length);
+  if (!state.showNewsAppLinks || !choices.length) return escapeManualSegment(text);
+  const labels = choices.map((app) => regexEscape(app.name)).join("|");
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])(${labels})(?![\\p{L}\\p{N}])`, "giu");
+  let result = "";
+  let previousEnd = 0;
+  for (const match of text.matchAll(pattern)) {
+    const prefix = match[1];
+    const label = match[2];
+    const labelStart = match.index + prefix.length;
+    const app = choices.find((item) => item.name.toLowerCase() === label.toLowerCase());
+    result += escapeManualSegment(text.slice(previousEnd, labelStart));
+    result += app ? articleLink(app, label) : escapeHtml(label);
+    previousEnd = match.index + match[0].length;
+  }
+  return result + escapeManualSegment(text.slice(previousEnd));
+}
+
+function buildManualNewsArticle(shortcutApps) {
+  const location = escapeHtml(state.newsLocation.trim() || "Rembang");
+  const calendarLink = `<button type="button" class="article-link" data-open-calendar>${newsDateNow()}</button>`;
+  const notesLink = '<button type="button" class="article-link" data-open-notes>Catatan</button>';
+  const content = state.newsManualBody || "Artikel manual masih kosong. Ketuk EDIT untuk menulis isi artikel.";
+  const separator = content.endsWith("\n") ? "" : " ";
+  return `<strong>${location}</strong>${state.date ? `, ${calendarLink}` : ""}<strong> — </strong>${manualAppLinks(content, shortcutApps)}${separator}Untuk mencatat kabar ini, buka ${notesLink}.`;
+}
+
+function openArticleEditor() {
+  $("manual-headline").value = state.newsManualHeadline;
+  $("manual-body").value = state.newsManualBody;
+  $("article-editor-status").textContent = state.newsManualEnabled
+    ? "Saat ini: artikel manual"
+    : "Saat ini: artikel otomatis";
+  $("article-editor-error").textContent = "";
+  $("manual-headline-count").textContent = `${state.newsManualHeadline.length}/160`;
+  $("manual-body-count").textContent = `${state.newsManualBody.length}/6000 · Baris baru dipertahankan`;
+  openSheet("article-editor-sheet");
+}
+
+function saveArticleEditor(manual) {
+  const headline = $("manual-headline").value.trim().slice(0, 160);
+  const body = $("manual-body").value.trim().slice(0, 6000);
+  if (manual && (!headline || !body)) {
+    $("article-editor-error").textContent = "Judul dan isi wajib diisi untuk mode manual.";
+    return;
+  }
+  state.newsManualEnabled = manual;
+  state.newsManualHeadline = headline;
+  state.newsManualBody = body;
+  if (manual) state.showNewsArticle = true;
+  closeSheets();
+  renderHome();
+  renderSettings();
+  toast(manual ? "Artikel manual disimpan" : "Draf disimpan; artikel otomatis aktif");
+}
+
 function folioRow(app, index, compact) {
   const unread = state.notificationAccess && state.showNotificationBadges ? (state.notifications[app.name] || 0) : 0;
   return `
@@ -1688,11 +1804,13 @@ function renderFolioHome() {
     .sort((a, b) => b.count - a.count);
   const shortcutApps = articleApps;
   const lead = entries[0];
-  const headline = state.newsApps !== null && !articleApps.length
-    ? "Pilih aplikasi untuk artikel Anda"
-    : lead
-      ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
-      : state.notificationAccess && state.showNewsUnread ? "Tidak ada kabar dari aplikasi pilihan" : "Kabar dari aplikasi pilihan";
+  const headline = state.newsManualEnabled
+    ? state.newsManualHeadline || "Artikel manual"
+    : state.newsApps !== null && !articleApps.length
+      ? "Pilih aplikasi untuk artikel Anda"
+      : lead
+        ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
+        : state.notificationAccess && state.showNewsUnread ? "Tidak ada kabar dari aplikasi pilihan" : "Kabar dari aplikasi pilihan";
   const homeResults = state.homeQuery.trim()
     ? available.filter((app) => matches(app, state.homeQuery.trim().toLowerCase())).slice(0, 6)
     : [];
@@ -1720,7 +1838,7 @@ function renderFolioHome() {
        </div>`
     : "";
   const article = state.showNewsArticle
-    ? `<p class="news-article">${buildNewsArticle(entries, shortcutApps)}</p>`
+    ? `<p class="news-article">${state.newsManualEnabled ? buildManualNewsArticle(shortcutApps) : buildNewsArticle(entries, shortcutApps)}</p>`
     : "";
   const appShelf = state.showNewsArticle
     ? `<div class="folio-section"><span>APLIKASI DALAM ARTIKEL</span><span>${articleApps.length} APLIKASI</span></div>
@@ -1746,7 +1864,7 @@ function renderFolioHome() {
              }).join("")
            : '<div class="news-search-empty">Tidak ada aplikasi yang cocok</div>'}
        </div>`
-    : `<div class="folio-section"><span>KABAR UTAMA</span><span>HLM. 1</span></div>
+    : `<button type="button" class="folio-section article-edit-trigger" data-edit-article><span>KABAR UTAMA</span><span>${state.newsManualEnabled ? "MANUAL · EDIT" : "HLM. 1 · EDIT"}</span></button>
        <h2 class="news-headline">${escapeHtml(headline)}</h2>
        ${photo}
        ${article}
@@ -1780,6 +1898,9 @@ function renderFolioHome() {
   });
   home.querySelectorAll("[data-open-notes]").forEach((el) => {
     el.onclick = () => performGesture("OPEN_NOTES");
+  });
+  home.querySelectorAll("[data-edit-article]").forEach((el) => {
+    el.onclick = () => openArticleEditor();
   });
   home.querySelectorAll("[data-open-settings]").forEach((el) => {
     el.onclick = () => openSettings();
@@ -2149,7 +2270,7 @@ function openSheet(id) {
 
 function closeSheets() {
   $("sheet-scrim").classList.remove("show");
-  ["app-sheet", "home-sheet", "hidden-sheet", "news-apps-sheet"].forEach((id) => $(id).classList.remove("show"));
+  ["app-sheet", "home-sheet", "hidden-sheet", "news-apps-sheet", "article-editor-sheet"].forEach((id) => $(id).classList.remove("show"));
 }
 
 /* --------------------------------------------------------- long press binder */
@@ -2362,8 +2483,12 @@ function renderSettings() {
       <div class="card">
         <input class="news-location-input" data-news-location value="${escapeHtml(state.newsLocation)}" aria-label="Kota dateline" placeholder="Rembang" />
         <div class="switch-row">
-          <div class="text"><div class="t">Artikel berita</div><div class="d">Teks berita otomatis di halaman depan</div></div>
+          <div class="text"><div class="t">Artikel berita</div><div class="d">Artikel otomatis atau manual di halaman depan</div></div>
           <div class="sw ${state.showNewsArticle ? "on" : ""}" data-sw="showNewsArticle"></div>
+        </div>
+        <div class="action-row" data-edit-article>
+          <div class="text"><div class="t">Edit artikel manual</div><div class="d">Tulis judul dan isi sendiri tanpa ditimpa notifikasi</div></div>
+          <div class="v">${state.newsManualEnabled ? "Manual aktif" : (state.newsManualHeadline || state.newsManualBody ? "Draf tersimpan" : "Otomatis")}</div>
         </div>
         <div class="action-row" data-news-apps>
           <div class="text"><div class="t">Aplikasi di artikel</div><div class="d">Hanya aplikasi ini yang menjadi shortcut dan sumber notifikasi</div></div>
@@ -2472,7 +2597,7 @@ function renderSettings() {
       <div class="card">
         <div class="action-row">
           <div class="text">
-            <div class="t">BitLauncher 0.3.0</div>
+            <div class="t">BitLauncher 0.4.0</div>
             <div class="d" style="margin-top:4px; line-height:16px">Folio koran di atas kertas Kaleido, atau minimalis ala Niagara + Minima.</div>
           </div>
         </div>
@@ -2554,6 +2679,8 @@ function renderSettings() {
     renderSettings();
     toast("Gambar bawaan dipulihkan");
   };
+  const editArticleRow = $("settings-body").querySelector("[data-edit-article]");
+  if (editArticleRow) editArticleRow.onclick = () => openArticleEditor();
   const newsAppsRow = $("settings-body").querySelector("[data-news-apps]");
   if (newsAppsRow) newsAppsRow.onclick = () => {
     renderNewsAppsList();
@@ -2757,6 +2884,14 @@ function bindDrawerChrome() {
 }
 
 $("sheet-scrim").onclick = closeSheets;
+$("save-manual-article").onclick = () => saveArticleEditor(true);
+$("save-automatic-article").onclick = () => saveArticleEditor(false);
+$("manual-headline").addEventListener("input", (event) => {
+  $("manual-headline-count").textContent = `${event.target.value.length}/160`;
+});
+$("manual-body").addEventListener("input", (event) => {
+  $("manual-body-count").textContent = `${event.target.value.length}/6000 · Baris baru dipertahankan`;
+});
 
 // Configurable home gestures: tap, long-press, horizontal, and two-finger vertical swipes.
 let homePressTimer = null;
