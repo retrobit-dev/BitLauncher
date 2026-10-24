@@ -17,10 +17,11 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 | Jam besar + tanggal | ✅ | ✅ | ✅ | ✅ |
 | Grid ikon klasik | 📋 | — | ✅ | ✅ |
 | Dock | 📋 | — | — | ✅ |
-| Widget | 📋 | — | — | ✅ |
+| Widget pihak ketiga (`AppWidgetHost`) | 📋 | — | — | ✅ |
+| Kartu editorial Kalender & Catatan | ✅ | — | — | — |
 | Folder | 📋 | — | — | ✅ |
 | Gestur geser untuk laci | ✅ | ✅ | — | ✅ |
-| Double-tap area kosong | ✅ (buka laci) | — | — | ✅ |
+| Double-tap area kosong | ✅ (cari di folio / laci di minimal) | — | — | ✅ |
 | Tekan lama → menu | ✅ | ✅ | ✅ | ✅ |
 | Wallpaper terlihat | ✅ | ✅ | ✅ | ✅ |
 | Halaman ganda + indikator | 📋 | — | — | ✅ |
@@ -69,7 +70,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 |---|---|---|---|---|
 | Launcher default (RoleManager) | ✅ | ✅ | ✅ | ✅ |
 | Ringkasan jumlah notifikasi | ✅ (via akses) | ✅ (via akses) | — | ✅ (Nova + plugin) |
-| Gestur notifikasi | ⛔ | — | — | ✅ (aksesibilitas) |
+| Gestur panel notifikasi | ✅ (`StatusBarManager`) | — | — | ✅ (aksesibilitas) |
 | Double-tap matikan layar | 📋 | — | — | ✅ (admin) |
 | Recents kustom | ⛔ | — | — | — |
 | Kunci aplikasi biometrik | 📋 | — | — | — |
@@ -83,7 +84,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Beranda vertikal, laci dengan pencarian, rel alfabet, daftar/kisi.
 - Shortcut, pin, sembunyikan, info, uninstall.
 - Tema, AMOLED, dynamic color, pengaturan dasar, backup JSON.
-- Beranda folio berita: foto, artikel dengan shortcut aplikasi, dan ringkasan jumlah notifikasi.
+- Beranda folio berita: foto, artikel dengan shortcut aplikasi, ringkasan jumlah notifikasi, pencarian masthead, gestur, serta kartu Kalender/Catatan.
 
 ### 0.2 — Beranda yang terasa "Niagara"
 - Widget host (`AppWidgetHost` + `AppWidgetManager`) dan penempatan widget.

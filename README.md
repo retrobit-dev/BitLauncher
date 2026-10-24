@@ -54,11 +54,14 @@ Yang bisa dicoba di prototipe:
 - Ganti gaya **Folio koran / Minimalis** dan tema **Kaleido / Kaleido malam / Terang / Gelap / AMOLED** secara langsung.
 - Simulasikan **3 pesan baru**, tandai semua dibaca, atau matikan akses notifikasi untuk melihat perubahan artikel.
 - Ketuk frasa bergaris bawah seperti **“3 pesan belum dibaca di WhatsApp”** untuk membuka aplikasi.
-- Ganti kota dateline dan tampilkan/sembunyikan foto berita dari pengaturan prototipe.
+- Ganti kota dateline, tampilkan/sembunyikan foto dan widget, serta pilih aplikasi catatan dari pengaturan prototipe.
+- Ketuk tanggal untuk membuka kalender atau tautan/kartu **Catatan** untuk membuka aplikasi catatan.
+- Ketuk ikon cari di masthead untuk membuka kolom pencarian di samping label **BITLAUNCHER**.
 - Beralih **Daftar / Kisi** dan jumlah kolom 3–6.
 - **Tekan lama** aplikasi untuk membuka lembar aksi (shortcut, pin, sembunyikan, info, uninstall).
 - **Ketuk** aplikasi untuk melihat umpan balik peluncuran.
-- **Geser ke atas** pada grabber bawah atau **ketuk dua kali** beranda untuk membuka laci.
+- **Geser ke atas** pada indikator bawah untuk membuka laci; **geser kiri** untuk pengaturan dan **geser kanan** untuk panel notifikasi.
+- **Ketuk dua kali** beranda folio untuk membuka pencarian masthead.
 - **Tekan lama** area kosong beranda untuk menu ala Nova.
 - Pencarian berperingkat, rel alfabet, dan manajer aplikasi tersembunyi (3 aplikasi contoh sudah disembunyikan).
 
@@ -70,7 +73,7 @@ Yang bisa dicoba di prototipe:
 
 | Gaya | Inspirasi | Wujud di BitLauncher |
 |---|---|---|
-| **Folio koran** | Surat kabar + e-paper | Headline, foto monokrom, artikel berisi shortcut aplikasi dan jumlah notifikasi, lalu indeks favorit dengan *dotted leader* |
+| **Folio koran** | Surat kabar + e-paper | Masthead dengan pencarian inline, headline, foto monokrom, artikel berisi shortcut aplikasi/notifikasi, serta kartu Kalender dan Catatan |
 | **Kaleido** | E Ink Kaleido | Kertas koran abu-abu hangat, tinta lembut, aksen abu-abu sepi, dan ikon dengan chroma tersisa 8%; varian malam memakai tinta kertas terang |
 | **Minimalis** | Niagara + Minima | Jam besar di atas wallpaper, satu kolom favorit, ruang kosong, bar pencarian membulat |
 | **Kedalaman** | Nova | Tekan lama untuk aksi, shortcut, sembunyikan aplikasi, grid, backup/restore, tema |
@@ -85,13 +88,16 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] **Gaya folio koran** dengan masthead, headline, foto monokrom, dan artikel yang dapat digulir
 - [x] Frasa di dalam artikel menjadi **shortcut aplikasi** yang dapat diketuk
 - [x] Jumlah pesan/notifikasi dirangkai menjadi berita melalui `NotificationListenerService`
-- [x] Kota dateline dapat diubah; foto berita dapat dimatikan
+- [x] Kota dateline dapat diubah; foto berita dan widget editorial dapat dimatikan
+- [x] Ikon cari membuka kolom di samping masthead; tidak ada indeks aplikasi permanen di halaman depan
+- [x] Tanggal membuka kalender; tautan/kartu Catatan membuka aplikasi yang terdeteksi atau dipilih pengguna
+- [x] Kartu editorial Kalender dan Catatan (bukan `AppWidgetHost` pihak ketiga)
 - [x] Palet **Kaleido** dan **Kaleido malam** seperti koran e-paper, dengan ikon aplikasi yang didesaturasi
 - [x] Menjadi launcher default (`CATEGORY_HOME` + `RoleManager`)
 - [x] Jam besar + tanggal, sadar format 12/24 jam (mengikuti sistem secara default)
 - [x] Ketuk jam → aplikasi alarm, seperti Pixel
-- [x] Daftar aplikasi favorit: indeks koran (folio) atau kolom vertikal (minimalis)
-- [x] Geser ke atas pada bar bawah untuk membuka laci
+- [x] Favorit menjadi tautan cadangan di artikel folio atau kolom vertikal pada gaya minimalis
+- [x] Geser atas untuk laci, geser kiri untuk pengaturan, geser kanan untuk panel notifikasi, dan ketuk dua kali untuk pencarian
 - [x] Tekan lama area kosong → menu ala Nova (pengaturan, wallpaper, launcher default, refresh)
 - [x] Wallpaper terlihat di belakang beranda (window transparan + `windowShowWallpaper`)
 - [x] Banner halus "jadikan launcher default" bila belum aktif
@@ -184,7 +190,7 @@ Ini fondasi yang serius, bukan launcher yang sudah selesai. Yang **belum** ada (
 
 | Belum ada | Catatan |
 |---|---|
-| Widget (`AppWidgetHost`) | Butuh host + konfigurasi + persistensi; prioritas berikutnya |
+| Widget pihak ketiga (`AppWidgetHost`) | Kartu Kalender/Catatan internal sudah ada; host widget umum butuh konfigurasi + persistensi |
 | Icon pack | Parsing `appfilter.xml` + masking ikon |
 | Rel alfabet melompat ke seksi lengket | Saat ini header ikut ter-scroll |
 | Jumlah pesan | Estimasi dari notifikasi aktif, bukan isi database pesan; perlu izin khusus **Akses Notifikasi** |

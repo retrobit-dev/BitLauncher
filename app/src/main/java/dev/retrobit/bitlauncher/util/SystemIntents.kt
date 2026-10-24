@@ -1,5 +1,6 @@
 package dev.retrobit.bitlauncher.util
 
+import android.app.StatusBarManager
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
@@ -44,6 +45,28 @@ object SystemIntents {
         if (!launchSafely(context, intent)) {
             launchSafely(context, Intent(Settings.ACTION_DISPLAY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
+    }
+
+    fun openCalendar(context: Context) {
+        val uri = android.net.Uri.parse("content://com.android.calendar/time/${System.currentTimeMillis()}")
+        val viewCalendar = Intent(Intent.ACTION_VIEW).apply {
+            data = uri
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        if (!launchSafely(context, viewCalendar)) {
+            launchSafely(
+                context,
+                Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_APP_CALENDAR)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                },
+            )
+        }
+    }
+
+    fun expandNotifications(context: Context) {
+        val statusBar = context.getSystemService(Context.STATUS_BAR_SERVICE) as? StatusBarManager
+        runCatching { statusBar?.expandNotificationsPanel() }
     }
 
     fun openNotificationAccess(context: Context) {

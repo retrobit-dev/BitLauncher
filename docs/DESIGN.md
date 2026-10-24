@@ -6,11 +6,11 @@ Tujuan visual: **tenang, satu tangan, tanpa kebisingan.** Gaya utama adalah **fo
 
 ## Gaya utama — Folio koran + E Ink Kaleido
 
-Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead, headline, foto, artikel dengan tautan aplikasi, lalu indeks favorit.
+Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead dengan pencarian yang dapat dibuka, headline, foto, artikel dengan tautan aplikasi, lalu kartu editorial Kalender dan Catatan. Tidak ada indeks aplikasi permanen atau tombol navigasi di bagian bawah.
 
 ```
 ┌──────────────────────────────┐
-│ BITLAUNCHER        EDISI 297 │
+│ BITLAUNCHER    EDISI 297  ⌕ │  ← ⌕ membuka kolom di samping nama
 │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
 │     SABTU, 24 OKTOBER 2026   │
 │ KABAR UTAMA            HLM. 1│
@@ -18,19 +18,21 @@ Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai dereta
 │ ┌──────────────────────────┐ │
 │ │      FOTO MONOKROM       │ │  ← foto utama
 │ └──────────────────────────┘ │
-│ Rembang, 24 Oktober 2026 —   │
+│ Rembang, 24 Oktober 2026 —   │  ← tanggal bergaris bawah = kalender
 │ Pada pukul 09.41 terjadi ... │
 │ ada 3 pesan belum dibaca di  │
-│ WhatsApp.                    │  ← frasa bergaris bawah = app
-│──────────────────────────────│
-│ INDEKS APLIKASI      05 ENTRI│
-│ 01 ▣ WhatsApp ············ › │
-│──────────────────────────────│
-│ [ ⌕ CARI DI ARSIP ] [▦] [☷] │
+│ WhatsApp. Buka Catatan.      │  ← frasa bergaris bawah = app
+│ ┌────────────┐ ┌───────────┐ │
+│ │ KALENDER   │ │ CATATAN   │ │  ← kartu editorial interaktif
+│ │ 24         │ │ Catatan   │ │
+│ └────────────┘ └───────────┘ │
+│             ────             │  ← geser atas = arsip, bukan tombol
 └──────────────────────────────┘
 ```
 
-Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal dengan garis bawah dan dapat diketuk. Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android.
+Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal dengan garis bawah dan dapat diketuk. Tanggal membuka kalender sistem; tautan dan kartu **Catatan** membuka aplikasi catatan yang terdeteksi otomatis atau dipilih di pengaturan. Kedua kartu dapat disembunyikan. Kartu ini adalah alat editorial internal, bukan host untuk widget pihak ketiga.
+
+Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android.
 
 Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian bergaris tinta, huruf seksi dengan rule, dan nomor entri berkelanjutan. Mode kisi memakai sel persegi dengan garis tipis, bukan kartu membulat.
 
@@ -45,7 +47,7 @@ Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian berga
 | Garis | `#979185` | `#6B665D` |
 | Aksen utama | `#3E433D` | `#B9B09C` |
 
-Aksen indeks hanya memakai tiga tingkat abu-abu hangat. Ikon aplikasi dan shortcut digambar dengan **8% chroma** (92% menuju luminance abu-abu), seperti foto berwarna yang dicetak sangat lemah pada e-paper. Bitmap asli tetap disimpan di cache, sehingga warna langsung pulih saat pengguna keluar dari tema Kaleido.
+Aksen metadata arsip hanya memakai tiga tingkat abu-abu hangat. Ikon aplikasi dan shortcut digambar dengan **8% chroma** (92% menuju luminance abu-abu), seperti foto berwarna yang dicetak sangat lemah pada e-paper. Bitmap asli tetap disimpan di cache, sehingga warna langsung pulih saat pengguna keluar dari tema Kaleido.
 
 ### Tipografi dan bentuk
 
@@ -173,8 +175,11 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 | Area | Gestur | Aksi |
 |---|---|---|
 | Beranda (kosong) | Tekan lama | Menu launcher |
-| Beranda (kosong) | Double tap | Buka laci + fokus pencarian |
-| Beranda | Geser atas di bar bawah | Buka laci |
+| Beranda folio | Double tap | Buka pencarian di samping masthead |
+| Beranda minimal | Double tap | Buka laci + fokus pencarian |
+| Beranda folio | Geser atas di indikator bawah | Buka laci |
+| Beranda folio | Geser kiri | Buka pengaturan |
+| Beranda folio | Geser kanan | Buka panel notifikasi sistem |
 | Beranda | Ketuk jam | Buka alarm |
 | Favorit | Ketuk | Buka aplikasi |
 | Favorit | Tekan lama | Lembar aksi |
@@ -182,7 +187,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 | Laci | Ketuk rel alfabet | Lompat ke huruf |
 | Laci | Tekan lama aplikasi | Lembar aksi |
 
-Semua gestur punya alternatif yang terlihat (tombol/pill), sehingga pengguna baru tidak terjebak.
+Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk gestur; pencarian, kalender, dan catatan tetap mempunyai kontrol yang terlihat.
 
 ---
 

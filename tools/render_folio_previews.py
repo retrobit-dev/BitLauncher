@@ -185,7 +185,8 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
     soft = color(palette["on_surface_variant"])
 
     tracked_text(draw, 20, 67, "BITLAUNCHER", font(11, "Bold"), ink, 3.4)
-    tracked_text(draw, 373, 67, "EDISI 297", font(10, "Medium"), soft, 1.6, "right")
+    tracked_text(draw, 342, 67, "EDISI 297", font(10, "Medium"), soft, 1.6, "right")
+    search_icon(draw, 363, 63, 16, ink, 1.6)
     rule(img, 76, palette, thick=True)
     tracked_text(draw, 196.5, 99, "SABTU, 24 OKTOBER 2026", font(10, "Medium"), soft, 2.2, "center")
     rule(img, 107, palette)
@@ -203,12 +204,12 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
     draw.line([(px(20), px(398)), (px(373), px(398))], fill=ink, width=max(1, px(1)))
     tracked_text(draw, 20, 416, "ILUSTRASI · SUASANA PAGI", font(8, "Medium"), soft, 1.4)
 
-    draw.text(
-        (px(20), px(446)),
-        "Rembang, Sabtu, 24 Oktober 2026 —",
-        font=serif(15, "SemiBold"),
-        fill=ink,
-        anchor="ls",
+    draw_article_line(
+        draw,
+        20,
+        446,
+        [("Rembang, ", "bold"), ("Sabtu, 24 Oktober 2026", "link"), (" —", "bold")],
+        palette,
     )
     article = [
         [("Pada pukul 09.41 terjadi sebuah fenomena", "regular")],
@@ -216,29 +217,25 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
         [("Kabar lain datang dari ", "regular"), ("Gmail, dengan 2 pesan", "link")],
         [("yang menanti. ", "link"), ("Untuk kabar berikutnya, buka", "regular")],
         [("Spotify", "link"), (" dan ", "regular"), ("Kamera", "link"), (".", "regular")],
+        [("Untuk mencatat kabar ini, buka ", "regular"), ("Catatan.", "link")],
     ]
     for index, line in enumerate(article):
         draw_article_line(draw, 20, 472 + index * 26, line, palette)
 
-    rule(img, 622, palette)
-    tracked_text(draw, 20, 642, "INDEKS APLIKASI", font(10, "SemiBold"), ink, 1.6)
-    tracked_text(draw, 373, 642, "05 ENTRI", font(10, "Medium"), soft, 1.6, "right")
-    rule(img, 650, palette)
-    editorial_row(img, APPS[0], 1, 658, palette, large=True)
-    editorial_row(img, APPS[1], 2, 720, palette, large=True)
+    # Interactive editorial cards, not a general Android AppWidgetHost.
+    rounded_rect(img, (20, 620, 177, 738), 2, outline=color(palette["outline"]))
+    rounded_rect(img, (185, 620, 373, 738), 2, outline=color(palette["outline"]))
+    draw = ImageDraw.Draw(img)
+    tracked_text(draw, 34, 643, "KALENDER", font(10, "SemiBold"), soft, 1.6)
+    draw.text((px(34), px(690)), "24", font=serif(36), fill=ink, anchor="ls")
+    tracked_text(draw, 34, 719, "OKTOBER 2026", font(8, "Medium"), soft, 1.0)
+    tracked_text(draw, 199, 643, "CATATAN", font(10, "SemiBold"), soft, 1.6)
+    draw.text((px(199), px(685)), "Catatan", font=serif(20), fill=ink, anchor="ls")
+    tracked_text(draw, 199, 719, "KETUK UNTUK MEMBUKA", font(8, "Medium"), soft, 1.0)
 
-    # Fixed archive actions, matching the Compose footer.
-    draw = ImageDraw.Draw(img)
-    draw.line([(px(20), px(766)), (px(373), px(766))], fill=ink, width=max(1, px(1)))
-    rounded_rect(img, (20, 778, 265, 824), 2, outline=ink)
-    rounded_rect(img, (273, 778, 319, 824), 2, outline=ink)
-    rounded_rect(img, (327, 778, 373, 824), 2, outline=ink)
-    draw = ImageDraw.Draw(img)
-    search_icon(draw, 81, 801, 16, ink, 1.6)
-    tracked_text(draw, 101, 805, "CARI DI ARSIP", font(10, "SemiBold"), ink, 1.4)
-    grid_icon(draw, 296, 801, 16, ink, 1.5)
-    sliders_icon(draw, 350, 801, 17, ink, 1.5)
-    tracked_text(draw, 196.5, 836, "BITLAUNCHER · LAUNCHER EDITORIAL · HLM. 1", font(8, "Medium"), soft, 1.2, "center")
+    # The archive is gesture-only; the small grabber is not a navigation button.
+    draw.rounded_rectangle([px(176), px(778), px(216), px(781)], radius=px(1.5), fill=color(palette["outline"]))
+    tracked_text(draw, 196.5, 801, "GESER ATAS UNTUK ARSIP · HLM. 1", font(8, "Medium"), soft, 1.2, "center")
 
     status_bar(img, tint=palette["on_surface"])
     return img

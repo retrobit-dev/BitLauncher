@@ -34,6 +34,8 @@ data class LauncherSettings(
     val compactRows: Boolean = false,
     val newsLocation: String = "Rembang",
     val showNewsPhoto: Boolean = true,
+    val showNewsWidgets: Boolean = true,
+    val notesPackage: String = "",
     val favorites: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
 )
@@ -79,6 +81,8 @@ class SettingsRepository(context: Context) {
             compactRows = prefs.getBoolean(KEY_COMPACT, false),
             newsLocation = prefs.getString(KEY_NEWS_LOCATION, "Rembang") ?: "Rembang",
             showNewsPhoto = prefs.getBoolean(KEY_NEWS_PHOTO, true),
+            showNewsWidgets = prefs.getBoolean(KEY_NEWS_WIDGETS, true),
+            notesPackage = prefs.getString(KEY_NOTES_PACKAGE, "") ?: "",
             favorites = favorites,
             hidden = prefs.getStringSet(KEY_HIDDEN, emptySet()) ?: emptySet(),
         )
@@ -100,6 +104,8 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_COMPACT, settings.compactRows)
             .putString(KEY_NEWS_LOCATION, settings.newsLocation)
             .putBoolean(KEY_NEWS_PHOTO, settings.showNewsPhoto)
+            .putBoolean(KEY_NEWS_WIDGETS, settings.showNewsWidgets)
+            .putString(KEY_NOTES_PACKAGE, settings.notesPackage)
             .putString(KEY_FAVORITES, settings.favorites.joinToString(SEPARATOR))
             .putStringSet(KEY_HIDDEN, settings.hidden)
             .apply()
@@ -148,6 +154,8 @@ class SettingsRepository(context: Context) {
         root.put("compactRows", settings.compactRows)
         root.put("newsLocation", settings.newsLocation)
         root.put("showNewsPhoto", settings.showNewsPhoto)
+        root.put("showNewsWidgets", settings.showNewsWidgets)
+        root.put("notesPackage", settings.notesPackage)
         root.put("favorites", JSONArray(settings.favorites))
         root.put("hidden", JSONArray(settings.hidden.toList()))
         return root.toString(2)
@@ -186,6 +194,8 @@ class SettingsRepository(context: Context) {
             compactRows = root.optBoolean("compactRows", current.compactRows),
             newsLocation = root.optString("newsLocation", current.newsLocation),
             showNewsPhoto = root.optBoolean("showNewsPhoto", current.showNewsPhoto),
+            showNewsWidgets = root.optBoolean("showNewsWidgets", current.showNewsWidgets),
+            notesPackage = root.optString("notesPackage", current.notesPackage),
             favorites = favorites,
             hidden = hidden,
         )
@@ -216,6 +226,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_COMPACT = "compact"
         private const val KEY_NEWS_LOCATION = "news_location"
         private const val KEY_NEWS_PHOTO = "news_photo"
+        private const val KEY_NEWS_WIDGETS = "news_widgets"
+        private const val KEY_NOTES_PACKAGE = "notes_package"
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_HIDDEN = "hidden"
     }

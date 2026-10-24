@@ -45,6 +45,7 @@ import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
 import dev.retrobit.bitlauncher.ui.components.HiddenAppsSheet
+import dev.retrobit.bitlauncher.ui.components.NotesAppSheet
 import dev.retrobit.bitlauncher.util.SystemIntents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,6 +63,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     var showHiddenApps by remember { mutableStateOf(false) }
+    var showNotesPicker by remember { mutableStateOf(false) }
     var isDefaultLauncher by remember { mutableStateOf(SystemIntents.isDefaultLauncher(context)) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -264,6 +266,15 @@ fun SettingsScreen(
             }
 
             item {
+                SettingsCard("Gestur folio") {
+                    SettingsSubtitle(
+                        "Geser atas di bagian bawah untuk arsip; geser kiri untuk pengaturan; " +
+                            "geser kanan untuk notifikasi. Ketuk dua kali untuk pencarian dan tekan lama untuk menu.",
+                    )
+                }
+            }
+
+            item {
                 SettingsCard("Halaman berita") {
                     OutlinedTextField(
                         value = settings.newsLocation,
@@ -282,6 +293,21 @@ fun SettingsScreen(
                         onCheckedChange = { enabled ->
                             viewModel.updateSettings { it.copy(showNewsPhoto = enabled) }
                         },
+                    )
+                    SwitchRow(
+                        title = "Widget kalender & catatan",
+                        checked = settings.showNewsWidgets,
+                        description = "Tampilkan dua kartu interaktif setelah artikel",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNewsWidgets = enabled) }
+                        },
+                    )
+                    ActionRow(
+                        title = "Aplikasi catatan",
+                        value = allApps.firstOrNull { it.packageName == settings.notesPackage }?.label
+                            ?: "Otomatis",
+                        description = "Dipakai oleh tautan dan widget Catatan",
+                        onClick = { showNotesPicker = true },
                     )
                     ActionRow(
                         title = "Akses notifikasi",
@@ -304,7 +330,7 @@ fun SettingsScreen(
                         onClick = { showHiddenApps = true },
                     )
                     SettingsSubtitle(
-                        "Tekan lama aplikasi di beranda atau laci untuk pin ke beranda, " +
+                        "Tekan lama aplikasi di laci (atau beranda gaya minimal) untuk pin, " +
                             "membuka shortcut, menyembunyikan, atau melihat info aplikasi.",
                     )
                 }
@@ -369,6 +395,18 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showNotesPicker) {
+        NotesAppSheet(
+            apps = allApps,
+            selectedPackage = settings.notesPackage,
+            onSelect = { packageName ->
+                viewModel.updateSettings { it.copy(notesPackage = packageName) }
+                showNotesPicker = false
+            },
+            onDismiss = { showNotesPicker = false },
+        )
     }
 
     if (showHiddenApps) {
