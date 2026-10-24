@@ -1,5 +1,6 @@
 package dev.retrobit.bitlauncher.ui.home
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -58,6 +59,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
+import dev.retrobit.bitlauncher.data.GestureAction
 import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.ui.components.AppActionsSheet
 import dev.retrobit.bitlauncher.ui.components.AppIcon
@@ -89,6 +91,8 @@ fun HomeScreen(
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val favorites by viewModel.favorites.collectAsStateWithLifecycle()
+    val allApps by viewModel.allApps.collectAsStateWithLifecycle()
+    val notificationCounts by viewModel.notificationCounts.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
 
     var showHomeMenu by remember { mutableStateOf(false) }
@@ -112,6 +116,26 @@ fun HomeScreen(
         isDefaultLauncher = SystemIntents.isDefaultLauncher(context)
     }
 
+    val notesApp = remember(allApps, settings.notesPackage) {
+        findNotesApp(allApps, settings.notesPackage)
+    }
+    fun openNotes() {
+        val app = notesApp
+        if (app != null) {
+            viewModel.launch(app)
+        } else {
+            Toast.makeText(context, "Pilih aplikasi catatan di Pengaturan", Toast.LENGTH_SHORT).show()
+            onOpenSettings()
+        }
+    }
+    val performGesture = rememberHomeGestureHandler(
+        onOpenDrawer = { onOpenDrawer(false) },
+        onOpenSearch = { onOpenDrawer(true) },
+        onOpenSettings = onOpenSettings,
+        onOpenHomeMenu = { showHomeMenu = true },
+        onOpenNotes = ::openNotes,
+    )
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Scrim keeps white text readable on any wallpaper.
         Box(
@@ -131,10 +155,20 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .pointerInput(Unit) {
+                .homeHorizontalGestures(
+                    leftAction = settings.swipeLeftAction,
+                    rightAction = settings.swipeRightAction,
+                    onAction = performGesture,
+                )
+                .homeTwoFingerGestures(
+                    upAction = settings.twoFingerSwipeUpAction,
+                    downAction = settings.twoFingerSwipeDownAction,
+                    onAction = performGesture,
+                )
+                .pointerInput(settings.doubleTapAction, settings.longPressAction) {
                     detectTapGestures(
-                        onLongPress = { showHomeMenu = true },
-                        onDoubleTap = { onOpenDrawer(true) },
+                        onLongPress = { performGesture(settings.longPressAction) },
+                        onDoubleTap = { performGesture(settings.doubleTapAction) },
                     )
                 },
         ) {
@@ -178,6 +212,11 @@ fun HomeScreen(
                         FavoriteRow(
                             app = app,
                             compact = settings.compactRows,
+                            unread = if (settings.showNotificationBadges) {
+                                notificationCounts[app.packageName] ?: 0
+                            } else {
+                                0
+                            },
                             onClick = { viewModel.launch(app) },
                             onLongClick = {
                                 if (settings.haptics) {
@@ -192,7 +231,8 @@ fun HomeScreen(
 
             HomeBottomBar(
                 onSearch = { onOpenDrawer(true) },
-                onOpenDrawer = { onOpenDrawer(false) },
+                swipeUpAction = settings.swipeUpAction,
+                onGesture = performGesture,
                 onOpenSettings = onOpenSettings,
             )
         }
@@ -303,6 +343,7 @@ private fun EmptyFavorites(modifier: Modifier, onOpenDrawer: () -> Unit) {
 private fun FavoriteRow(
     app: LaunchableApp,
     compact: Boolean,
+    unread: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -313,7 +354,7 @@ private fun FavoriteRow(
             .padding(horizontal = 24.dp, vertical = if (compact) 7.dp else 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AppIcon(app = app, size = if (compact) 24.dp else 30.dp)
+        AppIcon(app = app, size = if (compact) 24.dp else 30.dp, badgeCount = unread)
         Spacer(Modifier.width(18.dp))
         Column(Modifier.weight(1f)) {
             Text(
@@ -341,7 +382,8 @@ private fun FavoriteRow(
 @Composable
 private fun HomeBottomBar(
     onSearch: () -> Unit,
-    onOpenDrawer: () -> Unit,
+    swipeUpAction: GestureAction,
+    onGesture: (GestureAction) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
@@ -350,11 +392,11 @@ private fun HomeBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(26.dp)
-                .pointerInput(Unit) {
+                .pointerInput(swipeUpAction) {
                     var total = 0f
                     detectVerticalDragGestures(
                         onDragStart = { total = 0f },
-                        onDragEnd = { if (total < -24f) onOpenDrawer() },
+                        onDragEnd = { if (total < -24f) onGesture(swipeUpAction) },
                         onVerticalDrag = { _, delta -> total += delta },
                     )
                 },

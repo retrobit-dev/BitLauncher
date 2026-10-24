@@ -1,5 +1,6 @@
 package dev.retrobit.bitlauncher.util
 
+import android.accessibilityservice.AccessibilityService
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
@@ -9,7 +10,7 @@ import android.provider.AlarmClock
 import android.provider.Settings
 import android.widget.Toast
 import dev.retrobit.bitlauncher.data.LaunchableApp
-import dev.retrobit.bitlauncher.notifications.NotificationPanelAccessibilityService
+import dev.retrobit.bitlauncher.notifications.LauncherAccessibilityService
 
 object SystemIntents {
 
@@ -66,26 +67,54 @@ object SystemIntents {
     }
 
     fun expandNotifications(context: Context) {
-        if (NotificationPanelAccessibilityService.expandNotifications()) return
-        val enabled = NotificationPanelAccessibilityService.isEnabled(context)
-        Toast.makeText(
-            context,
-            if (enabled) "Layanan gestur belum siap; coba lagi" else "Aktifkan gestur notifikasi di Aksesibilitas",
-            Toast.LENGTH_SHORT,
-        ).show()
-        if (!enabled) openNotificationPanelSettings(context)
+        performGestureAction(context, AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS, "panel notifikasi")
     }
 
-    fun isNotificationPanelEnabled(context: Context): Boolean =
-        NotificationPanelAccessibilityService.isEnabled(context)
+    fun openQuickSettings(context: Context) {
+        performGestureAction(context, AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS, "pengaturan cepat")
+    }
 
-    fun openNotificationPanelSettings(context: Context) {
+    fun openRecents(context: Context) {
+        performGestureAction(context, AccessibilityService.GLOBAL_ACTION_RECENTS, "aplikasi terbaru")
+    }
+
+    fun lockScreen(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            Toast.makeText(context, "Kunci layar memerlukan Android 9 atau lebih baru", Toast.LENGTH_SHORT).show()
+            return
+        }
+        performGestureAction(context, AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN, "kunci layar")
+    }
+
+    fun takeScreenshot(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            Toast.makeText(context, "Screenshot memerlukan Android 11 atau lebih baru", Toast.LENGTH_SHORT).show()
+            return
+        }
+        performGestureAction(context, AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT, "screenshot")
+    }
+
+    fun isGestureServiceEnabled(context: Context): Boolean =
+        LauncherAccessibilityService.isEnabled(context)
+
+    fun openGestureSettings(context: Context) {
         launchSafely(
             context,
             Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             },
         )
+    }
+
+    private fun performGestureAction(context: Context, action: Int, label: String) {
+        if (LauncherAccessibilityService.perform(action)) return
+        val enabled = LauncherAccessibilityService.isEnabled(context)
+        Toast.makeText(
+            context,
+            if (enabled) "Aksi $label belum siap; coba lagi" else "Aktifkan gestur sistem untuk $label",
+            Toast.LENGTH_SHORT,
+        ).show()
+        if (!enabled) openGestureSettings(context)
     }
 
     fun openNotificationAccess(context: Context) {

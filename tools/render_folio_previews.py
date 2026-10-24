@@ -235,7 +235,7 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
 
     # The archive is gesture-only; the small grabber is not a navigation button.
     draw.rounded_rectangle([px(176), px(778), px(216), px(781)], radius=px(1.5), fill=color(palette["outline"]))
-    tracked_text(draw, 196.5, 801, "GESER ATAS UNTUK ARSIP · HLM. 1", font(8, "Medium"), soft, 1.2, "center")
+    tracked_text(draw, 196.5, 801, "GESER ATAS · BUKA ARSIP APLIKASI · HLM. 1", font(8, "Medium"), soft, 1.2, "center")
 
     status_bar(img, tint=palette["on_surface"])
     return img
@@ -336,10 +336,60 @@ def render_folio_grid(palette: dict = KALEIDO) -> Image.Image:
     return img
 
 
+
+def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
+    """A configured settings example showing gesture actions and editorial controls."""
+    img = Image.new("RGBA", (W, H), color(palette["bg"]))
+    draw = ImageDraw.Draw(img)
+    ink = color(palette["on_surface"])
+    soft = color(palette["on_surface_variant"])
+    outline = color(palette["outline_variant"])
+
+    draw.line([(px(29), px(69)), (px(41), px(81))], fill=ink, width=px(1.5))
+    draw.line([(px(41), px(69)), (px(29), px(81))], fill=ink, width=px(1.5))
+    draw.text((px(58), px(87)), "Pengaturan", font=serif(28), fill=ink, anchor="ls")
+    tracked_text(draw, 20, 118, "GESTUR BERANDA", font(10, "SemiBold"), ink, 1.6)
+    rounded_rect(img, (20, 130, 373, 498), 2, outline=outline)
+
+    gesture_rows = [
+        ("Ketuk dua kali", "Cari aplikasi"),
+        ("Tekan lama", "Menu launcher"),
+        ("Geser ke kiri", "Buka pengaturan"),
+        ("Geser ke kanan", "Panel notifikasi"),
+        ("Geser ke atas", "Buka arsip aplikasi"),
+        ("Geser dua jari ke atas", "Tidak ada"),
+        ("Geser dua jari ke bawah", "Pengaturan cepat"),
+    ]
+    for index, (label, value) in enumerate(gesture_rows):
+        y = 140 + index * 50
+        if index:
+            draw.line([(px(32), px(y)), (px(361), px(y))], fill=outline, width=max(1, px(0.6)))
+        draw.text((px(34), px(y + 30)), label, font=serif(14), fill=ink, anchor="ls")
+        draw.text((px(359), px(y + 29)), value, font=font(10, "Medium"), fill=soft, anchor="rs")
+
+    tracked_text(draw, 20, 528, "HALAMAN BERITA & APLIKASI", font(10, "SemiBold"), ink, 1.6)
+    rounded_rect(img, (20, 540, 373, 758), 2, outline=outline)
+    switches = ["Artikel berita", "Shortcut aplikasi di artikel", "Ringkasan notifikasi", "Badge notifikasi"]
+    for index, label in enumerate(switches):
+        y = 548 + index * 52
+        if index:
+            draw.line([(px(32), px(y)), (px(361), px(y))], fill=outline, width=max(1, px(0.6)))
+        draw.text((px(34), px(y + 31)), label, font=serif(14), fill=ink, anchor="ls")
+        draw.rounded_rectangle(
+            [px(329), px(y + 16), px(359), px(y + 34)],
+            radius=px(2),
+            fill=color(palette["primary"]),
+        )
+        draw.rectangle([px(347), px(y + 19), px(356), px(y + 31)], fill=color(palette["bg"]))
+
+    status_bar(img, tint=palette["on_surface"])
+    return img
+
 def main() -> None:
     save(framed(render_folio_home()), "folio-home")
     save(framed(render_folio_archive()), "folio-archive")
     save(framed(render_folio_grid()), "folio-grid")
+    save(framed(render_folio_settings()), "folio-settings")
     save(framed(render_folio_archive(KALEIDO_NIGHT)), "folio-night")
 
 

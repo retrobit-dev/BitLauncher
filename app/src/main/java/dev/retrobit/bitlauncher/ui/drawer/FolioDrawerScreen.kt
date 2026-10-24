@@ -99,6 +99,7 @@ fun FolioDrawerScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val notificationCounts by viewModel.notificationCounts.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -268,6 +269,11 @@ fun FolioDrawerScreen(
                                     item.apps.forEach { app ->
                                         FolioGridCell(
                                             app = app,
+                                            unread = if (settings.showNotificationBadges) {
+                                                notificationCounts[app.packageName] ?: 0
+                                            } else {
+                                                0
+                                            },
                                             onClick = { viewModel.launch(app) },
                                             onLongClick = {
                                                 if (settings.haptics) {
@@ -287,6 +293,11 @@ fun FolioDrawerScreen(
                                     val number = entryNumber[app.key] ?: 0
                                     FolioArchiveRow(
                                         app = app,
+                                        unread = if (settings.showNotificationBadges) {
+                                            notificationCounts[app.packageName] ?: 0
+                                        } else {
+                                            0
+                                        },
                                         number = number,
                                         accent = folioAccent(number),
                                         onClick = { viewModel.launch(app) },
@@ -451,6 +462,7 @@ private fun FolioSearchField(
 @Composable
 private fun FolioArchiveRow(
     app: LaunchableApp,
+    unread: Int,
     number: Int,
     accent: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
@@ -470,7 +482,7 @@ private fun FolioArchiveRow(
             color = accent,
             modifier = Modifier.width(22.dp),
         )
-        AppIcon(app = app, size = 28.dp)
+        AppIcon(app = app, size = 28.dp, badgeCount = unread)
         Spacer(Modifier.width(12.dp))
         Text(
             text = app.label,
@@ -505,6 +517,7 @@ private fun FolioArchiveRow(
 @Composable
 private fun FolioGridCell(
     app: LaunchableApp,
+    unread: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -517,7 +530,7 @@ private fun FolioGridCell(
             .padding(vertical = 12.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppIcon(app = app, size = 40.dp)
+        AppIcon(app = app, size = 40.dp, badgeCount = unread)
         Spacer(Modifier.height(8.dp))
         Text(
             text = app.label,

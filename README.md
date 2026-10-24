@@ -21,13 +21,17 @@ python3 -m http.server 8080 --directory preview
 
 ### Folio koran · E Ink Kaleido (default)
 
-| Halaman depan | Arsip aplikasi |
+| Halaman depan | Pengaturan gestur & artikel |
 |---|---|
-| ![Halaman depan folio](docs/preview-folio-home.jpg) | ![Arsip folio](docs/preview-folio-archive.jpg) |
+| ![Halaman depan folio](docs/preview-folio-home.jpg) | ![Pengaturan gestur dan artikel](docs/preview-folio-settings.jpg) |
 
-| Kisi arsip | Kaleido malam |
+| Arsip aplikasi | Kisi arsip |
 |---|---|
-| ![Kisi arsip folio](docs/preview-folio-grid.jpg) | ![Kaleido malam](docs/preview-folio-night.jpg) |
+| ![Arsip folio](docs/preview-folio-archive.jpg) | ![Kisi arsip folio](docs/preview-folio-grid.jpg) |
+
+| Kaleido malam |
+|---|
+| ![Kaleido malam](docs/preview-folio-night.jpg) |
 
 ### Minimalis (gaya alternatif)
 
@@ -57,6 +61,9 @@ Yang bisa dicoba di prototipe:
 - Ganti kota dateline, tampilkan/sembunyikan foto dan widget, serta pilih aplikasi catatan dari pengaturan prototipe.
 - Ketuk tanggal untuk membuka kalender atau tautan/kartu **Catatan** untuk membuka aplikasi catatan.
 - Ketuk ikon cari di masthead untuk membuka kolom pencarian di samping label **BITLAUNCHER**.
+- Buka **Pengaturan → Gestur beranda** untuk memetakan ketuk dua kali, tekan lama, geser kiri/kanan/atas, dan geser dua jari.
+- Pilih aksi **Kunci layar**, **Pengaturan cepat**, **Aplikasi terbaru**, atau **Ambil screenshot**; pilih **Tidak ada** untuk mematikan gestur.
+- Atur artikel, tautan shortcut aplikasi, ringkasan notifikasi, dan badge ikon secara terpisah.
 - Beralih **Daftar / Kisi** dan jumlah kolom 3–6.
 - **Tekan lama** aplikasi untuk membuka lembar aksi (shortcut, pin, sembunyikan, info, uninstall).
 - **Ketuk** aplikasi untuk melihat umpan balik peluncuran.
@@ -90,6 +97,10 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Jumlah pesan/notifikasi dirangkai menjadi berita melalui `NotificationListenerService`
 - [x] Kota dateline dapat diubah; foto berita dan widget editorial dapat dimatikan
 - [x] Ikon cari membuka kolom di samping masthead; tidak ada indeks aplikasi permanen di halaman depan
+- [x] Artikel, shortcut aplikasi dalam artikel, ringkasan notifikasi, foto, dan widget dapat diatur terpisah
+- [x] Tujuh gestur dapat dipetakan ulang atau dimatikan, termasuk geser dua jari
+- [x] Aksi kunci layar, panel notifikasi, pengaturan cepat, recents, dan screenshot via gestur
+- [x] Badge jumlah notifikasi pada ikon favorit, hasil pencarian, dan laci (dapat dimatikan)
 - [x] Tanggal membuka kalender; tautan/kartu Catatan membuka aplikasi yang terdeteksi atau dipilih pengguna
 - [x] Kartu editorial Kalender dan Catatan (bukan `AppWidgetHost` pihak ketiga)
 - [x] Palet **Kaleido** dan **Kaleido malam** seperti koran e-paper, dengan ikon aplikasi yang didesaturasi
@@ -97,7 +108,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Jam besar + tanggal, sadar format 12/24 jam (mengikuti sistem secara default)
 - [x] Ketuk jam → aplikasi alarm, seperti Pixel
 - [x] Favorit menjadi tautan cadangan di artikel folio atau kolom vertikal pada gaya minimalis
-- [x] Geser atas untuk laci, geser kiri untuk pengaturan, geser kanan untuk panel notifikasi, dan ketuk dua kali untuk pencarian
+- [x] Aksi setiap gestur dapat dipilih di pengaturan pada gaya Folio maupun Minimal
 - [x] Tekan lama area kosong → menu ala Nova (pengaturan, wallpaper, launcher default, refresh)
 - [x] Wallpaper terlihat di belakang beranda (window transparan + `windowShowWallpaper`)
 - [x] Banner halus "jadikan launcher default" bila belum aktif
@@ -127,7 +138,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Manajer aplikasi tersembunyi dengan pencarian
 - [x] Pintasan launcher default dan pemilih wallpaper sistem
 - [x] Pengaturan akses notifikasi dengan penjelasan privasi; isi pesan tidak dibaca/disimpan
-- [x] Gestur panel notifikasi via aksi global Accessibility; tanpa event atau konten layar
+- [x] Aksi global Accessibility untuk gestur sistem; tanpa event atau konten layar
 - [x] Ekspor/impor pengaturan ke JSON lewat Storage Access Framework
 
 ### Teknis
@@ -195,8 +206,8 @@ Ini fondasi yang serius, bukan launcher yang sudah selesai. Yang **belum** ada (
 | Icon pack | Parsing `appfilter.xml` + masking ikon |
 | Rel alfabet melompat ke seksi lengket | Saat ini header ikut ter-scroll |
 | Jumlah pesan | Estimasi dari notifikasi aktif, bukan isi database pesan; perlu izin khusus **Akses Notifikasi** |
-| Gestur panel notifikasi | Memerlukan opt-in **Aksesibilitas**; hanya menjalankan `GLOBAL_ACTION_NOTIFICATIONS` |
-| Double-tap untuk matikan layar | Butuh Device Admin / Accessibility, sengaja ditunda |
+| Aksi gestur sistem | Memerlukan opt-in **Aksesibilitas**; hanya aksi global yang dipilih, tanpa membaca konten layar |
+| Kunci layar / screenshot | Aksi Accessibility; kunci layar Android 9+, screenshot Android 11+ |
 | Recents kustom | Tidak mungkin sejak Android 5 (API dihapus) |
 
 Detail rencana ada di [docs/ROADMAP.md](docs/ROADMAP.md), sedangkan wireframe dan token desain ada di [docs/DESIGN.md](docs/DESIGN.md).

@@ -606,6 +606,19 @@
     position: relative;
   }
   .icon span { font-size: 46%; letter-spacing: 0; }
+  .icon .icon-badge {
+    position: absolute; top: 0; right: 0; min-width: 15px; height: 15px;
+    padding: 0 3px; border: 1px solid var(--bg); border-radius: 9px;
+    background: var(--on-surface); color: var(--bg);
+    display: grid; place-items: center;
+    font-family: var(--sans); font-size: 8px; line-height: 1; letter-spacing: 0;
+  }
+  .gesture-setting { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+  .gesture-setting > label { flex: 1; font-family: var(--sans); font-size: 14px; }
+  .gesture-select {
+    max-width: 170px; padding: 8px; border: 1px solid var(--outline); border-radius: 2px;
+    background: var(--bg); color: var(--on-surface); font: inherit; font-size: 12px;
+  }
 
   /* ------------------------------------------------------------------ panel */
   .panel {
@@ -1297,9 +1310,9 @@
 
     <div class="hint-keys">
       <div><kbd>klik</kbd> aplikasi → buka · <kbd>tekan</kbd> → lembar aksi</div>
-      <div><kbd>geser atas</kbd> footer → laci · <kbd>2× ketuk</kbd> beranda → cari</div>
-      <div><kbd>geser kiri</kbd> → pengaturan · <kbd>geser kanan</kbd> → notifikasi</div>
-      <div><kbd>tekan lama</kbd> area kosong beranda → menu</div>
+      <div><kbd>geser atas</kbd> footer → laci · <kbd>2× ketuk</kbd> beranda → cari (default)</div>
+      <div><kbd>geser kiri/kanan</kbd> dan <kbd>2 jari</kbd> → aksi dapat diatur di Pengaturan</div>
+      <div><kbd>tekan lama</kbd> → menu (default) · semua gestur dapat dinonaktifkan</div>
     </div>
   </aside>
 </div>
@@ -1337,6 +1350,20 @@ const APPS = [
 ];
 
 const FAVORITE_NAMES = ["WhatsApp", "Spotify", "Kamera", "Catatan", "Chrome"];
+const GESTURE_ACTIONS = {
+  NONE: "Tidak ada",
+  OPEN_DRAWER: "Buka arsip aplikasi",
+  OPEN_SEARCH: "Cari aplikasi",
+  OPEN_SETTINGS: "Buka pengaturan",
+  OPEN_HOME_MENU: "Menu launcher",
+  OPEN_NOTIFICATIONS: "Panel notifikasi",
+  OPEN_QUICK_SETTINGS: "Pengaturan cepat",
+  OPEN_RECENTS: "Aplikasi terbaru",
+  LOCK_SCREEN: "Kunci layar",
+  TAKE_SCREENSHOT: "Ambil screenshot",
+  OPEN_CALENDAR: "Buka kalender",
+  OPEN_NOTES: "Buka catatan",
+};
 
 const state = {
   theme: "kaleido",
@@ -1345,8 +1372,19 @@ const state = {
   notificationAccess: true,
   notifications: { "WhatsApp": 3, "Gmail": 2 },
   newsLocation: "Rembang",
+  showNewsArticle: true,
+  showNewsAppLinks: true,
+  showNewsUnread: true,
   showNewsPhoto: true,
   showNewsWidgets: true,
+  showNotificationBadges: true,
+  doubleTapAction: "OPEN_SEARCH",
+  longPressAction: "OPEN_HOME_MENU",
+  swipeLeftAction: "OPEN_SETTINGS",
+  swipeRightAction: "OPEN_NOTIFICATIONS",
+  swipeUpAction: "OPEN_DRAWER",
+  twoFingerSwipeUpAction: "NONE",
+  twoFingerSwipeDownAction: "NONE",
   homeSearchExpanded: false,
   homeQuery: "",
   notesApp: "Catatan",
@@ -1376,8 +1414,9 @@ function iconStyle(app, radius) {
   return `background:linear-gradient(150deg, ${app.c1}, ${app.c2}); color:${darkText}; border-radius:${radius}px;`;
 }
 
-function iconHtml(app, size, radius) {
-  return `<div class="icon" style="width:${size}px;height:${size}px;${iconStyle(app, radius)}"><span>${app.i}</span></div>`;
+function iconHtml(app, size, radius, badge = 0) {
+  const badgeHtml = badge > 0 ? `<span class="icon-badge">${badge > 99 ? "99+" : badge}</span>` : "";
+  return `<div class="icon" style="width:${size}px;height:${size}px;${iconStyle(app, radius)}"><span>${app.i}</span>${badgeHtml}</div>`;
 }
 
 function clockNow() {
@@ -1430,7 +1469,7 @@ function renderMinimalHome() {
       if (!app) return "";
       return `
         <div class="fav-row" data-app="${app.name}">
-          ${iconHtml(app, state.compact ? 24 : 30, state.compact ? 7 : 9)}
+          ${iconHtml(app, state.compact ? 24 : 30, state.compact ? 7 : 9, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
           <div style="min-width:0">
             <div class="fav-name">${app.name}</div>
             ${app.work ? '<div class="fav-sub">Profil kerja</div>' : ""}
@@ -1488,6 +1527,7 @@ function newsNoun(app) {
 }
 
 function articleLink(app, text) {
+  if (!state.showNewsAppLinks) return `<span>${escapeHtml(text)}</span>`;
   return `<button type="button" class="article-link" data-app="${escapeHtml(app.name)}">${escapeHtml(text)}</button>`;
 }
 
@@ -1505,6 +1545,14 @@ function buildNewsArticle(entries, shortcutApps) {
   const notesLink = '<button type="button" class="article-link" data-open-notes>Catatan</button>';
   const finish = (body) => `${body} Untuk mencatat kabar ini, buka ${notesLink}.`;
   let body = `<strong>${location}</strong>${state.date ? `, ${calendarLink}` : ""}<strong> — </strong>`;
+
+  if (!state.showNewsUnread) {
+    body += `${time}, ringkasan notifikasi tidak ditampilkan. `;
+    body += shortcutApps.length
+      ? `Aplikasi ${articleAppLinks(shortcutApps)} tercantum tanpa jumlah notifikasi.`
+      : "Arsip aplikasi tetap dapat dibuka dengan gestur yang dipilih.";
+    return finish(body);
+  }
 
   if (!state.notificationAccess) {
     body += `${time}, halaman ini belum dapat membaca jumlah pesan. Aktifkan akses notifikasi untuk kabar terbaru. `;
@@ -1533,11 +1581,11 @@ function buildNewsArticle(entries, shortcutApps) {
 }
 
 function folioRow(app, index, compact) {
-  const unread = state.notificationAccess ? (state.notifications[app.name] || 0) : 0;
+  const unread = state.notificationAccess && state.showNotificationBadges ? (state.notifications[app.name] || 0) : 0;
   return `
     <div class="folio-row" data-app="${app.name}">
       <span class="num" style="color:${printAccent(index)}">${String(index + 1).padStart(2, "0")}</span>
-      ${iconHtml(app, compact ? 28 : 26, 6)}
+      ${iconHtml(app, compact ? 28 : 26, 6, unread)}
       <span class="label">${app.name}</span>
       ${app.work ? '<span class="tag">KERJA</span>' : ""}
       ${unread ? `<span class="tag">${unread} ${newsNoun(app).toUpperCase()}</span>` : ""}
@@ -1551,7 +1599,7 @@ function renderFolioHome() {
   home.dataset.style = "folio";
   const favorites = state.favoriteNames.map(appByName).filter(Boolean);
   const available = visibleApps();
-  const entries = available
+  const entries = (state.showNewsUnread ? available : [])
     .filter((app) => (state.notifications[app.name] || 0) > 0)
     .map((app) => ({ app, count: state.notifications[app.name] }))
     .sort((a, b) => b.count - a.count)
@@ -1560,7 +1608,7 @@ function renderFolioHome() {
   const lead = entries[0];
   const headline = lead
     ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
-    : state.notificationAccess ? "Tidak ada kabar baru hari ini" : "Kabar dari aplikasi Anda";
+    : state.notificationAccess && state.showNewsUnread ? "Tidak ada kabar baru hari ini" : "Kabar dari aplikasi Anda";
   const homeResults = state.homeQuery.trim()
     ? available.filter((app) => matches(app, state.homeQuery.trim().toLowerCase())).slice(0, 6)
     : [];
@@ -1569,7 +1617,7 @@ function renderFolioHome() {
     ? `<img class="news-photo" src="assets/news-photo.jpg" alt="Ilustrasi suasana jalan di pagi hari" />
        <div class="news-caption">ILUSTRASI · SUASANA PAGI</div>`
     : "";
-  const accessNotice = !state.notificationAccess
+  const accessNotice = state.showNewsUnread && !state.notificationAccess
     ? `<button class="news-access" data-enable-notifications>
          ${ICONS.bell}
          <span><span class="t">AKTIFKAN AKSES NOTIFIKASI</span><span class="d">Hanya jumlah notifikasi aktif yang digunakan; isi pesan tidak disimpan.</span></span>
@@ -1587,14 +1635,17 @@ function renderFolioHome() {
          </button>
        </div>`
     : "";
+  const article = state.showNewsArticle
+    ? `<p class="news-article">${buildNewsArticle(entries, shortcutApps)}</p>`
+    : "";
   const searchContent = state.homeQuery.trim()
     ? `<div class="news-search-results">
          <div class="folio-section"><span>HASIL PENCARIAN</span><span>${homeResults.length} APLIKASI</span></div>
          ${homeResults.length
            ? homeResults.map((app) => {
-               const unread = state.notificationAccess ? (state.notifications[app.name] || 0) : 0;
+               const unread = state.notificationAccess && state.showNotificationBadges ? (state.notifications[app.name] || 0) : 0;
                return `<button type="button" class="news-search-row" data-app="${escapeHtml(app.name)}">
-                 ${iconHtml(app, 28, 6)}<span class="name">${escapeHtml(app.name)}</span>
+                 ${iconHtml(app, 28, 6, unread)}<span class="name">${escapeHtml(app.name)}</span>
                  ${unread ? `<span class="unread">${unread} ${newsNoun(app)}</span>` : ""}
                </button>`;
              }).join("")
@@ -1603,7 +1654,7 @@ function renderFolioHome() {
     : `<div class="folio-section"><span>KABAR UTAMA</span><span>HLM. 1</span></div>
        <h2 class="news-headline">${escapeHtml(headline)}</h2>
        ${photo}
-       <p class="news-article">${buildNewsArticle(entries, shortcutApps)}</p>
+       ${article}
        ${accessNotice}${widgets}`;
   const mastheadControl = state.homeSearchExpanded
     ? `<input id="home-search-input" class="masthead-search" value="${escapeHtml(state.homeQuery)}" placeholder="Cari aplikasi" autocomplete="off" aria-label="Cari aplikasi" />`
@@ -1623,16 +1674,16 @@ function renderFolioHome() {
         ${searchContent}
       </div>
       <div class="news-gesture-footer" data-folio-grab role="button" tabindex="0" aria-label="Geser ke atas untuk membuka arsip">
-        <i></i><span>GESER ATAS UNTUK ARSIP · HLM. 1</span>
+        <i></i><span>GESER ATAS · ${GESTURE_ACTIONS[state.swipeUpAction].toUpperCase()} · HLM. 1</span>
       </div>
     </div>`;
 
   bindAppTargets(home);
   home.querySelectorAll("[data-open-calendar]").forEach((el) => {
-    el.onclick = () => toast("Membuka Kalender");
+    el.onclick = () => performGesture("OPEN_CALENDAR");
   });
   home.querySelectorAll("[data-open-notes]").forEach((el) => {
-    el.onclick = () => toast(`Membuka ${state.notesApp}`);
+    el.onclick = () => performGesture("OPEN_NOTES");
   });
   home.querySelectorAll("[data-enable-notifications]").forEach((el) => {
     el.onclick = () => {
@@ -1683,13 +1734,13 @@ function renderFolioHome() {
     if (grabStart !== null && event.clientY - grabStart < -28) {
       grabbed = true;
       grabStart = null;
-      openDrawer(false);
+      performGesture(state.swipeUpAction);
     }
   });
   grab.addEventListener("pointerup", () => { grabStart = null; });
-  grab.addEventListener("click", () => { if (!grabbed) openDrawer(false); grabbed = false; });
+  grab.addEventListener("click", () => { if (!grabbed) performGesture(state.swipeUpAction); grabbed = false; });
   grab.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") openDrawer(false);
+    if (event.key === "Enter" || event.key === " ") performGesture(state.swipeUpAction);
   });
 }
 
@@ -1719,7 +1770,7 @@ function renderFolioDrawer() {
           .map(
             (app) => `
             <div class="folio-grid-cell" data-app="${app.name}">
-              ${iconHtml(app, 40, 8)}
+              ${iconHtml(app, 40, 8, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
               <span class="label">${app.name}</span>
             </div>`
           )
@@ -1859,7 +1910,7 @@ function renderMinimalDrawer() {
           .map(
             (app) => `
             <div class="grid-cell" data-app="${app.name}">
-              ${iconHtml(app, 46, 13)}
+              ${iconHtml(app, 46, 13, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
               <div class="label">${app.name}</div>
             </div>`
           )
@@ -1872,7 +1923,7 @@ function renderMinimalDrawer() {
         .map(
           (app) => `
           <div class="list-row" data-app="${app.name}">
-            ${iconHtml(app, 34, 10)}
+            ${iconHtml(app, 34, 10, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
             <div class="label">${app.name}</div>
             ${app.work ? '<span class="badge">kerja</span>' : ""}
           </div>`
@@ -2112,6 +2163,31 @@ function closeSettings() {
   });
 }
 
+function performGesture(action) {
+  switch (action) {
+    case "NONE": return;
+    case "OPEN_DRAWER": openDrawer(false); return;
+    case "OPEN_SEARCH":
+      if (state.style === "folio") {
+        state.homeSearchExpanded = true;
+        renderFolioHome();
+        setTimeout(() => $("home-search-input")?.focus(), 0);
+      } else {
+        openDrawer(true);
+      }
+      return;
+    case "OPEN_SETTINGS": openSettings(); return;
+    case "OPEN_HOME_MENU": openSheet("home-sheet"); return;
+    case "OPEN_NOTIFICATIONS": toast("Membuka panel notifikasi sistem"); return;
+    case "OPEN_QUICK_SETTINGS": toast("Membuka pengaturan cepat"); return;
+    case "OPEN_RECENTS": toast("Membuka aplikasi terbaru"); return;
+    case "LOCK_SCREEN": toast("Kunci layar (simulasi)"); return;
+    case "TAKE_SCREENSHOT": toast("Mengambil screenshot (simulasi)"); return;
+    case "OPEN_CALENDAR": toast("Membuka Kalender"); return;
+    case "OPEN_NOTES": toast(`Membuka ${state.notesApp}`); return;
+  }
+}
+
 /* ----------------------------------------------------------- settings screen */
 function renderSettings() {
   const themeChip = (value, label) =>
@@ -2123,6 +2199,12 @@ function renderSettings() {
 
   const styleChip = (value, label) =>
     `<button class="chip ${state.style === value ? "on" : ""}" data-set-style="${value}">${label}</button>`;
+  const gestureRow = (slot, label) => `
+    <div class="gesture-setting"><label>${label}</label>
+      <select class="gesture-select" data-gesture-slot="${slot}" aria-label="${label}">
+        ${Object.entries(GESTURE_ACTIONS).map(([action, text]) => `<option value="${action}" ${state[slot] === action ? "selected" : ""}>${text}</option>`).join("")}
+      </select>
+    </div>`;
 
   $("settings-body").innerHTML = `
     <div class="card-wrap">
@@ -2153,9 +2235,35 @@ function renderSettings() {
     </div>
 
     <div class="card-wrap">
+      <div class="card-title">Gestur beranda</div>
+      <div class="card">
+        ${gestureRow("doubleTapAction", "Ketuk dua kali")}
+        ${gestureRow("longPressAction", "Tekan lama")}
+        ${gestureRow("swipeLeftAction", "Geser ke kiri")}
+        ${gestureRow("swipeRightAction", "Geser ke kanan")}
+        ${gestureRow("swipeUpAction", "Geser ke atas")}
+        ${gestureRow("twoFingerSwipeUpAction", "Geser dua jari ke atas")}
+        ${gestureRow("twoFingerSwipeDownAction", "Geser dua jari ke bawah")}
+        <div class="sub">Aksi kunci layar, panel, recents, pengaturan cepat, dan screenshot memakai aksi sistem tanpa membaca konten layar.</div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
       <div class="card-title">Halaman berita</div>
       <div class="card">
         <input class="news-location-input" data-news-location value="${escapeHtml(state.newsLocation)}" aria-label="Kota dateline" placeholder="Rembang" />
+        <div class="switch-row">
+          <div class="text"><div class="t">Artikel berita</div><div class="d">Teks berita otomatis di halaman depan</div></div>
+          <div class="sw ${state.showNewsArticle ? "on" : ""}" data-sw="showNewsArticle"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Shortcut aplikasi di artikel</div><div class="d">Nama aplikasi dapat diketuk</div></div>
+          <div class="sw ${state.showNewsAppLinks ? "on" : ""}" data-sw="showNewsAppLinks"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Ringkasan notifikasi di artikel</div><div class="d">Jumlah notifikasi aktif menjadi berita</div></div>
+          <div class="sw ${state.showNewsUnread ? "on" : ""}" data-sw="showNewsUnread"></div>
+        </div>
         <div class="switch-row">
           <div class="text"><div class="t">Foto utama</div><div class="d">Foto monokrom di atas artikel</div></div>
           <div class="sw ${state.showNewsPhoto ? "on" : ""}" data-sw="showNewsPhoto"></div>
@@ -2197,6 +2305,10 @@ function renderSettings() {
     <div class="card-wrap">
       <div class="card-title">Aplikasi</div>
       <div class="card">
+        <div class="switch-row">
+          <div class="text"><div class="t">Badge notifikasi</div><div class="d">Jumlah pada ikon beranda dan laci</div></div>
+          <div class="sw ${state.showNotificationBadges ? "on" : ""}" data-sw="showNotificationBadges"></div>
+        </div>
         <div class="action-row" data-open-hidden>
           <div class="text"><div class="t">Aplikasi tersembunyi</div></div>
           <div class="v">${state.hiddenNames.length}</div>
@@ -2276,6 +2388,7 @@ function renderSettings() {
       const key = sw.dataset.sw;
       state[key] = !state[key];
       renderHome();
+      renderDrawer();
       renderSettings();
     };
   });
@@ -2286,6 +2399,13 @@ function renderSettings() {
       renderHome();
     };
   }
+  $("settings-body").querySelectorAll("[data-gesture-slot]").forEach((select) => {
+    select.onchange = () => {
+      state[select.dataset.gestureSlot] = select.value;
+      renderHome();
+      toast(`${GESTURE_ACTIONS[select.value]} dipilih`);
+    };
+  });
   const notesRow = $("settings-body").querySelector("[data-notes-app]");
   if (notesRow) notesRow.onclick = () => {
     state.notesApp = state.notesApp === "Catatan" ? "Notion" : "Catatan";
@@ -2382,12 +2502,12 @@ function bindHomeChrome() {
     if (zone.setPointerCapture) zone.setPointerCapture(e.pointerId);
   };
   zone.onpointerup = (e) => {
-    if (dragStart !== null && e.clientY - dragStart < -18) openDrawer(false);
+    if (dragStart !== null && e.clientY - dragStart < -18) performGesture(state.swipeUpAction);
     dragStart = null;
   };
   zone.onpointermove = (e) => {
     if (dragStart !== null && e.clientY - dragStart < -40) {
-      openDrawer(false);
+      performGesture(state.swipeUpAction);
       dragStart = null;
     }
   };
@@ -2427,58 +2547,114 @@ function bindDrawerChrome() {
 
 $("sheet-scrim").onclick = closeSheets;
 
-// Home gestures: long-press empty area -> menu, double tap -> masthead search.
+// Configurable home gestures: tap, long-press, horizontal, and two-finger vertical swipes.
 let homePressTimer = null;
 let lastTap = 0;
 let homeSwipe = null;
+let twoFingerStartY = null;
+let twoFingerTriggered = false;
+const homePointers = new Map();
 const homeLayer = $("home");
+const homeTargetExcluded = (target) => target.closest(
+  "button, input, select, .fav-row, .folio-row, .news-access, .pill, .circle-btn, .grabber-zone, .news-gesture-footer, [data-open-drawer], [data-open-settings]"
+);
+const pointerCenterY = () => [...homePointers.values()].reduce((sum, point) => sum + point.y, 0) / homePointers.size;
+
 homeLayer.addEventListener("pointerdown", (e) => {
-  if (e.target.closest("button, input, .fav-row, .folio-row, .news-access, .pill, .circle-btn, .grabber-zone, .news-gesture-footer, [data-open-drawer], [data-open-settings]")) return;
-  if (state.style === "folio") homeSwipe = { x: e.clientX, y: e.clientY };
-  homePressTimer = setTimeout(() => openSheet("home-sheet"), 500);
+  if (homeTargetExcluded(e.target)) return;
+  if (e.isPrimary !== false) homePointers.clear();
+  homePointers.set(e.pointerId ?? 1, { x: e.clientX, y: e.clientY });
+  if (homePointers.size >= 2) {
+    clearTimeout(homePressTimer);
+    homeSwipe = null;
+    lastTap = 0;
+    if (homePointers.size === 2) {
+      twoFingerStartY = pointerCenterY();
+      twoFingerTriggered = false;
+    }
+    return;
+  }
+
+  homeSwipe = { x: e.clientX, y: e.clientY };
+  homePressTimer = setTimeout(() => performGesture(state.longPressAction), 500);
   const now = Date.now();
   if (now - lastTap < 320) {
     clearTimeout(homePressTimer);
-    if (state.style === "folio") {
-      state.homeSearchExpanded = true;
-      renderFolioHome();
-      setTimeout(() => $("home-search-input")?.focus(), 0);
-    } else {
-      openDrawer(true);
+    performGesture(state.doubleTapAction);
+    lastTap = 0;
+  } else {
+    lastTap = now;
+  }
+});
+
+homeLayer.addEventListener("pointermove", (e) => {
+  const id = e.pointerId ?? 1;
+  if (!homePointers.has(id)) return;
+  homePointers.set(id, { x: e.clientX, y: e.clientY });
+  if (homePointers.size < 2 || twoFingerStartY === null || twoFingerTriggered) return;
+  const distance = pointerCenterY() - twoFingerStartY;
+  if (Math.abs(distance) > 80) {
+    const action = distance < 0 ? state.twoFingerSwipeUpAction : state.twoFingerSwipeDownAction;
+    if (action !== "NONE") {
+      twoFingerTriggered = true;
+      homePointers.clear();
+      twoFingerStartY = null;
+      twoFingerTriggered = false;
+      homeSwipe = null;
+      clearTimeout(homePressTimer);
+      performGesture(action);
     }
   }
-  lastTap = now;
 });
+
 homeLayer.addEventListener("pointerup", (e) => {
+  const id = e.pointerId ?? 1;
+  const wasTwoFinger = twoFingerStartY !== null || homePointers.size > 1;
+  homePointers.delete(id);
+  clearTimeout(homePressTimer);
+  if (wasTwoFinger) {
+    if (homePointers.size < 2) {
+      twoFingerStartY = null;
+      twoFingerTriggered = false;
+    }
+    homeSwipe = null;
+    return;
+  }
   if (homeSwipe && state.screen === "home") {
     const dx = e.clientX - homeSwipe.x;
     const dy = e.clientY - homeSwipe.y;
     if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
-      clearTimeout(homePressTimer);
       lastTap = 0;
-      if (dx < 0) openSettings();
-      else toast("Membuka panel notifikasi sistem");
+      performGesture(dx < 0 ? state.swipeLeftAction : state.swipeRightAction);
     }
   }
   homeSwipe = null;
 });
-["pointerup", "pointerleave", "pointercancel"].forEach((evt) =>
-  homeLayer.addEventListener(evt, () => clearTimeout(homePressTimer))
-);
 
-// Swipe up on the grabber zone to open the drawer.
+homeLayer.addEventListener("pointercancel", (e) => {
+  homePointers.delete(e.pointerId ?? 1);
+  clearTimeout(homePressTimer);
+  homeSwipe = null;
+  if (homePointers.size < 2) {
+    twoFingerStartY = null;
+    twoFingerTriggered = false;
+  }
+});
+homeLayer.addEventListener("pointerleave", () => clearTimeout(homePressTimer));
+
+// Swipe up on the minimal grabber to run the configured action.
 let dragStart = null;
 $("grabber-zone").addEventListener("pointerdown", (e) => {
   dragStart = e.clientY;
   e.currentTarget.setPointerCapture(e.pointerId);
 });
 $("grabber-zone").addEventListener("pointerup", (e) => {
-  if (dragStart !== null && e.clientY - dragStart < -18) openDrawer(false);
+  if (dragStart !== null && e.clientY - dragStart < -18) performGesture(state.swipeUpAction);
   dragStart = null;
 });
 $("grabber-zone").addEventListener("pointermove", (e) => {
   if (dragStart !== null && e.clientY - dragStart < -40) {
-    openDrawer(false);
+    performGesture(state.swipeUpAction);
     dragStart = null;
   }
 });

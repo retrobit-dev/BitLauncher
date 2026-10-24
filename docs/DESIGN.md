@@ -175,11 +175,12 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 | Area | Gestur | Aksi |
 |---|---|---|
 | Beranda (kosong) | Tekan lama | Menu launcher |
-| Beranda folio | Double tap | Buka pencarian di samping masthead |
-| Beranda minimal | Double tap | Buka laci + fokus pencarian |
+| Beranda folio/minimal | Double tap | Aksi pilihan; default pencarian |
+| Beranda folio/minimal | Tekan lama | Aksi pilihan; default menu launcher |
 | Beranda folio | Geser atas di indikator bawah | Buka laci |
-| Beranda folio | Geser kiri | Buka pengaturan |
-| Beranda folio | Geser kanan | Buka panel notifikasi sistem (opt-in Aksesibilitas) |
+| Beranda folio/minimal | Geser kiri | Aksi pilihan; default pengaturan |
+| Beranda folio/minimal | Geser kanan | Aksi pilihan; default panel notifikasi |
+| Beranda folio/minimal | Geser dua jari atas/bawah | Aksi pilihan; default tidak aktif |
 | Beranda | Ketuk jam | Buka alarm |
 | Favorit | Ketuk | Buka aplikasi |
 | Favorit | Tekan lama | Lembar aksi |
@@ -187,7 +188,9 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 | Laci | Ketuk rel alfabet | Lompat ke huruf |
 | Laci | Tekan lama aplikasi | Lembar aksi |
 
-Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk gestur; pencarian, kalender, dan catatan tetap mempunyai kontrol yang terlihat.
+Semua gestur di atas dapat dipetakan ke pencarian, arsip, pengaturan, menu, kalender, catatan, panel notifikasi, pengaturan cepat, recents, kunci layar, screenshot, atau **Tidak ada**. Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk aksi yang sedang dipilih.
+
+Artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, dan badge ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON.
 
 ---
 
@@ -198,5 +201,5 @@ Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, 
 - Target sentuh utama ≥ 48 dp (pill 48 dp, tombol lingkaran 48 dp).
 - Ukuran font mengikuti skala sistem (sp), dengan batas `maxLines` + ellipsis agar tidak merusak layout.
 - Getaran bisa dimatikan di pengaturan.
-- Layanan Aksesibilitas khusus gestur hanya menjalankan aksi panel notifikasi; konfigurasinya tidak meminta event atau konten jendela.
+- Layanan Aksesibilitas khusus gestur hanya menjalankan aksi global yang dipilih; konfigurasinya tidak meminta event atau konten jendela.
 - Belum diuji dengan TalkBack secara menyeluruh — masuk backlog 0.4.

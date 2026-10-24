@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -83,6 +82,7 @@ import dev.retrobit.bitlauncher.R
 import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.ui.components.AppIcon
 import dev.retrobit.bitlauncher.ui.components.HomeMenuSheet
+import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.ui.components.rememberMinuteTick
 import dev.retrobit.bitlauncher.util.AppSearch
 import dev.retrobit.bitlauncher.util.SystemIntents
@@ -94,17 +94,6 @@ private val EditorialLocale = Locale("id", "ID")
 private const val APP_LINK_TAG = "news-app"
 private const val CALENDAR_LINK_TAG = "news-calendar"
 private const val NOTES_LINK_TAG = "news-notes"
-
-private val NOTE_PACKAGES = setOf(
-    "com.google.android.keep",
-    "com.samsung.android.app.notes",
-    "com.miui.notes",
-    "com.oppo.notes",
-    "com.coloros.note",
-    "com.vivo.notes",
-    "com.evernote",
-    "com.notion.id",
-)
 
 private data class NewsEntry(val app: LaunchableApp, val count: Int)
 
@@ -160,7 +149,8 @@ fun FolioHomeScreen(
     val dateline = dateFormatter.format(now.time)
     val location = settings.newsLocation.trim().ifBlank { "Rembang" }.take(40)
 
-    val newsEntries = remember(apps, notificationCounts) {
+    val newsEntries = remember(apps, notificationCounts, settings.showNewsUnread) {
+        if (!settings.showNewsUnread) return@remember emptyList()
         apps.distinctBy { it.packageName }.mapNotNull { app ->
             notificationCounts[app.packageName]?.takeIf { it > 0 }?.let { NewsEntry(app, it) }
         }.sortedByDescending { it.count }.take(3)
@@ -169,17 +159,13 @@ fun FolioHomeScreen(
         (if (favorites.isNotEmpty()) favorites else apps).distinctBy { it.packageName }.take(3)
     }
     val notesApp = remember(allApps, settings.notesPackage) {
-        allApps.firstOrNull { it.packageName == settings.notesPackage }
-            ?: allApps.firstOrNull { it.packageName in NOTE_PACKAGES }
-            ?: allApps.firstOrNull { app ->
-                val label = app.label.lowercase()
-                "catatan" in label || "notes" in label || "keep" in label
-            }
+        findNotesApp(allApps, settings.notesPackage)
     }
     val searchResults = remember(apps, searchQuery) {
         if (searchQuery.isBlank()) emptyList() else AppSearch.filter(apps, searchQuery).take(6)
     }
     val headline = when {
+        !settings.showNewsUnread -> "Kabar dari aplikasi Anda"
         newsEntries.isNotEmpty() -> {
             val lead = newsEntries.first()
             "${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.label}"
@@ -198,28 +184,33 @@ fun FolioHomeScreen(
         }
     }
 
+    val performGesture = rememberHomeGestureHandler(
+        onOpenDrawer = { onOpenDrawer(false) },
+        onOpenSearch = { searchExpanded = true },
+        onOpenSettings = onOpenSettings,
+        onOpenHomeMenu = { showHomeMenu = true },
+        onOpenNotes = ::openNotes,
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.background)
             .statusBarsPadding()
-            .pointerInput(Unit) {
-                var distance = 0f
-                detectHorizontalDragGestures(
-                    onDragStart = { distance = 0f },
-                    onDragEnd = {
-                        when {
-                            distance < -70f -> onOpenSettings()
-                            distance > 70f -> SystemIntents.expandNotifications(context)
-                        }
-                    },
-                    onHorizontalDrag = { _, delta -> distance += delta },
-                )
-            }
-            .pointerInput(Unit) {
+            .homeHorizontalGestures(
+                leftAction = settings.swipeLeftAction,
+                rightAction = settings.swipeRightAction,
+                onAction = performGesture,
+            )
+            .homeTwoFingerGestures(
+                upAction = settings.twoFingerSwipeUpAction,
+                downAction = settings.twoFingerSwipeDownAction,
+                onAction = performGesture,
+            )
+            .pointerInput(settings.doubleTapAction, settings.longPressAction) {
                 detectTapGestures(
-                    onLongPress = { showHomeMenu = true },
-                    onDoubleTap = { searchExpanded = true },
+                    onLongPress = { performGesture(settings.longPressAction) },
+                    onDoubleTap = { performGesture(settings.doubleTapAction) },
                 )
             },
     ) {
@@ -276,7 +267,11 @@ fun FolioHomeScreen(
                     items(searchResults, key = { it.key }) { app ->
                         SearchResultRow(
                             app = app,
-                            unread = notificationCounts[app.packageName] ?: 0,
+                            unread = if (settings.showNotificationBadges) {
+                                notificationCounts[app.packageName] ?: 0
+                            } else {
+                                0
+                            },
                             onClick = {
                                 viewModel.launch(app)
                                 searchQuery = ""
@@ -301,21 +296,25 @@ fun FolioHomeScreen(
                     item { NewsPhoto() }
                 }
 
-                item {
-                    NewsArticle(
-                        location = location,
-                        date = if (settings.showDate) dateline else "",
-                        time = if (settings.showClock) timeText else "",
-                        notificationAccess = notificationAccess,
-                        entries = newsEntries,
-                        shortcutApps = shortcutApps,
-                        onOpenApp = { app -> viewModel.launch(app) },
-                        onOpenCalendar = { SystemIntents.openCalendar(context) },
-                        onOpenNotes = ::openNotes,
-                    )
+                if (settings.showNewsArticle) {
+                    item {
+                        NewsArticle(
+                            location = location,
+                            date = if (settings.showDate) dateline else "",
+                            time = if (settings.showClock) timeText else "",
+                            notificationAccess = notificationAccess,
+                            unreadEnabled = settings.showNewsUnread,
+                            appLinksEnabled = settings.showNewsAppLinks,
+                            entries = newsEntries,
+                            shortcutApps = shortcutApps,
+                            onOpenApp = { app -> viewModel.launch(app) },
+                            onOpenCalendar = { SystemIntents.openCalendar(context) },
+                            onOpenNotes = ::openNotes,
+                        )
+                    }
                 }
 
-                if (!notificationAccess) {
+                if (settings.showNewsUnread && !notificationAccess) {
                     item { NotificationAccessNotice(onEnable = { SystemIntents.openNotificationAccess(context) }) }
                 }
 
@@ -333,7 +332,10 @@ fun FolioHomeScreen(
             }
         }
 
-        FolioGestureFooter(onOpenDrawer = { onOpenDrawer(false) })
+        FolioGestureFooter(
+            gestureLabel = settings.swipeUpAction.label(),
+            onAction = { performGesture(settings.swipeUpAction) },
+        )
     }
 
     if (showHomeMenu) {
@@ -507,6 +509,8 @@ private fun NewsArticle(
     date: String,
     time: String,
     notificationAccess: Boolean,
+    unreadEnabled: Boolean,
+    appLinksEnabled: Boolean,
     entries: List<NewsEntry>,
     shortcutApps: List<LaunchableApp>,
     onOpenApp: (LaunchableApp) -> Unit,
@@ -532,6 +536,16 @@ private fun NewsArticle(
         val timeClause = if (time.isBlank()) "Pada edisi ini" else "Pada pukul $time"
 
         when {
+            !unreadEnabled -> {
+                append("$time, ringkasan notifikasi tidak ditampilkan. ")
+                if (shortcutApps.isEmpty()) {
+                    append("Arsip aplikasi tetap dapat dibuka dengan gestur yang dipilih.")
+                } else {
+                    append("Aplikasi ")
+                    appendAppLinks(shortcutApps, linkStyle, appLinksEnabled)
+                    append(" tercantum tanpa jumlah notifikasi.")
+                }
+            }
             !notificationAccess -> {
                 append("$timeClause, halaman ini belum dapat membaca jumlah pesan. ")
                 append("Aktifkan akses notifikasi untuk kabar terbaru. ")
@@ -539,7 +553,7 @@ private fun NewsArticle(
                     append("Arsip aplikasi dapat dibuka dengan gestur geser ke atas.")
                 } else {
                     append("Sementara itu, ")
-                    appendAppLinks(shortcutApps, linkStyle)
+                    appendAppLinks(shortcutApps, linkStyle, appLinksEnabled)
                     append(" siap dibuka dari artikel ini.")
                 }
             }
@@ -549,7 +563,7 @@ private fun NewsArticle(
                     append("Arsip aplikasi dapat dibuka dengan gestur geser ke atas.")
                 } else {
                     append("Namun ")
-                    appendAppLinks(shortcutApps, linkStyle)
+                    appendAppLinks(shortcutApps, linkStyle, appLinksEnabled)
                     append(" tetap dapat dibuka dengan satu ketukan.")
                 }
             }
@@ -560,6 +574,7 @@ private fun NewsArticle(
                     text = "${lead.count} ${newsNoun(lead.app)} belum dibaca di ${lead.app.label}",
                     app = lead.app,
                     style = linkStyle,
+                    enabled = appLinksEnabled,
                 )
                 append(".")
                 entries.drop(1).forEach { entry ->
@@ -568,13 +583,14 @@ private fun NewsArticle(
                         text = "${entry.app.label}, dengan ${entry.count} ${newsNoun(entry.app)} yang menanti",
                         app = entry.app,
                         style = linkStyle,
+                        enabled = appLinksEnabled,
                     )
                     append(".")
                 }
                 val additional = shortcutApps.filter { app -> entries.none { it.app.key == app.key } }
                 if (additional.isNotEmpty()) {
                     append(" Untuk kabar berikutnya, buka ")
-                    appendAppLinks(additional, linkStyle)
+                    appendAppLinks(additional, linkStyle, appLinksEnabled)
                     append(".")
                 }
             }
@@ -609,20 +625,29 @@ private fun NewsArticle(
     )
 }
 
-private fun AnnotatedString.Builder.appendAppLink(text: String, app: LaunchableApp, style: SpanStyle) {
+private fun AnnotatedString.Builder.appendAppLink(
+    text: String,
+    app: LaunchableApp,
+    style: SpanStyle,
+    enabled: Boolean,
+) {
     val start = length
-    withStyle(style) { append(text) }
-    addStringAnnotation(APP_LINK_TAG, app.key, start, length)
+    withStyle(if (enabled) style else SpanStyle()) { append(text) }
+    if (enabled) addStringAnnotation(APP_LINK_TAG, app.key, start, length)
 }
 
-private fun AnnotatedString.Builder.appendAppLinks(apps: List<LaunchableApp>, style: SpanStyle) {
+private fun AnnotatedString.Builder.appendAppLinks(
+    apps: List<LaunchableApp>,
+    style: SpanStyle,
+    enabled: Boolean,
+) {
     apps.forEachIndexed { index, app ->
         when (index) {
             0 -> Unit
             apps.lastIndex -> append(" dan ")
             else -> append(", ")
         }
-        appendAppLink(app.label, app, style)
+        appendAppLink(app.label, app, style, enabled)
     }
 }
 
@@ -725,18 +750,18 @@ private fun NotificationAccessNotice(onEnable: () -> Unit) {
 // ------------------------------------------------------------------ gestures/footer
 
 @Composable
-private fun FolioGestureFooter(onOpenDrawer: () -> Unit) {
+private fun FolioGestureFooter(gestureLabel: String, onAction: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .clickable(onClick = onOpenDrawer)
-            .pointerInput(Unit) {
+            .clickable(onClick = onAction)
+            .pointerInput(gestureLabel) {
                 var distance = 0f
                 detectVerticalDragGestures(
                     onDragStart = { distance = 0f },
-                    onDragEnd = { if (distance < -28f) onOpenDrawer() },
+                    onDragEnd = { if (distance < -28f) onAction() },
                     onVerticalDrag = { _, delta -> distance += delta },
                 )
             }
@@ -746,7 +771,7 @@ private fun FolioGestureFooter(onOpenDrawer: () -> Unit) {
         Box(modifier = Modifier.width(40.dp).height(3.dp).background(colors.outline))
         Spacer(Modifier.height(5.dp))
         Text(
-            text = "GESER ATAS UNTUK ARSIP · HLM. 1",
+            text = "GESER ATAS · ${gestureLabel.uppercase(EditorialLocale)} · HLM. 1",
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, letterSpacing = 1.2.sp),
             color = colors.onSurfaceVariant,
         )

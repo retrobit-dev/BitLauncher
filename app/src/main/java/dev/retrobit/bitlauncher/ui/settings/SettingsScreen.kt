@@ -41,15 +41,28 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.data.AppLayout
+import dev.retrobit.bitlauncher.data.GestureAction
 import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
+import dev.retrobit.bitlauncher.ui.components.GestureActionSheet
 import dev.retrobit.bitlauncher.ui.components.HiddenAppsSheet
 import dev.retrobit.bitlauncher.ui.components.NotesAppSheet
+import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.util.SystemIntents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private enum class GestureSlot(val title: String) {
+    DOUBLE_TAP("Ketuk dua kali"),
+    LONG_PRESS("Tekan lama"),
+    SWIPE_LEFT("Geser ke kiri"),
+    SWIPE_RIGHT("Geser ke kanan"),
+    SWIPE_UP("Geser ke atas"),
+    TWO_FINGER_UP("Geser dua jari ke atas"),
+    TWO_FINGER_DOWN("Geser dua jari ke bawah"),
+}
 
 @Composable
 fun SettingsScreen(
@@ -64,14 +77,15 @@ fun SettingsScreen(
 
     var showHiddenApps by remember { mutableStateOf(false) }
     var showNotesPicker by remember { mutableStateOf(false) }
+    var gestureSlot by remember { mutableStateOf<GestureSlot?>(null) }
     var isDefaultLauncher by remember { mutableStateOf(SystemIntents.isDefaultLauncher(context)) }
-    var notificationPanelEnabled by remember {
-        mutableStateOf(SystemIntents.isNotificationPanelEnabled(context))
+    var gestureServiceEnabled by remember {
+        mutableStateOf(SystemIntents.isGestureServiceEnabled(context))
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         isDefaultLauncher = SystemIntents.isDefaultLauncher(context)
-        notificationPanelEnabled = SystemIntents.isNotificationPanelEnabled(context)
+        gestureServiceEnabled = SystemIntents.isGestureServiceEnabled(context)
     }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -162,7 +176,7 @@ fun SettingsScreen(
                     )
                     SettingsSubtitle(
                         if (settings.style == LauncherStyle.FOLIO) {
-                            "Halaman depan bergaya koran di atas kertas Kaleido: masthead, garis ganda, dan indeks bertitik."
+                            "Halaman depan bergaya koran di atas kertas Kaleido: masthead, artikel, dan kartu editorial."
                         } else {
                             "Beranda vertikal minimalis di atas wallpaper, gaya Niagara + Minima."
                         },
@@ -270,17 +284,50 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsCard("Gestur folio") {
+                SettingsCard("Gestur beranda") {
                     ActionRow(
-                        title = "Panel notifikasi",
-                        value = if (notificationPanelEnabled) "Aktif" else "Aktifkan",
-                        description = "Izin Aksesibilitas hanya untuk membuka panel; konten layar tidak dibaca",
-                        onClick = { SystemIntents.openNotificationPanelSettings(context) },
+                        title = "Ketuk dua kali",
+                        value = settings.doubleTapAction.label(),
+                        onClick = { gestureSlot = GestureSlot.DOUBLE_TAP },
                     )
-                    SettingsSubtitle(
-                        "Geser atas di bagian bawah untuk arsip; geser kiri untuk pengaturan; " +
-                            "geser kanan untuk notifikasi. Ketuk dua kali untuk pencarian dan tekan lama untuk menu.",
+                    ActionRow(
+                        title = "Tekan lama",
+                        value = settings.longPressAction.label(),
+                        onClick = { gestureSlot = GestureSlot.LONG_PRESS },
                     )
+                    ActionRow(
+                        title = "Geser ke kiri",
+                        value = settings.swipeLeftAction.label(),
+                        onClick = { gestureSlot = GestureSlot.SWIPE_LEFT },
+                    )
+                    ActionRow(
+                        title = "Geser ke kanan",
+                        value = settings.swipeRightAction.label(),
+                        onClick = { gestureSlot = GestureSlot.SWIPE_RIGHT },
+                    )
+                    ActionRow(
+                        title = "Geser ke atas",
+                        value = settings.swipeUpAction.label(),
+                        onClick = { gestureSlot = GestureSlot.SWIPE_UP },
+                    )
+                    ActionRow(
+                        title = "Geser dua jari ke atas",
+                        value = settings.twoFingerSwipeUpAction.label(),
+                        onClick = { gestureSlot = GestureSlot.TWO_FINGER_UP },
+                    )
+                    ActionRow(
+                        title = "Geser dua jari ke bawah",
+                        value = settings.twoFingerSwipeDownAction.label(),
+                        onClick = { gestureSlot = GestureSlot.TWO_FINGER_DOWN },
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    ActionRow(
+                        title = "Gestur sistem",
+                        value = if (gestureServiceEnabled) "Aktif" else "Aktifkan",
+                        description = "Untuk kunci layar, panel, recents, pengaturan cepat, dan screenshot; konten layar tidak dibaca",
+                        onClick = { SystemIntents.openGestureSettings(context) },
+                    )
+                    SettingsSubtitle("Setiap gestur dapat dimatikan dengan memilih Tidak ada.")
                 }
             }
 
@@ -295,6 +342,30 @@ fun SettingsScreen(
                         placeholder = { Text("Rembang") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
+                    )
+                    SwitchRow(
+                        title = "Artikel berita",
+                        checked = settings.showNewsArticle,
+                        description = "Tampilkan teks berita otomatis di halaman depan",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNewsArticle = enabled) }
+                        },
+                    )
+                    SwitchRow(
+                        title = "Shortcut aplikasi di artikel",
+                        checked = settings.showNewsAppLinks,
+                        description = "Frasa nama aplikasi dapat diketuk untuk membukanya",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNewsAppLinks = enabled) }
+                        },
+                    )
+                    SwitchRow(
+                        title = "Ringkasan notifikasi di artikel",
+                        checked = settings.showNewsUnread,
+                        description = "Rangkai jumlah notifikasi aktif menjadi berita",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNewsUnread = enabled) }
+                        },
                     )
                     SwitchRow(
                         title = "Foto utama",
@@ -334,6 +405,14 @@ fun SettingsScreen(
 
             item {
                 SettingsCard("Aplikasi") {
+                    SwitchRow(
+                        title = "Badge notifikasi",
+                        checked = settings.showNotificationBadges,
+                        description = "Jumlah notifikasi aktif pada ikon beranda dan laci",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNotificationBadges = enabled) }
+                        },
+                    )
                     ActionRow(
                         title = "Aplikasi tersembunyi",
                         value = if (settings.hidden.isEmpty()) "Tidak ada" else "${settings.hidden.size}",
@@ -405,6 +484,37 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    gestureSlot?.let { slot ->
+        val selected = when (slot) {
+            GestureSlot.DOUBLE_TAP -> settings.doubleTapAction
+            GestureSlot.LONG_PRESS -> settings.longPressAction
+            GestureSlot.SWIPE_LEFT -> settings.swipeLeftAction
+            GestureSlot.SWIPE_RIGHT -> settings.swipeRightAction
+            GestureSlot.SWIPE_UP -> settings.swipeUpAction
+            GestureSlot.TWO_FINGER_UP -> settings.twoFingerSwipeUpAction
+            GestureSlot.TWO_FINGER_DOWN -> settings.twoFingerSwipeDownAction
+        }
+        GestureActionSheet(
+            title = slot.title,
+            selectedAction = selected,
+            onSelect = { action: GestureAction ->
+                viewModel.updateSettings { current ->
+                    when (slot) {
+                        GestureSlot.DOUBLE_TAP -> current.copy(doubleTapAction = action)
+                        GestureSlot.LONG_PRESS -> current.copy(longPressAction = action)
+                        GestureSlot.SWIPE_LEFT -> current.copy(swipeLeftAction = action)
+                        GestureSlot.SWIPE_RIGHT -> current.copy(swipeRightAction = action)
+                        GestureSlot.SWIPE_UP -> current.copy(swipeUpAction = action)
+                        GestureSlot.TWO_FINGER_UP -> current.copy(twoFingerSwipeUpAction = action)
+                        GestureSlot.TWO_FINGER_DOWN -> current.copy(twoFingerSwipeDownAction = action)
+                    }
+                }
+                gestureSlot = null
+            },
+            onDismiss = { gestureSlot = null },
+        )
     }
 
     if (showNotesPicker) {

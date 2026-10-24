@@ -21,7 +21,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 | Kartu editorial Kalender & Catatan | ✅ | — | — | — |
 | Folder | 📋 | — | — | ✅ |
 | Gestur geser untuk laci | ✅ | ✅ | — | ✅ |
-| Double-tap area kosong | ✅ (cari di folio / laci di minimal) | — | — | ✅ |
+| Pemetaan gestur + dua jari | ✅ (7 gestur, 12 aksi) | — | — | ✅ |
 | Tekan lama → menu | ✅ | ✅ | ✅ | ✅ |
 | Wallpaper terlihat | ✅ | ✅ | ✅ | ✅ |
 | Halaman ganda + indikator | 📋 | — | — | ✅ |
@@ -70,8 +70,9 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 |---|---|---|---|---|
 | Launcher default (RoleManager) | ✅ | ✅ | ✅ | ✅ |
 | Ringkasan jumlah notifikasi | ✅ (via akses) | ✅ (via akses) | — | ✅ (Nova + plugin) |
+| Badge jumlah pada ikon | ✅ (dapat dimatikan) | ✅ | — | ✅ |
 | Gestur panel notifikasi | ✅ (aksi global Accessibility) | — | — | ✅ (aksesibilitas) |
-| Double-tap matikan layar | 📋 | — | — | ✅ (admin) |
+| Kunci layar via gestur | ✅ (Accessibility, Android 9+) | — | — | ✅ (admin) |
 | Recents kustom | ⛔ | — | — | — |
 | Kunci aplikasi biometrik | 📋 | — | — | — |
 
@@ -85,6 +86,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Shortcut, pin, sembunyikan, info, uninstall.
 - Tema, AMOLED, dynamic color, pengaturan dasar, backup JSON.
 - Beranda folio berita: foto, artikel dengan shortcut aplikasi, ringkasan jumlah notifikasi, pencarian masthead, gestur, serta kartu Kalender/Catatan.
+- Pemetaan tujuh gestur, aksi kunci layar/recents/pengaturan cepat/screenshot, kontrol artikel/tautan, dan badge ikon.
 
 ### 0.2 — Beranda yang terasa "Niagara"
 - Widget host (`AppWidgetHost` + `AppWidgetManager`) dan penempatan widget.
@@ -97,7 +99,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 ### 0.3 — Kedalaman ala Nova
 - Folder (di beranda dan dock).
 - Gestur per ikon (geser untuk buka shortcut tertentu).
-- Badge per ikon dan penyaringan kategori notifikasi yang lebih rinci.
+- Penyaringan kategori notifikasi yang lebih rinci.
 - Pencarian universal: aplikasi + kontak + pengaturan sistem + pencarian web.
 - Profil launcher (mis. "Kerja" 09.00–17.00, "Malam" setelah 20.00).
 - Multi-halaman beranda + indikator + wallpaper scroll.

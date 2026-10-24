@@ -92,6 +92,7 @@ fun AppDrawerScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val notificationCounts by viewModel.notificationCounts.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
     val keyboard = LocalSoftwareKeyboardController.current
 
@@ -227,6 +228,11 @@ fun AppDrawerScreen(
                                     item.apps.forEach { app ->
                                         AppGridCell(
                                             app = app,
+                                            unread = if (settings.showNotificationBadges) {
+                                                notificationCounts[app.packageName] ?: 0
+                                            } else {
+                                                0
+                                            },
                                             onClick = { viewModel.launch(app) },
                                             onLongClick = {
                                                 if (settings.haptics) {
@@ -245,6 +251,11 @@ fun AppDrawerScreen(
                                 item.apps.forEach { app ->
                                     AppListRow(
                                         app = app,
+                                        unread = if (settings.showNotificationBadges) {
+                                            notificationCounts[app.packageName] ?: 0
+                                        } else {
+                                            0
+                                        },
                                         onClick = { viewModel.launch(app) },
                                         onLongClick = {
                                             if (settings.haptics) {
@@ -390,6 +401,7 @@ private fun SearchField(
 @Composable
 private fun AppListRow(
     app: LaunchableApp,
+    unread: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -400,7 +412,7 @@ private fun AppListRow(
             .padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AppIcon(app = app, size = 34.dp)
+        AppIcon(app = app, size = 34.dp, badgeCount = unread)
         Spacer(Modifier.width(16.dp))
         Text(
             text = app.label,
@@ -419,6 +431,7 @@ private fun AppListRow(
 @Composable
 private fun AppGridCell(
     app: LaunchableApp,
+    unread: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -430,7 +443,7 @@ private fun AppGridCell(
             .padding(vertical = 10.dp, horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppIcon(app = app, size = 46.dp)
+        AppIcon(app = app, size = 46.dp, badgeCount = unread)
         Spacer(Modifier.height(8.dp))
         Text(
             text = app.label,

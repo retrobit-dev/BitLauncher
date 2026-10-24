@@ -7,10 +7,10 @@ import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 
 /**
- * Performs only the system notification-panel action after an explicit accessibility opt-in.
+ * Performs explicit system actions assigned to launcher gestures after accessibility opt-in.
  * No accessibility events, window content, or screen text are requested or retained.
  */
-class NotificationPanelAccessibilityService : AccessibilityService() {
+class LauncherAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -28,13 +28,13 @@ class NotificationPanelAccessibilityService : AccessibilityService() {
 
     companion object {
         @Volatile
-        private var instance: NotificationPanelAccessibilityService? = null
+        private var instance: LauncherAccessibilityService? = null
 
-        fun expandNotifications(): Boolean =
-            instance?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS) == true
+        fun perform(action: Int): Boolean =
+            instance?.performGlobalAction(action) == true
 
         fun isEnabled(context: Context): Boolean {
-            val expected = ComponentName(context, NotificationPanelAccessibilityService::class.java)
+            val expected = ComponentName(context, LauncherAccessibilityService::class.java)
             val enabled = Settings.Secure.getString(
                 context.contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
