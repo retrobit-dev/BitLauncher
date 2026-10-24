@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.data.SettingsRepository
 
 /** Editor for a user-written headline and article body, with an automatic-mode escape hatch. */
@@ -32,6 +33,7 @@ import dev.retrobit.bitlauncher.data.SettingsRepository
 fun NewsArticleEditorSheet(
     initialHeadline: String,
     initialBody: String,
+    apps: List<LaunchableApp>,
     manualEnabled: Boolean,
     onSave: (manualEnabled: Boolean, headline: String, body: String) -> Unit,
     onDismiss: () -> Unit,
@@ -57,7 +59,7 @@ fun NewsArticleEditorSheet(
         ) {
             Text(text = "Edit artikel manual", style = MaterialTheme.typography.headlineSmall)
             Text(
-                text = "Tulis judul dan isi sendiri. Mode manual tidak ditimpa oleh perubahan notifikasi; lokasi, tanggal, tautan Catatan, chip aplikasi, dan badge tetap dipertahankan.",
+                text = "Tulis judul, isi, dan hyperlink aplikasi sendiri. Mode manual tidak ditimpa notifikasi; lokasi, tanggal, Catatan, dan badge tetap dipertahankan, sedangkan chip aplikasi mengikuti pengaturan.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
@@ -95,7 +97,7 @@ fun NewsArticleEditorSheet(
                 value = body,
                 onValueChange = { body = it.take(SettingsRepository.MAX_MANUAL_BODY) },
                 label = { Text("Isi artikel") },
-                placeholder = { Text("Tulis kabar Anda. Sebut nama aplikasi pilihan untuk membuat tautan.") },
+                placeholder = { Text("Tulis kabar Anda. Gunakan kontrol Hyperlink aplikasi di bawah.") },
                 minLines = 8,
                 maxLines = 14,
                 isError = attempted && bodyBlank,
@@ -115,6 +117,11 @@ fun NewsArticleEditorSheet(
                 },
                 modifier = Modifier.padding(bottom = 14.dp),
             )
+            ManualHyperlinkEditor(
+                apps = apps,
+                body = body,
+                onBodyChange = { body = it },
+            )
             Button(
                 onClick = {
                     attempted = true
@@ -133,7 +140,7 @@ fun NewsArticleEditorSheet(
                 Text("Simpan draf & gunakan otomatis")
             }
             Text(
-                text = "Nama aplikasi dalam artikel menjadi tautan hanya jika aplikasi tersebut dipilih untuk artikel dan shortcut diaktifkan. Jumlah notifikasi tidak disisipkan ke teks manual.",
+                text = "Hyperlink Manual membuka aplikasi yang dipilih di editor. Nama aplikasi biasa mengikuti daftar aplikasi artikel; keduanya mengikuti saklar shortcut. Jumlah notifikasi tidak disisipkan ke teks manual.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

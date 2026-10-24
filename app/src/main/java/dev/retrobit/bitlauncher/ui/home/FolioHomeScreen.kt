@@ -87,6 +87,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.R
 import dev.retrobit.bitlauncher.data.LaunchableApp
+import dev.retrobit.bitlauncher.data.parseManualArticleLinks
 import dev.retrobit.bitlauncher.data.resolveArticleApps
 import dev.retrobit.bitlauncher.ui.components.AppIcon
 import dev.retrobit.bitlauncher.ui.components.EpaperColorFilter
@@ -326,6 +327,7 @@ fun FolioHomeScreen(
                                 body = settings.newsManualBody,
                                 appLinksEnabled = settings.showNewsAppLinks,
                                 shortcutApps = articleApps,
+                                hyperlinkApps = allApps,
                                 onOpenApp = { app -> viewModel.launch(app) },
                                 onOpenCalendar = { SystemIntents.openCalendar(context) },
                                 onOpenNotes = ::openNotes,
@@ -346,15 +348,17 @@ fun FolioHomeScreen(
                             )
                         }
                     }
-                    item {
-                        NewsAppShelf(
-                            apps = articleApps,
-                            notificationCounts = notificationCounts,
-                            showUnread = settings.showNewsUnread && notificationAccess,
-                            linksEnabled = settings.showNewsAppLinks,
-                            onOpenApp = { app -> viewModel.launch(app) },
-                            onOpenSettings = onOpenSettings,
-                        )
+                    if (settings.showNewsAppShelf) {
+                        item {
+                            NewsAppShelf(
+                                apps = articleApps,
+                                notificationCounts = notificationCounts,
+                                showUnread = settings.showNewsUnread && notificationAccess,
+                                linksEnabled = settings.showNewsAppLinks,
+                                onOpenApp = { app -> viewModel.launch(app) },
+                                onOpenSettings = onOpenSettings,
+                            )
+                        }
                     }
                 }
 
@@ -386,6 +390,7 @@ fun FolioHomeScreen(
         NewsArticleEditorSheet(
             initialHeadline = settings.newsManualHeadline,
             initialBody = settings.newsManualBody,
+            apps = allApps,
             manualEnabled = settings.newsManualEnabled,
             onSave = { manual, headline, body ->
                 viewModel.updateSettings {
@@ -685,6 +690,7 @@ private fun ManualNewsArticle(
     body: String,
     appLinksEnabled: Boolean,
     shortcutApps: List<LaunchableApp>,
+    hyperlinkApps: List<LaunchableApp>,
     onOpenApp: (LaunchableApp) -> Unit,
     onOpenCalendar: () -> Unit,
     onOpenNotes: () -> Unit,
@@ -695,7 +701,7 @@ private fun ManualNewsArticle(
         fontWeight = FontWeight.Bold,
         textDecoration = TextDecoration.Underline,
     )
-    val linkedApps = shortcutApps.associateBy { it.key }
+    val linkedApps = (hyperlinkApps + shortcutApps).associateBy { it.key }
     val content = body.ifBlank { "Artikel manual masih kosong. Ketuk EDIT untuk menulis isi artikel." }
     val article = buildAnnotatedString {
         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(location) }
@@ -706,7 +712,7 @@ private fun ManualNewsArticle(
             addStringAnnotation(CALENDAR_LINK_TAG, "calendar", start, length)
         }
         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(" — ") }
-        appendManualAppLinks(content, shortcutApps, linkStyle, appLinksEnabled)
+        appendManualAppLinks(content, shortcutApps, hyperlinkApps, linkStyle, appLinksEnabled)
         if (!content.endsWith('\n')) append(" ")
         append("Untuk mencatat kabar ini, buka ")
         val notesStart = length
@@ -738,8 +744,41 @@ private fun ManualNewsArticle(
     )
 }
 
-/** Link only exact, boundary-delimited labels of apps selected for the article. */
+/** Render explicit app hyperlinks without exposing their storage markup, then auto-link prose around them. */
 private fun AnnotatedString.Builder.appendManualAppLinks(
+    text: String,
+    automaticApps: List<LaunchableApp>,
+    hyperlinkApps: List<LaunchableApp>,
+    style: SpanStyle,
+    enabled: Boolean,
+) {
+    val links = parseManualArticleLinks(text)
+    var previousEnd = 0
+    links.forEach { link ->
+        appendAutomaticAppLinks(
+            text = text.substring(previousEnd, link.start),
+            apps = automaticApps,
+            style = style,
+            enabled = enabled,
+        )
+        val app = hyperlinkApps.firstOrNull { it.key == link.appKey }
+        if (app == null) {
+            append(link.label)
+        } else {
+            appendAppLink(link.label, app, style, enabled)
+        }
+        previousEnd = link.endExclusive
+    }
+    appendAutomaticAppLinks(
+        text = text.substring(previousEnd),
+        apps = automaticApps,
+        style = style,
+        enabled = enabled,
+    )
+}
+
+/** Link only exact, boundary-delimited labels of apps selected for the article. */
+private fun AnnotatedString.Builder.appendAutomaticAppLinks(
     text: String,
     apps: List<LaunchableApp>,
     style: SpanStyle,

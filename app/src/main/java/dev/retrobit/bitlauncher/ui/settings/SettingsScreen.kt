@@ -471,9 +471,17 @@ fun SettingsScreen(
                         onClick = { showNewsAppsPicker = true },
                     )
                     SwitchRow(
+                        title = "Daftar aplikasi di artikel",
+                        checked = settings.showNewsAppShelf,
+                        description = "Tampilkan atau sembunyikan chip daftar aplikasi tanpa mengubah artikel dan filter notifikasi",
+                        onCheckedChange = { enabled ->
+                            viewModel.updateSettings { it.copy(showNewsAppShelf = enabled) }
+                        },
+                    )
+                    SwitchRow(
                         title = "Shortcut aplikasi di artikel",
                         checked = settings.showNewsAppLinks,
-                        description = "Frasa nama aplikasi dapat diketuk untuk membukanya",
+                        description = "Nama aplikasi dan hyperlink Manual dapat diketuk untuk membukanya",
                         onCheckedChange = { enabled ->
                             viewModel.updateSettings { it.copy(showNewsAppLinks = enabled) }
                         },
@@ -609,7 +617,7 @@ fun SettingsScreen(
                     Box(Modifier.padding(vertical = 8.dp)) {
                         Column {
                             Text(
-                                text = "BitLauncher 0.4.0",
+                                text = "BitLauncher 0.5.0",
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
@@ -661,6 +669,7 @@ fun SettingsScreen(
         NewsArticleEditorSheet(
             initialHeadline = settings.newsManualHeadline,
             initialBody = settings.newsManualBody,
+            apps = allApps,
             manualEnabled = settings.newsManualEnabled,
             onSave = { manual, headline, body ->
                 viewModel.updateSettings {

@@ -55,6 +55,7 @@ data class LauncherSettings(
     val newsLocation: String = "Rembang",
     val showNewsArticle: Boolean = true,
     val showNewsAppLinks: Boolean = true,
+    val showNewsAppShelf: Boolean = true,
     val showNewsUnread: Boolean = true,
     /** Null = automatic favorites/top-three mode; empty = deliberately no article apps. */
     val newsApps: List<String>? = null,
@@ -128,6 +129,7 @@ class SettingsRepository(context: Context) {
             newsLocation = prefs.getString(KEY_NEWS_LOCATION, "Rembang") ?: "Rembang",
             showNewsArticle = prefs.getBoolean(KEY_NEWS_ARTICLE, true),
             showNewsAppLinks = prefs.getBoolean(KEY_NEWS_APP_LINKS, true),
+            showNewsAppShelf = prefs.getBoolean(KEY_NEWS_APP_SHELF, true),
             showNewsUnread = prefs.getBoolean(KEY_NEWS_UNREAD, true),
             newsApps = if (prefs.contains(KEY_NEWS_APPS)) {
                 prefs.getString(KEY_NEWS_APPS, "")
@@ -178,6 +180,7 @@ class SettingsRepository(context: Context) {
             .putString(KEY_NEWS_LOCATION, settings.newsLocation)
             .putBoolean(KEY_NEWS_ARTICLE, settings.showNewsArticle)
             .putBoolean(KEY_NEWS_APP_LINKS, settings.showNewsAppLinks)
+            .putBoolean(KEY_NEWS_APP_SHELF, settings.showNewsAppShelf)
             .putBoolean(KEY_NEWS_UNREAD, settings.showNewsUnread)
             .putString(KEY_NEWS_APPS, settings.newsApps?.joinToString(SEPARATOR))
             .putBoolean(KEY_NEWS_MANUAL_ENABLED, settings.newsManualEnabled)
@@ -246,6 +249,7 @@ class SettingsRepository(context: Context) {
         root.put("newsLocation", settings.newsLocation)
         root.put("showNewsArticle", settings.showNewsArticle)
         root.put("showNewsAppLinks", settings.showNewsAppLinks)
+        root.put("showNewsAppShelf", settings.showNewsAppShelf)
         root.put("showNewsUnread", settings.showNewsUnread)
         root.put("newsApps", settings.newsApps?.let { JSONArray(it) } ?: JSONObject.NULL)
         root.put("newsManualEnabled", settings.newsManualEnabled)
@@ -316,6 +320,7 @@ class SettingsRepository(context: Context) {
             newsLocation = root.optString("newsLocation", current.newsLocation),
             showNewsArticle = root.optBoolean("showNewsArticle", current.showNewsArticle),
             showNewsAppLinks = root.optBoolean("showNewsAppLinks", current.showNewsAppLinks),
+            showNewsAppShelf = root.optBoolean("showNewsAppShelf", current.showNewsAppShelf),
             showNewsUnread = root.optBoolean("showNewsUnread", current.showNewsUnread),
             newsApps = newsApps,
             newsManualEnabled = root.optBoolean("newsManualEnabled", current.newsManualEnabled),
@@ -370,6 +375,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_NEWS_LOCATION = "news_location"
         private const val KEY_NEWS_ARTICLE = "news_article"
         private const val KEY_NEWS_APP_LINKS = "news_app_links"
+        private const val KEY_NEWS_APP_SHELF = "news_app_shelf"
         private const val KEY_NEWS_UNREAD = "news_unread"
         private const val KEY_NEWS_APPS = "news_apps"
         private const val KEY_NEWS_MANUAL_ENABLED = "news_manual_enabled"

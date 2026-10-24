@@ -608,6 +608,21 @@
   .editor-save, .editor-auto { width: 100%; min-height: 44px; margin-top: 6px; cursor: pointer; font: inherit; font-weight: 600; }
   .editor-save { border: 1px solid var(--primary); background: var(--primary); color: var(--surface); }
   .editor-auto { border: 0; background: none; color: var(--primary); }
+  .manual-links { margin: 8px 0 10px; padding-top: 12px; border-top: 1px solid var(--outline-variant); }
+  .manual-links h4 { margin: 0; font: 600 17px var(--sans); }
+  .manual-links > p { margin: 4px 0 8px; color: var(--on-surface-variant); font-size: 11px; line-height: 16px; }
+  .manual-link-row { display: flex; align-items: center; gap: 5px; padding: 6px 0; border-bottom: 1px solid var(--outline-variant); }
+  .manual-link-row .link-copy { flex: 1; min-width: 0; }
+  .manual-link-row .link-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .manual-link-row .link-target { color: var(--on-surface-variant); font-size: 10px; }
+  .manual-link-row button { border: 0; background: none; color: var(--primary); padding: 7px 4px; font: 600 11px var(--sans); cursor: pointer; }
+  .manual-link-empty { color: var(--on-surface-variant); font-size: 11px; }
+  .manual-link-app { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 0; border: 0; background: none; color: var(--on-surface); text-align: left; cursor: pointer; }
+  .manual-link-app .app-name { flex: 1; font-size: 13px; }
+  .manual-link-app .selected { color: var(--primary); }
+  .editor-link-save, .editor-link-cancel { width: 100%; min-height: 40px; margin-top: 7px; cursor: pointer; font: 600 13px var(--sans); }
+  .editor-link-save { border: 1px solid var(--primary); background: transparent; color: var(--primary); }
+  .editor-link-cancel { border: 0; background: none; color: var(--on-surface-variant); }
 
   /* toast */
   .toast {
@@ -1279,20 +1294,36 @@
         <div class="sheet-handle"></div>
         <div class="article-editor">
           <h3>Edit artikel manual</h3>
-          <p>Tulis judul dan isi sendiri. Perubahan notifikasi tidak menimpa teks manual; chip aplikasi dan badge tetap aktif.</p>
+          <p>Tulis judul, isi, dan hyperlink aplikasi sendiri. Notifikasi tidak menimpa teks manual; chip aplikasi mengikuti pengaturan.</p>
           <div class="editor-mode" id="article-editor-status">Saat ini: artikel otomatis</div>
           <label>Judul artikel
             <input id="manual-headline" maxlength="160" placeholder="Tulis headline utama" autocomplete="off" />
           </label>
           <div class="editor-meta" id="manual-headline-count">0/160</div>
           <label>Isi artikel
-            <textarea id="manual-body" maxlength="6000" placeholder="Tulis kabar Anda. Sebut nama aplikasi pilihan untuk membuat tautan."></textarea>
+            <textarea id="manual-body" maxlength="6000" placeholder="Tulis kabar Anda. Gunakan kontrol Hyperlink aplikasi di bawah."></textarea>
           </label>
           <div class="editor-meta" id="manual-body-count">0/6000 · Baris baru dipertahankan</div>
+          <section class="manual-links" aria-label="Hyperlink aplikasi">
+            <h4>Hyperlink aplikasi</h4>
+            <p>Pilih aplikasi dan teks tautan. Pada artikel hanya teks tautan yang terlihat.</p>
+            <div id="manual-link-list"></div>
+            <label>Teks hyperlink
+              <input id="manual-link-label" maxlength="120" placeholder="Contoh: obrolan keluarga" autocomplete="off" />
+            </label>
+            <label>Cari aplikasi tujuan
+              <input id="manual-link-search" placeholder="Cari aplikasi" autocomplete="off" />
+            </label>
+            <div id="manual-link-apps"></div>
+            <div class="editor-error" id="manual-link-error" role="alert"></div>
+            <button type="button" class="editor-link-save" id="insert-manual-link">Sisipkan hyperlink</button>
+            <button type="button" class="editor-link-cancel" id="cancel-edit-manual-link" hidden>Batal edit hyperlink</button>
+            <p>Setelah menyusun hyperlink, simpan artikel manual di bawah.</p>
+          </section>
           <div class="editor-error" id="article-editor-error" role="alert"></div>
           <button type="button" class="editor-save" id="save-manual-article">Simpan &amp; gunakan artikel manual</button>
           <button type="button" class="editor-auto" id="save-automatic-article">Simpan draf &amp; gunakan otomatis</button>
-          <p>Nama aplikasi menjadi tautan hanya jika dipilih untuk artikel dan shortcut diaktifkan.</p>
+          <p>Hyperlink Manual membuka aplikasi dari editor. Nama aplikasi biasa mengikuti daftar artikel; keduanya mengikuti saklar shortcut.</p>
         </div>
       </div>
 
@@ -1380,6 +1411,7 @@
       <div class="seg" id="seg-news">
         <button data-toggle="showNewsPhoto" class="on">Foto</button>
         <button data-toggle="showNewsWidgets" class="on">Widget</button>
+        <button data-toggle="showNewsAppShelf" class="on">Chip aplikasi</button>
         <button data-toggle="notificationAccess" class="on">Notifikasi</button>
       </div>
       <div class="seg">
@@ -1397,7 +1429,7 @@
     </div>
 
     <p class="note">
-      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.4.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
+      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.5.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
     </p>
 
     <div class="hint-keys">
@@ -1481,6 +1513,7 @@ const state = {
   newsLocation: "Rembang",
   showNewsArticle: true,
   showNewsAppLinks: true,
+  showNewsAppShelf: true,
   showNewsUnread: true,
   newsApps: null,
   newsManualEnabled: false,
@@ -1717,7 +1750,35 @@ function regexEscape(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function manualAppLinks(text, apps) {
+function parseManualArticleLinks(text) {
+  const pattern = /\[([^\]\n]+)]\(app:([^)\s]+)\)/g;
+  return [...text.matchAll(pattern)].map((match) => ({
+    label: match[1],
+    appKey: match[2],
+    raw: match[0],
+    start: match.index,
+    endExclusive: match.index + match[0].length,
+  }));
+}
+
+function manualArticleLinkToken(label, appKey) {
+  return `[${label.trim()}](app:${appKey})`;
+}
+
+function insertManualArticleLink(text, label, appKey) {
+  const separator = !text || /[ \n]$/.test(text) ? "" : " ";
+  return text + separator + manualArticleLinkToken(label, appKey);
+}
+
+function replaceManualArticleLink(text, link, label, appKey) {
+  return text.slice(0, link.start) + manualArticleLinkToken(label, appKey) + text.slice(link.endExclusive);
+}
+
+function removeManualArticleLink(text, link) {
+  return text.slice(0, link.start) + link.label + text.slice(link.endExclusive);
+}
+
+function automaticManualAppLinks(text, apps) {
   const choices = apps.filter((app, index) =>
     apps.findIndex((other) => other.name.toLowerCase() === app.name.toLowerCase()) === index
   ).sort((a, b) => b.name.length - a.name.length);
@@ -1738,6 +1799,19 @@ function manualAppLinks(text, apps) {
   return result + escapeManualSegment(text.slice(previousEnd));
 }
 
+function manualAppLinks(text, apps) {
+  const links = parseManualArticleLinks(text);
+  let result = "";
+  let previousEnd = 0;
+  links.forEach((link) => {
+    result += automaticManualAppLinks(text.slice(previousEnd, link.start), apps);
+    const app = appByName(link.appKey);
+    result += app ? articleLink(app, link.label) : escapeManualSegment(link.label);
+    previousEnd = link.endExclusive;
+  });
+  return result + automaticManualAppLinks(text.slice(previousEnd), apps);
+}
+
 function buildManualNewsArticle(shortcutApps) {
   const location = escapeHtml(state.newsLocation.trim() || "Rembang");
   const calendarLink = `<button type="button" class="article-link" data-open-calendar>${newsDateNow()}</button>`;
@@ -1745,6 +1819,120 @@ function buildManualNewsArticle(shortcutApps) {
   const content = state.newsManualBody || "Artikel manual masih kosong. Ketuk EDIT untuk menulis isi artikel.";
   const separator = content.endsWith("\n") ? "" : " ";
   return `<strong>${location}</strong>${state.date ? `, ${calendarLink}` : ""}<strong> — </strong>${manualAppLinks(content, shortcutApps)}${separator}Untuk mencatat kabar ini, buka ${notesLink}.`;
+}
+
+let manualLinkEditingStart = null;
+let manualLinkSelectedApp = APPS[0]?.name || "";
+
+function currentManualLink() {
+  return parseManualArticleLinks($("manual-body").value)
+    .find((link) => link.start === manualLinkEditingStart) || null;
+}
+
+function updateManualBody(value) {
+  $("manual-body").value = value.slice(0, 6000);
+  $("manual-body-count").textContent = `${$("manual-body").value.length}/6000 · Baris baru dipertahankan`;
+  renderManualLinkList();
+}
+
+function renderManualLinkList() {
+  const links = parseManualArticleLinks($("manual-body").value);
+  const list = $("manual-link-list");
+  list.innerHTML = links.length ? links.map((link) => {
+    const app = appByName(link.appKey);
+    return `<div class="manual-link-row">
+      <div class="link-copy"><div class="link-label">${escapeHtml(link.label)}</div><div class="link-target">${escapeHtml(app?.name || "Aplikasi tidak ditemukan")}</div></div>
+      <button type="button" data-manual-link-edit="${link.start}">Edit</button>
+      <button type="button" data-manual-link-remove="${link.start}">Hapus</button>
+    </div>`;
+  }).join("") : '<div class="manual-link-empty">Belum ada hyperlink manual.</div>';
+
+  list.querySelectorAll("[data-manual-link-edit]").forEach((button) => {
+    button.onclick = () => {
+      const link = links.find((item) => item.start === Number(button.dataset.manualLinkEdit));
+      if (!link) return;
+      manualLinkEditingStart = link.start;
+      manualLinkSelectedApp = appByName(link.appKey)?.name || APPS[0]?.name || "";
+      $("manual-link-label").value = link.label;
+      $("manual-link-search").value = "";
+      $("manual-link-error").textContent = "";
+      renderManualLinkAppChoices();
+      renderManualLinkList();
+    };
+  });
+  list.querySelectorAll("[data-manual-link-remove]").forEach((button) => {
+    button.onclick = () => {
+      const link = links.find((item) => item.start === Number(button.dataset.manualLinkRemove));
+      if (!link) return;
+      if (manualLinkEditingStart === link.start) {
+        manualLinkEditingStart = null;
+        $("manual-link-label").value = "";
+      }
+      updateManualBody(removeManualArticleLink($("manual-body").value, link));
+    };
+  });
+  $("insert-manual-link").textContent = currentManualLink() ? "Simpan perubahan hyperlink" : "Sisipkan hyperlink";
+  $("cancel-edit-manual-link").hidden = manualLinkEditingStart === null;
+}
+
+function renderManualLinkAppChoices() {
+  const query = $("manual-link-search").value.trim().toLowerCase();
+  const matches = APPS.filter((app) => app.name.toLowerCase().includes(query));
+  const selected = appByName(manualLinkSelectedApp) || APPS[0];
+  let choices = matches.slice(0, 3);
+  if (!query && selected && !choices.some((app) => app.name === selected.name)) {
+    choices = [selected, ...choices.slice(0, 2)];
+  }
+  const container = $("manual-link-apps");
+  container.innerHTML = choices.length ? choices.map((app) => `
+    <button type="button" class="manual-link-app" data-manual-link-app="${escapeHtml(app.name)}">
+      ${iconHtml(app, 28, 7)}<span class="app-name">${escapeHtml(app.name)}</span><span class="selected">${selected?.name === app.name ? "✓" : ""}</span>
+    </button>`).join("") : '<div class="manual-link-empty">Tidak ada aplikasi yang cocok</div>';
+  container.querySelectorAll("[data-manual-link-app]").forEach((button) => {
+    button.onclick = () => {
+      manualLinkSelectedApp = button.dataset.manualLinkApp;
+      if (!$("manual-link-label").value.trim()) $("manual-link-label").value = manualLinkSelectedApp;
+      $("manual-link-error").textContent = "";
+      renderManualLinkAppChoices();
+    };
+  });
+}
+
+function resetManualLinkEditor() {
+  manualLinkEditingStart = null;
+  manualLinkSelectedApp = APPS[0]?.name || "";
+  $("manual-link-label").value = "";
+  $("manual-link-search").value = "";
+  $("manual-link-error").textContent = "";
+  renderManualLinkList();
+  renderManualLinkAppChoices();
+}
+
+function insertManualLinkFromEditor() {
+  const label = $("manual-link-label").value.trim();
+  const app = appByName(manualLinkSelectedApp) || APPS[0];
+  if (!label || label.includes("]")) {
+    $("manual-link-error").textContent = "Teks hyperlink wajib diisi dan tidak boleh mengandung ]";
+    return;
+  }
+  if (!app) {
+    $("manual-link-error").textContent = "Pilih aplikasi tujuan";
+    return;
+  }
+  const body = $("manual-body").value;
+  const editing = currentManualLink();
+  const updated = editing
+    ? replaceManualArticleLink(body, editing, label, app.name)
+    : insertManualArticleLink(body, label, app.name);
+  if (updated.length > 6000) {
+    $("manual-link-error").textContent = "Artikel terlalu panjang untuk menambahkan hyperlink";
+    return;
+  }
+  manualLinkEditingStart = null;
+  $("manual-link-label").value = "";
+  $("manual-link-error").textContent = "";
+  updateManualBody(updated);
+  renderManualLinkAppChoices();
 }
 
 function openArticleEditor() {
@@ -1756,6 +1944,7 @@ function openArticleEditor() {
   $("article-editor-error").textContent = "";
   $("manual-headline-count").textContent = `${state.newsManualHeadline.length}/160`;
   $("manual-body-count").textContent = `${state.newsManualBody.length}/6000 · Baris baru dipertahankan`;
+  resetManualLinkEditor();
   openSheet("article-editor-sheet");
 }
 
@@ -1840,7 +2029,7 @@ function renderFolioHome() {
   const article = state.showNewsArticle
     ? `<p class="news-article">${state.newsManualEnabled ? buildManualNewsArticle(shortcutApps) : buildNewsArticle(entries, shortcutApps)}</p>`
     : "";
-  const appShelf = state.showNewsArticle
+  const appShelf = state.showNewsArticle && state.showNewsAppShelf
     ? `<div class="folio-section"><span>APLIKASI DALAM ARTIKEL</span><span>${articleApps.length} APLIKASI</span></div>
        ${articleApps.length
          ? `<div class="news-app-shelf">${articleApps.map((app) => {
@@ -2495,7 +2684,11 @@ function renderSettings() {
           <div class="v">${state.newsApps === null ? "Otomatis" : `${state.newsApps.length} dipilih`}</div>
         </div>
         <div class="switch-row">
-          <div class="text"><div class="t">Shortcut aplikasi di artikel</div><div class="d">Nama aplikasi dapat diketuk</div></div>
+          <div class="text"><div class="t">Daftar aplikasi di artikel</div><div class="d">Sembunyikan chip tanpa mengubah artikel dan filter notifikasi</div></div>
+          <div class="sw ${state.showNewsAppShelf ? "on" : ""}" data-sw="showNewsAppShelf"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Shortcut aplikasi di artikel</div><div class="d">Nama aplikasi dan hyperlink Manual dapat diketuk</div></div>
           <div class="sw ${state.showNewsAppLinks ? "on" : ""}" data-sw="showNewsAppLinks"></div>
         </div>
         <div class="switch-row">
@@ -2597,7 +2790,7 @@ function renderSettings() {
       <div class="card">
         <div class="action-row">
           <div class="text">
-            <div class="t">BitLauncher 0.4.0</div>
+            <div class="t">BitLauncher 0.5.0</div>
             <div class="d" style="margin-top:4px; line-height:16px">Folio koran di atas kertas Kaleido, atau minimalis ala Niagara + Minima.</div>
           </div>
         </div>
@@ -2891,7 +3084,11 @@ $("manual-headline").addEventListener("input", (event) => {
 });
 $("manual-body").addEventListener("input", (event) => {
   $("manual-body-count").textContent = `${event.target.value.length}/6000 · Baris baru dipertahankan`;
+  renderManualLinkList();
 });
+$("manual-link-search").addEventListener("input", renderManualLinkAppChoices);
+$("insert-manual-link").onclick = insertManualLinkFromEditor;
+$("cancel-edit-manual-link").onclick = resetManualLinkEditor;
 
 // Configurable home gestures: tap, long-press, horizontal, and two-finger vertical swipes.
 let homePressTimer = null;

@@ -83,14 +83,15 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 
 ## 2. Fase pengembangan
 
-### 0.1–0.4 — Fondasi + kustomisasi awal (rilis saat ini)
+### 0.1–0.5 — Fondasi + kustomisasi awal (rilis saat ini)
 - Launcher default, daftar aplikasi `LauncherApps`, multi-profil.
 - Beranda vertikal, laci dengan pencarian, rel alfabet, daftar/kisi.
 - Shortcut, pin, sembunyikan, info, uninstall.
 - Tema, AMOLED, dynamic color, pengaturan dasar, backup JSON.
 - Beranda folio berita: foto, artikel dengan shortcut aplikasi, ringkasan jumlah notifikasi, pencarian masthead, gestur, serta kartu Kalender/Catatan.
-- Pemilih aplikasi artikel: mode Otomatis/kustom/kosong, chip shortcut dan badge shelf, serta filter notifikasi artikel tanpa mengubah badge global.
-- Editor judul/isi artikel manual dengan multiline, draf persisten, tautan aplikasi pilihan, dan mode otomatis yang dapat dipulihkan.
+- Pemilih aplikasi artikel: mode Otomatis/kustom/kosong, chip shortcut dan badge shelf, filter notifikasi artikel tanpa mengubah badge global, serta saklar visibilitas shelf yang independen.
+- Editor judul/isi artikel manual dengan multiline, draf persisten, tautan nama aplikasi pilihan, dan mode otomatis yang dapat dipulihkan.
+- Hyperlink Manual dengan teks kustom, pencarian target dari semua aplikasi, sisip/edit/hapus, renderer tanpa markup, dan fallback teks biasa.
 - Pemetaan tujuh gestur, aksi kunci layar/recents/pengaturan cepat/screenshot, kontrol artikel/tautan, dan badge ikon.
 - Enam pilihan gaya font, gambar artikel kustom dengan caption/reset, dan APK release test-signed untuk sideload.
 - Paket Ikon tema, penemuan icon pack pihak ketiga, parser appfilter, kalender harian, dan fallback ikon asli.

@@ -239,7 +239,7 @@ def render_folio_home(palette: dict = KALEIDO, manual: bool = False) -> Image.Im
     )
     article = [
         [("Pagi ini saya menulis kabar sendiri.", "regular")],
-        [("Buka ", "regular"), ("WhatsApp", "link"), (" untuk menyapa keluarga,", "regular")],
+        [("Buka ", "regular"), ("obrolan keluarga", "link"), (" untuk menyapa,", "regular")],
         [("lalu ", "regular"), ("Spotify", "link"), (" untuk menemani membaca.", "regular")],
         [("Untuk mencatat kabar ini, buka ", "regular"), ("Catatan.", "link")],
     ] if manual else [
@@ -394,7 +394,7 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
     draw.line([(px(41), px(69)), (px(29), px(81))], fill=ink, width=px(1.5))
     draw.text((px(58), px(87)), "Pengaturan", font=serif(28), fill=ink, anchor="ls")
     tracked_text(draw, 20, 118, "GESTUR BERANDA", font(10, "SemiBold"), ink, 1.6)
-    rounded_rect(img, (20, 130, 373, 498), 2, outline=outline)
+    rounded_rect(img, (20, 130, 373, 458), 2, outline=outline)
 
     gesture_rows = [
         ("Ketuk dua kali", "Cari aplikasi"),
@@ -406,17 +406,17 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
         ("Geser dua jari ke bawah", "Pengaturan cepat"),
     ]
     for index, (label, value) in enumerate(gesture_rows):
-        y = 140 + index * 50
+        y = 140 + index * 44
         if index:
             draw.line([(px(32), px(y)), (px(361), px(y))], fill=outline, width=max(1, px(0.6)))
         draw.text((px(34), px(y + 30)), label, font=serif(14), fill=ink, anchor="ls")
         draw.text((px(359), px(y + 29)), value, font=font(10, "Medium"), fill=soft, anchor="rs")
 
-    tracked_text(draw, 20, 528, "HALAMAN BERITA & APLIKASI", font(10, "SemiBold"), ink, 1.6)
-    rounded_rect(img, (20, 540, 373, 810), 2, outline=outline)
-    switches = ["Edit artikel manual", "Aplikasi di artikel", "Artikel berita", "Shortcut aplikasi di artikel", "Ringkasan notifikasi"]
+    tracked_text(draw, 20, 488, "HALAMAN BERITA & APLIKASI", font(10, "SemiBold"), ink, 1.6)
+    rounded_rect(img, (20, 500, 373, 822), 2, outline=outline)
+    switches = ["Edit artikel manual", "Aplikasi di artikel", "Artikel berita", "Daftar aplikasi di artikel", "Shortcut aplikasi di artikel", "Ringkasan notifikasi"]
     for index, label in enumerate(switches):
-        y = 548 + index * 52
+        y = 508 + index * 52
         if index:
             draw.line([(px(32), px(y)), (px(361), px(y))], fill=outline, width=max(1, px(0.6)))
         draw.text((px(34), px(y + 31)), label, font=serif(14), fill=ink, anchor="ls")

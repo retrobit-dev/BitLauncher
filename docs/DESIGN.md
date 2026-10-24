@@ -6,7 +6,7 @@ Tujuan visual: **tenang, satu tangan, tanpa kebisingan.** Gaya utama adalah **fo
 
 ## Gaya utama — Folio koran + E Ink Kaleido
 
-Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead dengan pencarian yang dapat dibuka, headline, foto, artikel dengan tautan aplikasi, shelf aplikasi pilihan, lalu kartu editorial Kalender dan Catatan. Tidak ada indeks aplikasi permanen atau tombol navigasi di bagian bawah.
+Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead dengan pencarian yang dapat dibuka, headline, foto, artikel dengan tautan aplikasi, shelf aplikasi pilihan yang dapat disembunyikan, lalu kartu editorial Kalender dan Catatan. Tidak ada indeks aplikasi permanen atau tombol navigasi di bagian bawah.
 
 ```
 ┌──────────────────────────────┐
@@ -23,7 +23,7 @@ Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai dereta
 │ ada 3 pesan belum dibaca di  │
 │ WhatsApp. Buka Catatan.      │  ← frasa bergaris bawah = app
 │ APLIKASI DALAM ARTIKEL       │
-│ [W WhatsApp] [S Spotify] [K]│  ← chip + badge hanya app pilihan
+│ [W WhatsApp] [S Spotify] [K]│  ← chip + badge; dapat disembunyikan
 │ ┌────────────┐ ┌───────────┐ │
 │ │ KALENDER   │ │ CATATAN   │ │  ← kartu editorial interaktif
 │ │ 24         │ │ Catatan   │ │
@@ -38,9 +38,11 @@ Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal deng
 
 Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android; jumlah lama tidak tetap tampil di headline.
 
-**Aplikasi di artikel** adalah daftar yang dipilih pengguna, bukan daftar favorit yang dipaksakan. Satu resolver memasok aplikasi yang sama ke headline, prosa, chip shortcut, dan badge shelf. Mode Otomatis mempertahankan perilaku lama; pilihan kustom dapat mencakup aplikasi tersembunyi; daftar kosong berarti benar-benar tanpa aplikasi/notifikasi artikel. Shelf menampilkan semua pilihan dalam grid tiga kolom, sedangkan prosa menyebut maksimal tiga aplikasi. Filter tidak mengubah badge global pada pencarian atau laci.
+**Aplikasi di artikel** adalah daftar yang dipilih pengguna, bukan daftar favorit yang dipaksakan. Satu resolver memasok aplikasi yang sama ke headline, prosa, chip shortcut, dan badge shelf. Mode Otomatis mempertahankan perilaku lama; pilihan kustom dapat mencakup aplikasi tersembunyi; daftar kosong berarti benar-benar tanpa aplikasi/notifikasi artikel. Shelf menampilkan semua pilihan dalam grid tiga kolom, sedangkan prosa menyebut maksimal tiga aplikasi. Saklar **Daftar aplikasi di artikel** hanya mengubah visibilitas shelf; resolver, artikel, dan badge global tidak berubah.
 
-**Artikel manual** mengganti headline dan isi utama dengan tulisan pengguna. Baris *Kabar Utama* menjadi target sentuh **EDIT**; pada mode manual label berubah menjadi **MANUAL · EDIT**. Editor memakai bottom sheet dengan field judul, area teks multiline, validasi, dan dua aksi eksplisit: aktifkan manual atau simpan draf sambil kembali ke otomatis. Dateline, Catatan, chip, dan badge tetap memakai komponen yang sama. Nama aplikasi pilihan ditautkan berdasarkan batas label utuh, bukan substring di dalam kata lain; teks lain selalu di-escape. Notifikasi tidak menimpa tulisan manual.
+**Artikel manual** mengganti headline dan isi utama dengan tulisan pengguna. Baris *Kabar Utama* menjadi target sentuh **EDIT**; pada mode manual label berubah menjadi **MANUAL · EDIT**. Editor memakai bottom sheet dengan field judul, area teks multiline, validasi, kontrol hyperlink, dan dua aksi eksplisit: aktifkan manual atau simpan draf sambil kembali ke otomatis. Dateline, Catatan, dan badge tetap memakai komponen yang sama; chip mengikuti saklar shelf. Nama aplikasi pilihan ditautkan berdasarkan batas label utuh, bukan substring di dalam kata lain; teks lain selalu di-escape. Notifikasi tidak menimpa tulisan manual.
+
+**Hyperlink Manual** adalah anotasi aplikasi eksplisit dengan label yang boleh berbeda dari nama aplikasi. Editor menyediakan teks kustom, pencarian aplikasi, sisip, edit target/label, dan hapus. Target dapat berupa aplikasi apa pun yang terpasang, terlepas dari daftar sumber artikel. Renderer hanya menampilkan label dan anotasi klik—format `[label](app:kunci)` tidak bocor ke prosa. Jika target hilang atau shortcut dimatikan, label menjadi teks biasa. Penghapusan tautan mempertahankan label sebagai prosa.
 
 Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian bergaris tinta, huruf seksi dengan rule, dan nomor entri berkelanjutan. Mode kisi memakai sel persegi dengan garis tipis, bukan kartu membulat.
 
@@ -207,7 +209,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 
 Semua gestur di atas dapat dipetakan ke pencarian, arsip, pengaturan, menu, kalender, catatan, panel notifikasi, pengaturan cepat, recents, kunci layar, screenshot, atau **Tidak ada**. Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk aksi yang sedang dipilih.
 
-Artikel, mode/draf manual, daftar aplikasi artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
+Artikel, mode/draf manual beserta hyperlink, pilihan dan visibilitas daftar aplikasi artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, badge, dan paket ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
 
 ---
 
