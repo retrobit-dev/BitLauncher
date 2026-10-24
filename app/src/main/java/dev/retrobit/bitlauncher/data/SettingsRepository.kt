@@ -33,12 +33,15 @@ enum class GestureAction {
     OPEN_NOTES,
 }
 
+enum class LauncherFont { STYLE_DEFAULT, LORA, ROBOTO, TYPEWRITER, PIXEL, OPERATOR }
+
 enum class AppLayout { LIST, GRID }
 
 data class LauncherSettings(
     val style: LauncherStyle = LauncherStyle.FOLIO,
     val themeMode: ThemeMode = ThemeMode.KALEIDO,
     val dynamicColor: Boolean = true,
+    val fontChoice: LauncherFont = LauncherFont.STYLE_DEFAULT,
     val showClock: Boolean = true,
     val showDate: Boolean = true,
     val use24Hour: Boolean = false,
@@ -53,6 +56,7 @@ data class LauncherSettings(
     val showNewsAppLinks: Boolean = true,
     val showNewsUnread: Boolean = true,
     val showNewsPhoto: Boolean = true,
+    val newsImageUri: String = "",
     val showNewsWidgets: Boolean = true,
     val notesPackage: String = "",
     val showNotificationBadges: Boolean = true,
@@ -100,6 +104,9 @@ class SettingsRepository(context: Context) {
             style = style,
             themeMode = theme,
             dynamicColor = prefs.getBoolean(KEY_DYNAMIC_COLOR, true),
+            fontChoice = runCatching {
+                LauncherFont.valueOf(prefs.getString(KEY_FONT, LauncherFont.STYLE_DEFAULT.name)!!)
+            }.getOrDefault(LauncherFont.STYLE_DEFAULT),
             showClock = prefs.getBoolean(KEY_SHOW_CLOCK, true),
             showDate = prefs.getBoolean(KEY_SHOW_DATE, true),
             use24Hour = prefs.getBoolean(KEY_24H, systemUses24Hour),
@@ -114,6 +121,7 @@ class SettingsRepository(context: Context) {
             showNewsAppLinks = prefs.getBoolean(KEY_NEWS_APP_LINKS, true),
             showNewsUnread = prefs.getBoolean(KEY_NEWS_UNREAD, true),
             showNewsPhoto = prefs.getBoolean(KEY_NEWS_PHOTO, true),
+            newsImageUri = prefs.getString(KEY_NEWS_IMAGE, "") ?: "",
             showNewsWidgets = prefs.getBoolean(KEY_NEWS_WIDGETS, true),
             notesPackage = prefs.getString(KEY_NOTES_PACKAGE, "") ?: "",
             showNotificationBadges = prefs.getBoolean(KEY_NOTIFICATION_BADGES, true),
@@ -134,6 +142,7 @@ class SettingsRepository(context: Context) {
             .putString(KEY_STYLE, settings.style.name)
             .putString(KEY_THEME, settings.themeMode.name)
             .putBoolean(KEY_DYNAMIC_COLOR, settings.dynamicColor)
+            .putString(KEY_FONT, settings.fontChoice.name)
             .putBoolean(KEY_SHOW_CLOCK, settings.showClock)
             .putBoolean(KEY_SHOW_DATE, settings.showDate)
             .putBoolean(KEY_24H, settings.use24Hour)
@@ -148,6 +157,7 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_NEWS_APP_LINKS, settings.showNewsAppLinks)
             .putBoolean(KEY_NEWS_UNREAD, settings.showNewsUnread)
             .putBoolean(KEY_NEWS_PHOTO, settings.showNewsPhoto)
+            .putString(KEY_NEWS_IMAGE, settings.newsImageUri)
             .putBoolean(KEY_NEWS_WIDGETS, settings.showNewsWidgets)
             .putString(KEY_NOTES_PACKAGE, settings.notesPackage)
             .putBoolean(KEY_NOTIFICATION_BADGES, settings.showNotificationBadges)
@@ -195,6 +205,7 @@ class SettingsRepository(context: Context) {
         root.put("style", settings.style.name)
         root.put("themeMode", settings.themeMode.name)
         root.put("dynamicColor", settings.dynamicColor)
+        root.put("fontChoice", settings.fontChoice.name)
         root.put("showClock", settings.showClock)
         root.put("showDate", settings.showDate)
         root.put("use24Hour", settings.use24Hour)
@@ -209,6 +220,7 @@ class SettingsRepository(context: Context) {
         root.put("showNewsAppLinks", settings.showNewsAppLinks)
         root.put("showNewsUnread", settings.showNewsUnread)
         root.put("showNewsPhoto", settings.showNewsPhoto)
+        root.put("newsImageUri", settings.newsImageUri)
         root.put("showNewsWidgets", settings.showNewsWidgets)
         root.put("notesPackage", settings.notesPackage)
         root.put("showNotificationBadges", settings.showNotificationBadges)
@@ -246,6 +258,9 @@ class SettingsRepository(context: Context) {
                 ThemeMode.valueOf(root.optString("themeMode", current.themeMode.name))
             }.getOrDefault(current.themeMode),
             dynamicColor = root.optBoolean("dynamicColor", current.dynamicColor),
+            fontChoice = runCatching {
+                LauncherFont.valueOf(root.optString("fontChoice", current.fontChoice.name))
+            }.getOrDefault(current.fontChoice),
             showClock = root.optBoolean("showClock", current.showClock),
             showDate = root.optBoolean("showDate", current.showDate),
             use24Hour = root.optBoolean("use24Hour", current.use24Hour),
@@ -263,6 +278,7 @@ class SettingsRepository(context: Context) {
             showNewsAppLinks = root.optBoolean("showNewsAppLinks", current.showNewsAppLinks),
             showNewsUnread = root.optBoolean("showNewsUnread", current.showNewsUnread),
             showNewsPhoto = root.optBoolean("showNewsPhoto", current.showNewsPhoto),
+            newsImageUri = root.optString("newsImageUri", current.newsImageUri),
             showNewsWidgets = root.optBoolean("showNewsWidgets", current.showNewsWidgets),
             notesPackage = root.optString("notesPackage", current.notesPackage),
             showNotificationBadges = root.optBoolean("showNotificationBadges", current.showNotificationBadges),
@@ -292,6 +308,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_STYLE = "style"
         private const val KEY_THEME = "theme"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+        private const val KEY_FONT = "font_choice"
         private const val KEY_SHOW_CLOCK = "show_clock"
         private const val KEY_SHOW_DATE = "show_date"
         private const val KEY_24H = "use_24h"
@@ -306,6 +323,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_NEWS_APP_LINKS = "news_app_links"
         private const val KEY_NEWS_UNREAD = "news_unread"
         private const val KEY_NEWS_PHOTO = "news_photo"
+        private const val KEY_NEWS_IMAGE = "news_image_uri"
         private const val KEY_NEWS_WIDGETS = "news_widgets"
         private const val KEY_NOTES_PACKAGE = "notes_package"
         private const val KEY_NOTIFICATION_BADGES = "notification_badges"

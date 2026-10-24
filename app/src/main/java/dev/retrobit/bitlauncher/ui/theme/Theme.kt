@@ -15,10 +15,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import dev.retrobit.bitlauncher.data.LauncherSettings
+import dev.retrobit.bitlauncher.R
+import dev.retrobit.bitlauncher.data.LauncherFont
 import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.ThemeMode
 
@@ -227,6 +230,55 @@ private val FolioTypography = Typography(
     ),
 )
 
+
+private val LoraFamily = FontFamily(
+    Font(R.font.lora, FontWeight.Normal),
+    Font(R.font.lora, FontWeight.Bold),
+)
+private val RobotoFamily = FontFamily(
+    Font(R.font.roboto, FontWeight.Normal),
+    Font(R.font.roboto, FontWeight.Bold),
+)
+private val TypewriterFamily = FontFamily(
+    Font(R.font.courier_prime_regular, FontWeight.Normal),
+    Font(R.font.courier_prime_bold, FontWeight.Bold),
+)
+private val PixelFamily = FontFamily(
+    Font(R.font.silkscreen_regular, FontWeight.Normal),
+    Font(R.font.silkscreen_bold, FontWeight.Bold),
+)
+private val OperatorFamily = FontFamily(
+    Font(R.font.space_mono_regular, FontWeight.Normal),
+    Font(R.font.space_mono_bold, FontWeight.Bold),
+)
+
+private fun LauncherFont.familyOrNull(): FontFamily? = when (this) {
+    LauncherFont.STYLE_DEFAULT -> null
+    LauncherFont.LORA -> LoraFamily
+    LauncherFont.ROBOTO -> RobotoFamily
+    LauncherFont.TYPEWRITER -> TypewriterFamily
+    LauncherFont.PIXEL -> PixelFamily
+    LauncherFont.OPERATOR -> OperatorFamily
+}
+
+private fun Typography.withFontFamily(family: FontFamily) = Typography(
+    displayLarge = displayLarge.copy(fontFamily = family),
+    displayMedium = displayMedium.copy(fontFamily = family),
+    displaySmall = displaySmall.copy(fontFamily = family),
+    headlineLarge = headlineLarge.copy(fontFamily = family),
+    headlineMedium = headlineMedium.copy(fontFamily = family),
+    headlineSmall = headlineSmall.copy(fontFamily = family),
+    titleLarge = titleLarge.copy(fontFamily = family),
+    titleMedium = titleMedium.copy(fontFamily = family),
+    titleSmall = titleSmall.copy(fontFamily = family),
+    bodyLarge = bodyLarge.copy(fontFamily = family),
+    bodyMedium = bodyMedium.copy(fontFamily = family),
+    bodySmall = bodySmall.copy(fontFamily = family),
+    labelLarge = labelLarge.copy(fontFamily = family),
+    labelMedium = labelMedium.copy(fontFamily = family),
+    labelSmall = labelSmall.copy(fontFamily = family),
+)
+
 @Composable
 fun BitLauncherTheme(
     settings: LauncherSettings,
@@ -251,10 +303,12 @@ fun BitLauncherTheme(
     }
     val epaper = settings.themeMode == ThemeMode.KALEIDO ||
         settings.themeMode == ThemeMode.KALEIDO_NIGHT
+    val baseTypography = if (settings.style == LauncherStyle.FOLIO) FolioTypography else MinimalTypography
+    val selectedFamily = settings.fontChoice.familyOrNull()
     CompositionLocalProvider(LocalEpaper provides epaper) {
         MaterialTheme(
             colorScheme = scheme,
-            typography = if (settings.style == LauncherStyle.FOLIO) FolioTypography else MinimalTypography,
+            typography = if (selectedFamily == null) baseTypography else baseTypography.withFontFamily(selectedFamily),
             content = content,
         )
     }

@@ -33,6 +33,11 @@ from render_previews import (
 )
 
 SERIF_FILE = Path(__file__).resolve().parent.parent / "preview" / "assets" / "fonts" / "Lora.ttf"
+TYPEWRITER_REGULAR = Path(__file__).resolve().parent.parent / "preview" / "assets" / "fonts" / "CourierPrime-Regular.ttf"
+TYPEWRITER_BOLD = Path(__file__).resolve().parent.parent / "preview" / "assets" / "fonts" / "CourierPrime-Bold.ttf"
+ACTIVE_SERIF_FILE = SERIF_FILE
+ACTIVE_SERIF_BOLD_FILE = SERIF_FILE
+ACTIVE_SERIF_SCALE = 1.0
 NEWS_PHOTO = Path(__file__).resolve().parent.parent / "app" / "src" / "main" / "res" / "drawable" / "news_hero.jpg"
 
 KALEIDO = {
@@ -75,9 +80,10 @@ def paper_tile(img, box, radius, c1, c2, glyph="") -> None:
 
 
 def serif(size: float, weight: str = "Regular") -> ImageFont.FreeTypeFont:
-    path = str(SERIF_FILE) if SERIF_FILE.exists() else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
-    result = ImageFont.truetype(path, px(size))
-    if SERIF_FILE.exists():
+    source = ACTIVE_SERIF_FILE if weight == "Regular" else ACTIVE_SERIF_BOLD_FILE
+    path = str(source) if source.exists() else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+    result = ImageFont.truetype(path, px(size * ACTIVE_SERIF_SCALE))
+    if source.exists():
         try:
             result.set_variation_by_name(weight)
         except Exception:
@@ -386,11 +392,20 @@ def render_folio_settings(palette: dict = KALEIDO) -> Image.Image:
     return img
 
 def main() -> None:
+    global ACTIVE_SERIF_FILE, ACTIVE_SERIF_BOLD_FILE, ACTIVE_SERIF_SCALE
     save(framed(render_folio_home()), "folio-home")
     save(framed(render_folio_archive()), "folio-archive")
     save(framed(render_folio_grid()), "folio-grid")
     save(framed(render_folio_settings()), "folio-settings")
     save(framed(render_folio_archive(KALEIDO_NIGHT)), "folio-night")
+
+    ACTIVE_SERIF_FILE = TYPEWRITER_REGULAR
+    ACTIVE_SERIF_BOLD_FILE = TYPEWRITER_BOLD
+    ACTIVE_SERIF_SCALE = 0.84
+    save(framed(render_folio_home()), "folio-typewriter")
+    ACTIVE_SERIF_FILE = SERIF_FILE
+    ACTIVE_SERIF_BOLD_FILE = SERIF_FILE
+    ACTIVE_SERIF_SCALE = 1.0
 
 
 if __name__ == "__main__":

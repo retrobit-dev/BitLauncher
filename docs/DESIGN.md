@@ -30,6 +30,8 @@ Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai dereta
 └──────────────────────────────┘
 ```
 
+Foto artikel dapat diganti melalui pemilih dokumen sistem. Decode dilakukan di luar thread utama dengan downsample maksimum 1600 px; pada Kaleido, bitmap memakai filter chroma yang sama dengan ikon. Kegagalan membaca URI selalu kembali ke ilustrasi bawaan, bukan meninggalkan area kosong atau menghentikan launcher.
+
 Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal dengan garis bawah dan dapat diketuk. Tanggal membuka kalender sistem; tautan dan kartu **Catatan** membuka aplikasi catatan yang terdeteksi otomatis atau dipilih di pengaturan. Kedua kartu dapat disembunyikan. Kartu ini adalah alat editorial internal, bukan host untuk widget pihak ketiga.
 
 Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android.
@@ -51,7 +53,8 @@ Aksen metadata arsip hanya memakai tiga tingkat abu-abu hangat. Ikon aplikasi da
 
 ### Tipografi dan bentuk
 
-- Headline, artikel, dan nama aplikasi memakai **serif**; metadata memakai sans uppercase dengan tracking 1.2–3.4sp.
+- Secara default, headline, artikel, dan nama aplikasi memakai **serif**; metadata memakai sans uppercase dengan tracking 1.2–3.4sp.
+- Pengguna dapat mengganti seluruh skala tipografi dengan **Lora**, **Roboto**, **Courier Prime (Typewriter)**, **Silkscreen (Pixel)**, atau **Space Mono (Operator-style)**. Semua font dikemas lokal; tidak ada unduhan saat runtime.
 - Headline 34sp; artikel 17sp dengan line-height 26sp; nama favorit 23sp; label arsip 18sp; metadata 8–11sp.
 - Sudut tombol dan sel kisi **2dp**; tidak ada pill, glass, blur, atau bayangan pada gaya folio.
 - Garis ganda 2.5dp + 0.8dp menjadi penanda masthead; *dotted leader* menghubungkan nama aplikasi dengan chevron.
@@ -165,8 +168,9 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 
 ### Tipografi
 
-- Keluarga: Roboto (default sistem) untuk v1. Font kustom (mis. Inter/Manrope) direncanakan di 0.2.
-- Bobot: Light untuk judul besar, Normal untuk isi, Medium untuk aksi.
+- Bawaan gaya minimalis: sans sistem. Pilihan eksplisit: Lora, Roboto, Courier Prime, Silkscreen, dan Space Mono.
+- Bobot: Light/Regular untuk judul besar dan isi, Medium/Bold untuk aksi. Pilihan font diterapkan ke seluruh `Typography`, bukan hanya headline.
+- Gambar artikel mengikuti SAF + persistable read permission; file tidak disalin atau diunggah oleh launcher.
 
 ---
 
@@ -190,7 +194,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 
 Semua gestur di atas dapat dipetakan ke pencarian, arsip, pengaturan, menu, kalender, catatan, panel notifikasi, pengaturan cepat, recents, kunci layar, screenshot, atau **Tidak ada**. Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, indikator bawah memberi petunjuk aksi yang sedang dipilih.
 
-Artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, dan badge ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON.
+Artikel, tautan aplikasi, ringkasan notifikasi, foto, widget, dan badge ikon mempunyai pengaturan terpisah serta ikut dalam backup JSON. Pilihan font dan URI gambar juga disimpan; URI yang tidak lagi valid jatuh ke gambar bawaan.
 
 ---
 

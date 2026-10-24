@@ -16,8 +16,22 @@ android {
         versionName = "0.1.0"
     }
 
+    // Public test-only identity for directly installable CI/sideload builds.
+    // Replace this signing config with a private production key before any store release.
+    signingConfigs {
+        create("sideload") {
+            storeFile = file("test-release.p12")
+            storePassword = "bitlauncher-test"
+            keyAlias = "bitlauncher-test"
+            keyPassword = "bitlauncher-test"
+            storeType = "PKCS12"
+        }
+    }
+
     buildTypes {
         release {
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("sideload")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

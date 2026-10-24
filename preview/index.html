@@ -18,6 +18,14 @@
     font-display: block;
   }
 
+
+  @font-face { font-family: "Courier Prime"; src: url("assets/fonts/CourierPrime-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Courier Prime"; src: url("assets/fonts/CourierPrime-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "Silkscreen"; src: url("assets/fonts/Silkscreen-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Silkscreen"; src: url("assets/fonts/Silkscreen-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "Space Mono"; src: url("assets/fonts/SpaceMono-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Space Mono"; src: url("assets/fonts/SpaceMono-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+
   /* ------------------------------------------------------------------ tokens
      Nilai di bawah disalin dari app/src/main/java/.../ui/theme/Theme.kt,
      HomeScreen.kt dan AppDrawerScreen.kt agar preview setara dengan APK. */
@@ -615,6 +623,12 @@
   }
   .gesture-setting { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
   .gesture-setting > label { flex: 1; font-family: var(--sans); font-size: 14px; }
+  .news-image-picker {
+    display: block; margin: 10px 0; padding: 12px; border: 1px dashed var(--outline);
+    font-family: var(--sans); font-size: 13px; color: var(--on-surface-variant); cursor: pointer;
+  }
+  .news-image-picker input { display: block; width: 100%; margin-top: 8px; font: inherit; }
+  .text-action { border: 0; background: none; color: var(--primary); padding: 8px 0; font: inherit; cursor: pointer; }
   .gesture-select {
     max-width: 170px; padding: 8px; border: 1px solid var(--outline); border-radius: 2px;
     background: var(--bg); color: var(--on-surface); font: inherit; font-size: 12px;
@@ -1365,6 +1379,15 @@ const GESTURE_ACTIONS = {
   OPEN_NOTES: "Buka catatan",
 };
 
+const FONT_CHOICES = {
+  STYLE_DEFAULT: { label: "Bawaan", description: "Mengikuti gaya Folio atau Minimal." },
+  LORA: { label: "Lora", stack: '"Lora", Georgia, serif', description: "Serif editorial untuk seluruh tampilan." },
+  ROBOTO: { label: "Roboto", stack: '"Roboto", sans-serif', description: "Sans bersih untuk seluruh tampilan." },
+  TYPEWRITER: { label: "Typewriter", stack: '"Courier Prime", monospace', description: "Courier Prime bergaya mesin ketik." },
+  PIXEL: { label: "Pixel", stack: '"Silkscreen", monospace', description: "Silkscreen bergaya bitmap/pixel." },
+  OPERATOR: { label: "Operator", stack: '"Space Mono", monospace', description: "Space Mono bergaya Operator/terminal, open-source." },
+};
+
 const state = {
   theme: "kaleido",
   style: "folio",
@@ -1376,6 +1399,8 @@ const state = {
   showNewsAppLinks: true,
   showNewsUnread: true,
   showNewsPhoto: true,
+  newsImage: "",
+  fontChoice: "STYLE_DEFAULT",
   showNewsWidgets: true,
   showNotificationBadges: true,
   doubleTapAction: "OPEN_SEARCH",
@@ -1614,8 +1639,8 @@ function renderFolioHome() {
     : [];
 
   const photo = state.showNewsPhoto
-    ? `<img class="news-photo" src="assets/news-photo.jpg" alt="Ilustrasi suasana jalan di pagi hari" />
-       <div class="news-caption">ILUSTRASI · SUASANA PAGI</div>`
+    ? `<img class="news-photo" src="${escapeHtml(state.newsImage || "assets/news-photo.jpg")}" alt="Gambar artikel" />
+       <div class="news-caption">${state.newsImage ? "FOTO · PILIHAN PENGGUNA" : "ILUSTRASI · SUASANA PAGI"}</div>`
     : "";
   const accessNotice = state.showNewsUnread && !state.notificationAccess
     ? `<button class="news-access" data-enable-notifications>
@@ -2199,6 +2224,8 @@ function renderSettings() {
 
   const styleChip = (value, label) =>
     `<button class="chip ${state.style === value ? "on" : ""}" data-set-style="${value}">${label}</button>`;
+  const fontChip = (value) => `
+    <button class="chip ${state.fontChoice === value ? "on" : ""}" data-set-font="${value}">${FONT_CHOICES[value].label}</button>`;
   const gestureRow = (slot, label) => `
     <div class="gesture-setting"><label>${label}</label>
       <select class="gesture-select" data-gesture-slot="${slot}" aria-label="${label}">
@@ -2212,6 +2239,9 @@ function renderSettings() {
       <div class="card">
         <div class="sub">Gaya</div>
         <div class="chips">${styleChip("folio", "Folio koran")}${styleChip("minimal", "Minimalis")}</div>
+        <div class="sub">Jenis font</div>
+        <div class="chips">${Object.keys(FONT_CHOICES).map(fontChip).join("")}</div>
+        <div class="sub">${FONT_CHOICES[state.fontChoice].description}</div>
         <div class="sub">Tema</div>
         <div class="chips">${themeChip("kaleido", "Kaleido")}${themeChip("kaleido-night", "Kaleido malam")}${themeChip("light", "Terang")}${themeChip("dark", "Gelap")}${themeChip("amoled", "AMOLED")}</div>
         <div class="switch-row">
@@ -2268,6 +2298,10 @@ function renderSettings() {
           <div class="text"><div class="t">Foto utama</div><div class="d">Foto monokrom di atas artikel</div></div>
           <div class="sw ${state.showNewsPhoto ? "on" : ""}" data-sw="showNewsPhoto"></div>
         </div>
+        <label class="news-image-picker">Gambar artikel: ${state.newsImage ? "kustom" : "bawaan"}
+          <input type="file" accept="image/*" data-news-image />
+        </label>
+        ${state.newsImage ? '<button type="button" class="text-action" data-reset-news-image>Gunakan gambar bawaan</button>' : ""}
         <div class="switch-row">
           <div class="text"><div class="t">Widget kalender & catatan</div><div class="d">Dua kartu interaktif setelah artikel</div></div>
           <div class="sw ${state.showNewsWidgets ? "on" : ""}" data-sw="showNewsWidgets"></div>
@@ -2365,6 +2399,9 @@ function renderSettings() {
   $("settings-body").querySelectorAll("[data-set-style]").forEach((b) => {
     b.onclick = () => applyStyle(b.dataset.setStyle);
   });
+  $("settings-body").querySelectorAll("[data-set-font]").forEach((b) => {
+    b.onclick = () => setFontChoice(b.dataset.setFont);
+  });
   $("settings-body").querySelectorAll("[data-set-theme]").forEach((b) => {
     b.onclick = () => {
       applyTheme(b.dataset.setTheme);
@@ -2406,6 +2443,31 @@ function renderSettings() {
       toast(`${GESTURE_ACTIONS[select.value]} dipilih`);
     };
   });
+  const imageInput = $("settings-body").querySelector("[data-news-image]");
+  if (imageInput) imageInput.onchange = () => {
+    const file = imageInput.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Pilih gambar berukuran maksimal 10 MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.newsImage = String(reader.result);
+      renderHome();
+      renderSettings();
+      toast("Gambar artikel diganti");
+    };
+    reader.onerror = () => toast("Gambar tidak dapat dibaca");
+    reader.readAsDataURL(file);
+  };
+  const resetImage = $("settings-body").querySelector("[data-reset-news-image]");
+  if (resetImage) resetImage.onclick = () => {
+    state.newsImage = "";
+    renderHome();
+    renderSettings();
+    toast("Gambar bawaan dipulihkan");
+  };
   const notesRow = $("settings-body").querySelector("[data-notes-app]");
   if (notesRow) notesRow.onclick = () => {
     state.notesApp = state.notesApp === "Catatan" ? "Notion" : "Catatan";
@@ -2443,6 +2505,19 @@ function renderHiddenList() {
 }
 
 /* ------------------------------------------------------------- state setters */
+function updateFontVariables() {
+  const choice = FONT_CHOICES[state.fontChoice] || FONT_CHOICES.STYLE_DEFAULT;
+  screenEl.style.setProperty("--serif", choice.stack || '"Lora", Georgia, "Times New Roman", serif');
+  screenEl.style.setProperty("--sans", choice.stack || '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif');
+}
+
+function setFontChoice(choice) {
+  if (!FONT_CHOICES[choice]) return;
+  state.fontChoice = choice;
+  updateFontVariables();
+  renderSettings();
+}
+
 function applyTheme(theme) {
   state.theme = theme;
   screenEl.dataset.theme = theme;
@@ -2455,6 +2530,7 @@ function applyTheme(theme) {
 
 function applyStyle(style) {
   state.style = style;
+  updateFontVariables();
   screenEl.dataset.theme = state.theme;
   screenEl.classList.toggle("folio", style === "folio");
   document.querySelectorAll("#seg-style button").forEach((b) => {

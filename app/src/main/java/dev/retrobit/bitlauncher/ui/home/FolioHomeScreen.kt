@@ -1,5 +1,8 @@
 package dev.retrobit.bitlauncher.ui.home
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -55,6 +59,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
@@ -81,14 +87,18 @@ import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.R
 import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.ui.components.AppIcon
+import dev.retrobit.bitlauncher.ui.components.EpaperColorFilter
 import dev.retrobit.bitlauncher.ui.components.HomeMenuSheet
 import dev.retrobit.bitlauncher.ui.components.label
 import dev.retrobit.bitlauncher.ui.components.rememberMinuteTick
+import dev.retrobit.bitlauncher.ui.theme.LocalEpaper
 import dev.retrobit.bitlauncher.util.AppSearch
 import dev.retrobit.bitlauncher.util.SystemIntents
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val EditorialLocale = Locale("id", "ID")
 private const val APP_LINK_TAG = "news-app"
@@ -293,7 +303,7 @@ fun FolioHomeScreen(
                 }
 
                 if (settings.showNewsPhoto) {
-                    item { NewsPhoto() }
+                    item { NewsPhoto(settings.newsImageUri) }
                 }
 
                 if (settings.showNewsArticle) {
@@ -484,22 +494,62 @@ private fun SearchResultRow(app: LaunchableApp, unread: Int, onClick: () -> Unit
 // ---------------------------------------------------------------------- article
 
 @Composable
-private fun NewsPhoto() {
+private fun NewsPhoto(imageUri: String) {
     val colors = MaterialTheme.colorScheme
+    val context = LocalContext.current
+    val customBitmap by produceState<ImageBitmap?>(initialValue = null, imageUri) {
+        value = null
+        if (imageUri.isNotBlank()) {
+            value = withContext(Dispatchers.IO) {
+                runCatching { decodeArticleImage(context, imageUri) }.getOrNull()
+            }
+        }
+    }
+    val epaperFilter = if (LocalEpaper.current) EpaperColorFilter else null
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        Image(
-            painter = painterResource(R.drawable.news_hero),
-            contentDescription = "Ilustrasi suasana jalan di pagi hari",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().height(176.dp),
-        )
+        if (customBitmap != null) {
+            Image(
+                bitmap = customBitmap!!,
+                contentDescription = "Gambar artikel pilihan pengguna",
+                contentScale = ContentScale.Crop,
+                colorFilter = epaperFilter,
+                modifier = Modifier.fillMaxWidth().height(176.dp),
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.news_hero),
+                contentDescription = "Ilustrasi suasana jalan di pagi hari",
+                contentScale = ContentScale.Crop,
+                colorFilter = epaperFilter,
+                modifier = Modifier.fillMaxWidth().height(176.dp),
+            )
+        }
         Hairline(color = colors.onBackground)
         Text(
-            text = "ILUSTRASI · SUASANA PAGI",
+            text = if (customBitmap != null) "FOTO · PILIHAN PENGGUNA" else "ILUSTRASI · SUASANA PAGI",
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
             color = colors.onSurfaceVariant,
             modifier = Modifier.padding(vertical = 5.dp),
         )
+    }
+}
+
+private fun decodeArticleImage(context: Context, rawUri: String): ImageBitmap? {
+    val uri = Uri.parse(rawUri)
+    val resolver = context.contentResolver
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, bounds)
+    }
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+    var sampleSize = 1
+    while (maxOf(bounds.outWidth, bounds.outHeight) / sampleSize > 1600) {
+        sampleSize *= 2
+    }
+    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+    return resolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, options)?.asImageBitmap()
     }
 }
 

@@ -60,7 +60,9 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 | Material You (dynamic color) | ✅ | ✅ | — | ✅ |
 | Icon pack | 📋 | ✅ | — | ✅ |
 | Bentuk ikon / mask | 📋 | — | — | ✅ |
-| Ukuran & gaya font | 🚧 | — | — | ✅ |
+| Pilihan gaya font | ✅ (6 pilihan, lokal) | — | — | ✅ |
+| Skala/ukuran font kustom | 📋 | — | — | ✅ |
+| Gambar artikel kustom | ✅ (SAF, tanpa izin storage luas) | — | — | — |
 | Animasi transisi | 📋 | ✅ | — | ✅ |
 | Backup/restore | ✅ | — | — | ✅ |
 
@@ -87,6 +89,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Tema, AMOLED, dynamic color, pengaturan dasar, backup JSON.
 - Beranda folio berita: foto, artikel dengan shortcut aplikasi, ringkasan jumlah notifikasi, pencarian masthead, gestur, serta kartu Kalender/Catatan.
 - Pemetaan tujuh gestur, aksi kunci layar/recents/pengaturan cepat/screenshot, kontrol artikel/tautan, dan badge ikon.
+- Enam pilihan gaya font, gambar artikel kustom dengan caption/reset, dan APK release test-signed untuk sideload.
 
 ### 0.2 — Beranda yang terasa "Niagara"
 - Widget host (`AppWidgetHost` + `AppWidgetManager`) dan penempatan widget.
@@ -128,6 +131,9 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 | Ikon | `LruCache` 256 bitmap | Menghindari decode berulang saat scroll |
 | Jam | Tick per menit (delay sampai detik ke-60) | Hemat baterai dibanding tick per detik |
 | Backup | JSON via SAF (`CreateDocument`/`OpenDocument`) | Tanpa izin storage, ramah scoped storage |
+| Font | TTF lokal + lisensi OFL di resource aplikasi | Bekerja offline, satu sumber aset untuk APK dan preview |
+| Gambar artikel | `OpenDocument` + persistable read URI + decode IO/downsample | Tidak menyalin file, tidak meminta storage luas, hemat memori |
+| Release sideload | Release non-debuggable + test key terdokumentasi + SHA-256 | Dapat diinstal dan diverifikasi; dipisahkan tegas dari kunci produksi |
 | Navigasi | State enum + `AnimatedVisibility` | Tiga layar saja; Navigation-Compose menambah overhead & dependensi |
 
 ### Yang sengaja **tidak** dilakukan

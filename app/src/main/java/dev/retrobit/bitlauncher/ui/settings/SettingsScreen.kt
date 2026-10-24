@@ -1,5 +1,7 @@
 package dev.retrobit.bitlauncher.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.data.AppLayout
 import dev.retrobit.bitlauncher.data.GestureAction
+import dev.retrobit.bitlauncher.data.LauncherFont
 import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
@@ -129,6 +132,29 @@ fun SettingsScreen(
         }
     }
 
+    val imageLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+            val previousUri = settings.newsImageUri
+            if (previousUri.isNotBlank() && previousUri != uri.toString()) {
+                runCatching {
+                    context.contentResolver.releasePersistableUriPermission(
+                        Uri.parse(previousUri),
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                }
+            }
+            viewModel.updateSettings { it.copy(newsImageUri = uri.toString()) }
+        }
+    }
+
     val defaultLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { isDefaultLauncher = SystemIntents.isDefaultLauncher(context) }
@@ -179,6 +205,31 @@ fun SettingsScreen(
                             "Halaman depan bergaya koran di atas kertas Kaleido: masthead, artikel, dan kartu editorial."
                         } else {
                             "Beranda vertikal minimalis di atas wallpaper, gaya Niagara + Minima."
+                        },
+                    )
+                    SettingsSubtitle("Jenis font")
+                    ChoiceRow(
+                        options = listOf(
+                            LauncherFont.STYLE_DEFAULT to "Bawaan",
+                            LauncherFont.LORA to "Lora",
+                            LauncherFont.ROBOTO to "Roboto",
+                            LauncherFont.TYPEWRITER to "Typewriter",
+                            LauncherFont.PIXEL to "Pixel",
+                            LauncherFont.OPERATOR to "Operator",
+                        ),
+                        selected = settings.fontChoice,
+                        onSelect = { choice ->
+                            viewModel.updateSettings { it.copy(fontChoice = choice) }
+                        },
+                    )
+                    SettingsSubtitle(
+                        when (settings.fontChoice) {
+                            LauncherFont.STYLE_DEFAULT -> "Mengikuti gaya Folio atau Minimal."
+                            LauncherFont.LORA -> "Serif editorial Lora untuk seluruh tampilan."
+                            LauncherFont.ROBOTO -> "Sans Roboto untuk seluruh tampilan."
+                            LauncherFont.TYPEWRITER -> "Courier Prime, gaya mesin ketik untuk seluruh tampilan."
+                            LauncherFont.PIXEL -> "Silkscreen, gaya bitmap/pixel untuk seluruh tampilan."
+                            LauncherFont.OPERATOR -> "Space Mono, alternatif open-source bergaya Operator/terminal."
                         },
                     )
                     SettingsSubtitle("Tema")
@@ -375,6 +426,27 @@ fun SettingsScreen(
                             viewModel.updateSettings { it.copy(showNewsPhoto = enabled) }
                         },
                     )
+                    ActionRow(
+                        title = "Gambar artikel",
+                        value = if (settings.newsImageUri.isBlank()) "Bawaan" else "Kustom",
+                        description = "Pilih gambar dari galeri; izin baca disimpan untuk pemakaian berikutnya",
+                        onClick = { imageLauncher.launch(arrayOf("image/*")) },
+                    )
+                    if (settings.newsImageUri.isNotBlank()) {
+                        ActionRow(
+                            title = "Gunakan gambar bawaan",
+                            description = "Hapus gambar kustom dan pulihkan ilustrasi koran",
+                            onClick = {
+                                runCatching {
+                                    context.contentResolver.releasePersistableUriPermission(
+                                        Uri.parse(settings.newsImageUri),
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                                    )
+                                }
+                                viewModel.updateSettings { it.copy(newsImageUri = "") }
+                            },
+                        )
+                    }
                     SwitchRow(
                         title = "Widget kalender & catatan",
                         checked = settings.showNewsWidgets,

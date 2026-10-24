@@ -57,7 +57,7 @@ private object IconCache {
  * Leave only a trace of chroma, similar to colour photos printed by an e-paper newspaper.
  * The cached bitmap remains untouched; this filter is applied only while drawing.
  */
-private val EpaperColorFilter = ColorFilter.colorMatrix(
+internal val EpaperColorFilter = ColorFilter.colorMatrix(
     ColorMatrix(
         floatArrayOf(
             0.275592f, 0.657984f, 0.066424f, 0f, 0f,
