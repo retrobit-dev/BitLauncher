@@ -68,7 +68,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 | Fitur | BitLauncher | Niagara | Minima | Nova |
 |---|---|---|---|---|
 | Launcher default (RoleManager) | ✅ | ✅ | ✅ | ✅ |
-| Badge notifikasi | 📋 | ✅ (via akses) | — | ✅ (Nova + plugin) |
+| Ringkasan jumlah notifikasi | ✅ (via akses) | ✅ (via akses) | — | ✅ (Nova + plugin) |
 | Gestur notifikasi | ⛔ | — | — | ✅ (aksesibilitas) |
 | Double-tap matikan layar | 📋 | — | — | ✅ (admin) |
 | Recents kustom | ⛔ | — | — | — |
@@ -83,6 +83,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 - Beranda vertikal, laci dengan pencarian, rel alfabet, daftar/kisi.
 - Shortcut, pin, sembunyikan, info, uninstall.
 - Tema, AMOLED, dynamic color, pengaturan dasar, backup JSON.
+- Beranda folio berita: foto, artikel dengan shortcut aplikasi, dan ringkasan jumlah notifikasi.
 
 ### 0.2 — Beranda yang terasa "Niagara"
 - Widget host (`AppWidgetHost` + `AppWidgetManager`) dan penempatan widget.
@@ -95,7 +96,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 ### 0.3 — Kedalaman ala Nova
 - Folder (di beranda dan dock).
 - Gestur per ikon (geser untuk buka shortcut tertentu).
-- Badge notifikasi via `NotificationListenerService` + halaman izin yang jelas.
+- Badge per ikon dan penyaringan kategori notifikasi yang lebih rinci.
 - Pencarian universal: aplikasi + kontak + pengaturan sistem + pencarian web.
 - Profil launcher (mis. "Kerja" 09.00–17.00, "Malam" setelah 20.00).
 - Multi-halaman beranda + indikator + wallpaper scroll.
@@ -129,7 +130,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 ### Yang sengaja **tidak** dilakukan
 - **RAM cleaner / mematikan aplikasi lain** — tidak diizinkan Android, menyesatkan pengguna.
 - **Recents kustom** — API-nya dihapus sejak Android 5.
-- **Membaca notifikasi tanpa izin eksplisit** — akan memakai `NotificationListenerService` dengan penjelasan jelas, bukan trik.
+- **Membaca isi notifikasi** — listener hanya mengeluarkan nama paket dan jumlah; judul, isi pesan, dan aksi tidak dikirim ke UI.
 - **Overlay/draw over other apps** untuk "game booster" — di luar cakupan launcher ini.
 
 ---

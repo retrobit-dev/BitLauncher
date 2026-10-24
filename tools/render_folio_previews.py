@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from render_previews import (
     APPS,
@@ -33,6 +33,7 @@ from render_previews import (
 )
 
 SERIF_FILE = Path(__file__).resolve().parent.parent / "preview" / "assets" / "fonts" / "Lora.ttf"
+NEWS_PHOTO = Path(__file__).resolve().parent.parent / "app" / "src" / "main" / "res" / "drawable" / "news_hero.jpg"
 
 KALEIDO = {
     "bg": "#e3dfd5",
@@ -159,6 +160,24 @@ def editorial_row(
     chevron_right(draw, 366, y + (28 if large else 24), 11, color(palette["on_surface_variant"]), 1.4)
 
 
+def draw_article_line(
+    draw: ImageDraw.ImageDraw,
+    x: float,
+    baseline: float,
+    segments: list[tuple[str, str]],
+    palette: dict,
+) -> None:
+    """Draw one article line; link segments are bold and underlined like the live text."""
+    for text, role in segments:
+        face = serif(16, "Regular" if role == "regular" else "SemiBold")
+        tint = color(palette["on_surface"] if role == "regular" else palette["primary"])
+        draw.text((px(x), px(baseline)), text, font=face, fill=tint, anchor="ls")
+        width = draw.textlength(text, font=face) / S
+        if role == "link":
+            draw.line([(px(x), px(baseline + 2)), (px(x + width), px(baseline + 2))], fill=tint, width=max(1, px(0.7)))
+        x += width
+
+
 def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
     img = Image.new("RGBA", (W, H), color(palette["bg"]))
     draw = ImageDraw.Draw(img)
@@ -171,32 +190,55 @@ def render_folio_home(palette: dict = KALEIDO) -> Image.Image:
     tracked_text(draw, 196.5, 99, "SABTU, 24 OKTOBER 2026", font(10, "Medium"), soft, 2.2, "center")
     rule(img, 107, palette)
 
-    tracked_text(draw, 20, 132, "WAKTU SETEMPAT", font(9.5, "Medium"), soft, 1.6)
-    tracked_text(draw, 373, 132, "FORMAT 24 JAM", font(9.5, "Medium"), soft, 1.6, "right")
-    draw.text((px(18), px(216)), "09:41", font=serif(84), fill=ink, anchor="ls")
+    tracked_text(draw, 20, 132, "KABAR UTAMA", font(10, "SemiBold"), ink, 1.6)
+    tracked_text(draw, 373, 132, "HLM. 1", font(10, "Medium"), soft, 1.6, "right")
+    draw.text((px(20), px(172)), "3 pesan menanti di", font=serif(34), fill=ink, anchor="ls")
+    draw.text((px(20), px(210)), "WhatsApp", font=serif(34), fill=ink, anchor="ls")
 
-    rule(img, 232, palette)
-    tracked_text(draw, 20, 252, "INDEKS APLIKASI", font(10, "SemiBold"), ink, 1.6)
-    tracked_text(draw, 373, 252, "05 ENTRI", font(10, "Medium"), soft, 1.6, "right")
-    rule(img, 260, palette)
-
-    y = 272
-    for index, app in enumerate(APPS[:5], 1):
-        editorial_row(img, app, index, y, palette, large=True)
-        y += 62
-
-    # Footer: ink rule, outlined search and archive/settings buttons.
+    if NEWS_PHOTO.exists():
+        photo = Image.open(NEWS_PHOTO).convert("RGB")
+        photo = ImageOps.fit(photo, (px(353), px(176)), method=Image.Resampling.LANCZOS)
+        img.paste(photo, (px(20), px(222)))
     draw = ImageDraw.Draw(img)
-    draw.line([(px(20), px(750)), (px(373), px(750))], fill=ink, width=max(1, px(1)))
-    rounded_rect(img, (20, 762, 265, 808), 2, outline=ink)
-    rounded_rect(img, (273, 762, 319, 808), 2, outline=ink)
-    rounded_rect(img, (327, 762, 373, 808), 2, outline=ink)
+    draw.line([(px(20), px(398)), (px(373), px(398))], fill=ink, width=max(1, px(1)))
+    tracked_text(draw, 20, 416, "ILUSTRASI · SUASANA PAGI", font(8, "Medium"), soft, 1.4)
+
+    draw.text(
+        (px(20), px(446)),
+        "Rembang, Sabtu, 24 Oktober 2026 —",
+        font=serif(15, "SemiBold"),
+        fill=ink,
+        anchor="ls",
+    )
+    article = [
+        [("Pada pukul 09.41 terjadi sebuah fenomena", "regular")],
+        [("aneh: ada ", "regular"), ("3 pesan belum dibaca di WhatsApp.", "link")],
+        [("Kabar lain datang dari ", "regular"), ("Gmail, dengan 2 pesan", "link")],
+        [("yang menanti. ", "link"), ("Untuk kabar berikutnya, buka", "regular")],
+        [("Spotify", "link"), (" dan ", "regular"), ("Kamera", "link"), (".", "regular")],
+    ]
+    for index, line in enumerate(article):
+        draw_article_line(draw, 20, 472 + index * 26, line, palette)
+
+    rule(img, 622, palette)
+    tracked_text(draw, 20, 642, "INDEKS APLIKASI", font(10, "SemiBold"), ink, 1.6)
+    tracked_text(draw, 373, 642, "05 ENTRI", font(10, "Medium"), soft, 1.6, "right")
+    rule(img, 650, palette)
+    editorial_row(img, APPS[0], 1, 658, palette, large=True)
+    editorial_row(img, APPS[1], 2, 720, palette, large=True)
+
+    # Fixed archive actions, matching the Compose footer.
     draw = ImageDraw.Draw(img)
-    search_icon(draw, 81, 785, 16, ink, 1.6)
-    tracked_text(draw, 101, 789, "CARI DI ARSIP", font(10, "SemiBold"), ink, 1.4)
-    grid_icon(draw, 296, 785, 16, ink, 1.5)
-    sliders_icon(draw, 350, 785, 17, ink, 1.5)
-    tracked_text(draw, 196.5, 826, "BITLAUNCHER · LAUNCHER EDITORIAL · HLM. 1", font(8, "Medium"), soft, 1.2, "center")
+    draw.line([(px(20), px(766)), (px(373), px(766))], fill=ink, width=max(1, px(1)))
+    rounded_rect(img, (20, 778, 265, 824), 2, outline=ink)
+    rounded_rect(img, (273, 778, 319, 824), 2, outline=ink)
+    rounded_rect(img, (327, 778, 373, 824), 2, outline=ink)
+    draw = ImageDraw.Draw(img)
+    search_icon(draw, 81, 801, 16, ink, 1.6)
+    tracked_text(draw, 101, 805, "CARI DI ARSIP", font(10, "SemiBold"), ink, 1.4)
+    grid_icon(draw, 296, 801, 16, ink, 1.5)
+    sliders_icon(draw, 350, 801, 17, ink, 1.5)
+    tracked_text(draw, 196.5, 836, "BITLAUNCHER · LAUNCHER EDITORIAL · HLM. 1", font(8, "Medium"), soft, 1.2, "center")
 
     status_bar(img, tint=palette["on_surface"])
     return img

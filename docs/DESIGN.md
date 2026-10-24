@@ -6,26 +6,31 @@ Tujuan visual: **tenang, satu tangan, tanpa kebisingan.** Gaya utama adalah **fo
 
 ## Gaya utama — Folio koran + E Ink Kaleido
 
-Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Informasi disusun dengan hierarki editorial: masthead, dateline, jam besar, lalu indeks aplikasi.
+Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Hierarkinya adalah masthead, headline, foto, artikel dengan tautan aplikasi, lalu indeks favorit.
 
 ```
 ┌──────────────────────────────┐
 │ BITLAUNCHER        EDISI 297 │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │  ← garis ganda
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
 │     SABTU, 24 OKTOBER 2026   │
-│ WAKTU SETEMPAT   FORMAT 24 JAM│
-│ 09:41                        │  ← serif 84sp
+│ KABAR UTAMA            HLM. 1│
+│ 3 pesan menanti di WhatsApp  │  ← headline serif
+│ ┌──────────────────────────┐ │
+│ │      FOTO MONOKROM       │ │  ← foto utama
+│ └──────────────────────────┘ │
+│ Rembang, 24 Oktober 2026 —   │
+│ Pada pukul 09.41 terjadi ... │
+│ ada 3 pesan belum dibaca di  │
+│ WhatsApp.                    │  ← frasa bergaris bawah = app
 │──────────────────────────────│
 │ INDEKS APLIKASI      05 ENTRI│
+│ 01 ▣ WhatsApp ············ › │
 │──────────────────────────────│
-│ 01 ▣ WhatsApp ············ › │  ← nomor aksen + leader
-│ 02 ▣ Spotify ·············· › │
-│ 03 ▣ Kamera ··············· › │
-│                              │
-│──────────────────────────────│
-│ [ ⌕ CARI DI ARSIP ] [▦] [☷] │  ← tombol tinta persegi
+│ [ ⌕ CARI DI ARSIP ] [▦] [☷] │
 └──────────────────────────────┘
 ```
+
+Artikel memakai kota, tanggal, dan jam sistem. Frasa aplikasi dicetak tebal dengan garis bawah dan dapat diketuk. Jumlah pesan berasal dari **notifikasi aktif**, bukan dari membaca isi pesan. Jika akses notifikasi belum diberikan, artikel menampilkan keadaan kosong yang jujur serta tombol menuju pengaturan khusus Android.
 
 Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian bergaris tinta, huruf seksi dengan rule, dan nomor entri berkelanjutan. Mode kisi memakai sel persegi dengan garis tipis, bukan kartu membulat.
 
@@ -44,8 +49,8 @@ Aksen indeks hanya memakai tiga tingkat abu-abu hangat. Ikon aplikasi dan shortc
 
 ### Tipografi dan bentuk
 
-- Judul, jam, dan nama aplikasi memakai **serif**; metadata memakai sans uppercase dengan tracking 1.2–3.4sp.
-- Jam 84sp; nama favorit 23sp; label arsip 18sp; label metadata 9–11sp.
+- Headline, artikel, dan nama aplikasi memakai **serif**; metadata memakai sans uppercase dengan tracking 1.2–3.4sp.
+- Headline 34sp; artikel 17sp dengan line-height 26sp; nama favorit 23sp; label arsip 18sp; metadata 8–11sp.
 - Sudut tombol dan sel kisi **2dp**; tidak ada pill, glass, blur, atau bayangan pada gaya folio.
 - Garis ganda 2.5dp + 0.8dp menjadi penanda masthead; *dotted leader* menghubungkan nama aplikasi dengan chevron.
 - Transisi beranda → arsip memakai fade agar terasa seperti pergantian halaman, bukan laci mengambang.

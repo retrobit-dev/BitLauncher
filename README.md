@@ -52,6 +52,9 @@ Font disimpan satu kali di `preview/assets/fonts/` dan dipakai bersama oleh prev
 Yang bisa dicoba di prototipe:
 
 - Ganti gaya **Folio koran / Minimalis** dan tema **Kaleido / Kaleido malam / Terang / Gelap / AMOLED** secara langsung.
+- Simulasikan **3 pesan baru**, tandai semua dibaca, atau matikan akses notifikasi untuk melihat perubahan artikel.
+- Ketuk frasa bergaris bawah seperti **“3 pesan belum dibaca di WhatsApp”** untuk membuka aplikasi.
+- Ganti kota dateline dan tampilkan/sembunyikan foto berita dari pengaturan prototipe.
 - Beralih **Daftar / Kisi** dan jumlah kolom 3–6.
 - **Tekan lama** aplikasi untuk membuka lembar aksi (shortcut, pin, sembunyikan, info, uninstall).
 - **Ketuk** aplikasi untuk melihat umpan balik peluncuran.
@@ -67,7 +70,7 @@ Yang bisa dicoba di prototipe:
 
 | Gaya | Inspirasi | Wujud di BitLauncher |
 |---|---|---|
-| **Folio koran** | Surat kabar + e-paper | Masthead `BITLAUNCHER`, nomor edisi, garis ganda, jam serif, indeks aplikasi dengan *dotted leader*, tombol tinta persegi |
+| **Folio koran** | Surat kabar + e-paper | Headline, foto monokrom, artikel berisi shortcut aplikasi dan jumlah notifikasi, lalu indeks favorit dengan *dotted leader* |
 | **Kaleido** | E Ink Kaleido | Kertas koran abu-abu hangat, tinta lembut, aksen abu-abu sepi, dan ikon dengan chroma tersisa 8%; varian malam memakai tinta kertas terang |
 | **Minimalis** | Niagara + Minima | Jam besar di atas wallpaper, satu kolom favorit, ruang kosong, bar pencarian membulat |
 | **Kedalaman** | Nova | Tekan lama untuk aksi, shortcut, sembunyikan aplikasi, grid, backup/restore, tema |
@@ -79,7 +82,10 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 ## Fitur yang sudah berjalan (0.1.0-alpha)
 
 ### Beranda
-- [x] **Gaya folio koran** dengan masthead, dateline, nomor edisi, dan indeks aplikasi editorial
+- [x] **Gaya folio koran** dengan masthead, headline, foto monokrom, dan artikel yang dapat digulir
+- [x] Frasa di dalam artikel menjadi **shortcut aplikasi** yang dapat diketuk
+- [x] Jumlah pesan/notifikasi dirangkai menjadi berita melalui `NotificationListenerService`
+- [x] Kota dateline dapat diubah; foto berita dapat dimatikan
 - [x] Palet **Kaleido** dan **Kaleido malam** seperti koran e-paper, dengan ikon aplikasi yang didesaturasi
 - [x] Menjadi launcher default (`CATEGORY_HOME` + `RoleManager`)
 - [x] Jam besar + tanggal, sadar format 12/24 jam (mengikuti sistem secara default)
@@ -114,6 +120,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Tata letak laci, jumlah kolom, rel alfabet, autofocus pencarian, getaran
 - [x] Manajer aplikasi tersembunyi dengan pencarian
 - [x] Pintasan launcher default dan pemilih wallpaper sistem
+- [x] Pengaturan akses notifikasi dengan penjelasan privasi; isi pesan tidak dibaca/disimpan
 - [x] Ekspor/impor pengaturan ke JSON lewat Storage Access Framework
 
 ### Teknis
@@ -137,6 +144,7 @@ app/src/main/java/dev/retrobit/bitlauncher/
 │   └── SettingsRepository.kt    # preferensi + backup JSON
 ├── ui/
 │   ├── LauncherApp.kt           # navigasi Beranda / Laci / Pengaturan
+│   ├── notifications/…          # listener + alur jumlah notifikasi (tanpa isi pesan)
 │   ├── home/{HomeScreen,FolioHomeScreen}.kt
 │   ├── drawer/{AppDrawerScreen,FolioDrawerScreen}.kt
 │   ├── settings/…
@@ -179,7 +187,7 @@ Ini fondasi yang serius, bukan launcher yang sudah selesai. Yang **belum** ada (
 | Widget (`AppWidgetHost`) | Butuh host + konfigurasi + persistensi; prioritas berikutnya |
 | Icon pack | Parsing `appfilter.xml` + masking ikon |
 | Rel alfabet melompat ke seksi lengket | Saat ini header ikut ter-scroll |
-| Badge notifikasi | Butuh `NotificationListenerService` + izin khusus pengguna |
+| Jumlah pesan | Estimasi dari notifikasi aktif, bukan isi database pesan; perlu izin khusus **Akses Notifikasi** |
 | Double-tap untuk matikan layar | Butuh Device Admin / Accessibility, sengaja ditunda |
 | Recents kustom | Tidak mungkin sejak Android 5 (API dihapus) |
 

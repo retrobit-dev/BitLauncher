@@ -827,6 +827,103 @@
     padding-top: 8px;
   }
 
+
+  /* ------------------------------------------------------------- news page */
+  .news-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+  .news-scroll::-webkit-scrollbar { display: none; }
+  .news-scroll .folio-index { flex: none; overflow: visible; padding: 0; }
+  .news-scroll .folio-section { margin-top: 14px; }
+  .news-headline {
+    margin: 0;
+    padding: 0 20px 10px;
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 38px;
+    letter-spacing: -0.5px;
+    color: var(--on-surface);
+  }
+  .news-photo {
+    display: block;
+    width: calc(100% - 40px);
+    height: 176px;
+    margin: 0 20px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--on-surface);
+    filter: saturate(0.08);
+  }
+  .news-caption {
+    margin: 0 20px;
+    padding: 5px 0;
+    font-family: var(--sans);
+    font-size: 8px;
+    letter-spacing: 1.4px;
+    color: var(--on-surface-variant);
+  }
+  .news-article {
+    margin: 0;
+    padding: 8px 20px;
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 26px;
+    text-align: justify;
+    color: var(--on-surface);
+  }
+  .news-article strong { font-weight: 700; }
+  .article-link {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--primary);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .news-access {
+    margin: 6px 20px;
+    padding: 14px;
+    border: 1px solid var(--outline);
+    border-radius: 2px;
+    background: none;
+    color: var(--on-surface);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .news-access .t {
+    display: block;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+  }
+  .news-access .d {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--serif);
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--on-surface-variant);
+  }
+  .news-location-input {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid var(--outline);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--on-surface);
+    font: inherit;
+    font-size: 15px;
+  }
+
   /* folio archive (drawer) */
   .folio-archive-wrap {
     position: absolute; inset: 0;
@@ -1144,6 +1241,18 @@
     </div>
 
     <div class="group">
+      <span class="group-label">Halaman berita</span>
+      <div class="seg" id="seg-news">
+        <button data-toggle="showNewsPhoto" class="on">Foto</button>
+        <button data-toggle="notificationAccess" class="on">Notifikasi</button>
+      </div>
+      <div class="seg">
+        <button id="simulate-news">3 pesan baru</button>
+        <button id="clear-news">Tandai dibaca</button>
+      </div>
+    </div>
+
+    <div class="group">
       <span class="group-label">Aksi</span>
       <div class="seg">
         <button id="trigger-sheet">Tekan lama aplikasi</button>
@@ -1201,6 +1310,10 @@ const state = {
   theme: "kaleido",
   style: "folio",
   focusDrawerSearch: false,
+  notificationAccess: true,
+  notifications: { "WhatsApp": 3, "Gmail": 2 },
+  newsLocation: "Rembang",
+  showNewsPhoto: true,
   layout: "list",
   columns: 4,
   clock: true,
@@ -1296,6 +1409,7 @@ function renderMinimalHome() {
 
 /* ---------------------------------------------------------------- folio render */
 const ICONS = {
+  bell: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 16V10a6 6 0 0112 0v6l2 2H4l2-2zM10 20a2 2 0 004 0" stroke-linejoin="round"/></svg>',
   search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>',
   grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg>',
   list: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>',
@@ -1322,13 +1436,72 @@ function editionNumber() {
   return String(Math.floor((Date.now() - start) / 86400000)).padStart(3, "0");
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
+}
+
+function newsDateNow() {
+  return `${dateNow()} ${new Date().getFullYear()}`;
+}
+
+function newsNoun(app) {
+  return ["WhatsApp", "Gmail", "Telegram"].includes(app.name) ? "pesan" : "notifikasi";
+}
+
+function articleLink(app, text) {
+  return `<button type="button" class="article-link" data-app="${escapeHtml(app.name)}">${escapeHtml(text)}</button>`;
+}
+
+function articleAppLinks(apps) {
+  return apps.map((app, index) => {
+    const separator = index === 0 ? "" : index === apps.length - 1 ? " dan " : ", ";
+    return separator + articleLink(app, app.name);
+  }).join("");
+}
+
+function buildNewsArticle(entries, shortcutApps) {
+  const location = escapeHtml(state.newsLocation.trim() || "Rembang");
+  const date = state.date ? `, ${newsDateNow()}` : "";
+  const time = state.clock ? `Pada pukul ${clockNow().replace(":", ".")}` : "Pada edisi ini";
+  let body = `<strong>${location}${date} — </strong>`;
+
+  if (!state.notificationAccess) {
+    body += `${time}, halaman ini belum dapat membaca jumlah pesan. Aktifkan akses notifikasi untuk kabar terbaru. `;
+    body += shortcutApps.length
+      ? `Sementara itu, ${articleAppLinks(shortcutApps)} siap dibuka dari artikel ini.`
+      : "Arsip aplikasi dapat dibuka dari tombol di bawah.";
+    return body;
+  }
+
+  if (!entries.length) {
+    body += `${time}, tidak ada pesan baru yang menanti. Suasana redaksi tenang. `;
+    body += shortcutApps.length
+      ? `Namun ${articleAppLinks(shortcutApps)} tetap dapat dibuka dengan satu ketukan.`
+      : "Arsip aplikasi dapat dibuka dari tombol di bawah.";
+    return body;
+  }
+
+  const lead = entries[0];
+  body += `${time} terjadi sebuah fenomena aneh: ada ${articleLink(lead.app, `${lead.count} ${newsNoun(lead.app)} belum dibaca di ${lead.app.name}`)}.`;
+  entries.slice(1).forEach((entry) => {
+    body += ` Kabar lain datang dari ${articleLink(entry.app, `${entry.app.name}, dengan ${entry.count} ${newsNoun(entry.app)} yang menanti`)}.`;
+  });
+  const additional = shortcutApps.filter((app) => !entries.some((entry) => entry.app.name === app.name));
+  if (additional.length) body += ` Untuk kabar berikutnya, buka ${articleAppLinks(additional)}.`;
+  return body;
+}
+
 function folioRow(app, index, compact) {
+  const unread = state.notificationAccess ? (state.notifications[app.name] || 0) : 0;
   return `
     <div class="folio-row" data-app="${app.name}">
       <span class="num" style="color:${printAccent(index)}">${String(index + 1).padStart(2, "0")}</span>
       ${iconHtml(app, compact ? 28 : 26, 6)}
       <span class="label">${app.name}</span>
       ${app.work ? '<span class="tag">KERJA</span>' : ""}
+      ${unread ? `<span class="tag">${unread} ${newsNoun(app).toUpperCase()}</span>` : ""}
       <span class="folio-leader"></span>
       <span class="chev">›</span>
     </div>`;
@@ -1337,33 +1510,56 @@ function folioRow(app, index, compact) {
 function renderFolioHome() {
   const home = $("home");
   home.dataset.style = "folio";
-  const entries = state.favoriteNames.map(appByName).filter(Boolean);
+  const favorites = state.favoriteNames.map(appByName).filter(Boolean);
+  const available = visibleApps();
+  const entries = available
+    .filter((app) => (state.notifications[app.name] || 0) > 0)
+    .map((app) => ({ app, count: state.notifications[app.name] }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+  const shortcutApps = (favorites.length ? favorites : available).slice(0, 3);
+  const lead = entries[0];
+  const headline = lead
+    ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
+    : state.notificationAccess ? "Tidak ada kabar baru hari ini" : "Kabar dari aplikasi Anda";
 
-  const clockBlock = state.clock
-    ? `<div class="folio-clock-label"><span>WAKTU SETEMPAT</span><span>FORMAT 24 JAM</span></div>
-       <div class="folio-clock">${clockNow()}</div>`
-    : "";
-
-  const indexBlock = entries.length
-    ? `<div class="folio-index">${entries.map((app, i) => folioRow(app, i)).join("")}</div>`
+  const indexBlock = favorites.length
+    ? `<div class="folio-index">${favorites.map((app, i) => folioRow(app, i)).join("")}</div>`
     : `<div class="folio-index">
          <div class="folio-empty">
-           <h3>Belum ada entri hari ini</h3>
-           <p>Buka arsip aplikasi, lalu tekan lama satu aplikasi untuk menaruhnya di halaman depan.</p>
+           <h3>Belum ada entri di indeks</h3>
+           <p>Tekan lama aplikasi di arsip untuk menaruhnya di halaman depan.</p>
            <button data-open-drawer="list">BUKA ARSIP →</button>
          </div>
        </div>`;
 
+  const photo = state.showNewsPhoto
+    ? `<img class="news-photo" src="assets/news-photo.jpg" alt="Ilustrasi suasana jalan di pagi hari" />
+       <div class="news-caption">ILUSTRASI · SUASANA PAGI</div>`
+    : "";
+  const accessNotice = !state.notificationAccess
+    ? `<button class="news-access" data-enable-notifications>
+         ${ICONS.bell}
+         <span><span class="t">AKTIFKAN AKSES NOTIFIKASI</span><span class="d">Hanya jumlah notifikasi aktif yang digunakan; isi pesan tidak disimpan.</span></span>
+       </button>`
+    : "";
+
   home.innerHTML = `
     <div class="folio-home ${state.compact ? "compact" : ""}">
-      <div class="folio-masthead">
-        <div class="folio-topline"><span>BITLAUNCHER</span><span class="folio-tag">EDISI ${editionNumber()}</span></div>
-        <div class="rule-double"></div>
-        <div class="folio-dateline">${state.date ? dateNow().toUpperCase() : "LAUNCHER EDITORIAL"}</div>
+      <div class="news-scroll">
+        <div class="folio-masthead">
+          <div class="folio-topline"><span>BITLAUNCHER</span><span class="folio-tag">EDISI ${editionNumber()}</span></div>
+          <div class="rule-double"></div>
+          <div class="folio-dateline">${state.date ? newsDateNow().toUpperCase() : "LAUNCHER EDITORIAL"}</div>
+        </div>
+        <div class="folio-section"><span>KABAR UTAMA</span><span>HLM. 1</span></div>
+        <h2 class="news-headline">${escapeHtml(headline)}</h2>
+        ${photo}
+        <p class="news-article">${buildNewsArticle(entries, shortcutApps)}</p>
+        ${accessNotice}
+        <div class="folio-section"><span>INDEKS APLIKASI</span><span>${String(favorites.length).padStart(2, "0")} ENTRI</span></div>
+        ${indexBlock}
       </div>
-      ${clockBlock}
-      <div class="folio-section"><span>INDEKS APLIKASI</span><span>${String(entries.length).padStart(2, "0")} ENTRI</span></div>
-      ${indexBlock}
       <div class="folio-footer">
         <div class="folio-rule-ink"></div>
         <div class="folio-actions">
@@ -1381,6 +1577,14 @@ function renderFolioHome() {
   });
   home.querySelectorAll("[data-open-settings]").forEach((b) => {
     b.onclick = () => openSettings();
+  });
+  home.querySelectorAll("[data-enable-notifications]").forEach((b) => {
+    b.onclick = () => {
+      state.notificationAccess = true;
+      renderHome();
+      renderSettings();
+      toast("Akses notifikasi contoh diaktifkan");
+    };
   });
 }
 
@@ -1727,6 +1931,13 @@ function bindAppTargets(root) {
     el.addEventListener("pointerup", end);
     el.addEventListener("pointerleave", cancel);
     el.addEventListener("pointercancel", cancel);
+    // Pointerup handles touch/mouse. A zero-detail click is keyboard activation;
+    // handling it here keeps inline article buttons accessible without double launches.
+    el.addEventListener("click", (e) => {
+      if (e.detail !== 0) return;
+      if (state.screen === "drawer") closeDrawer();
+      toast(`Membuka ${app.name}`);
+    });
     el.addEventListener("contextmenu", (e) => e.preventDefault());
   });
 }
@@ -1837,6 +2048,22 @@ function renderSettings() {
     </div>
 
     <div class="card-wrap">
+      <div class="card-title">Halaman berita</div>
+      <div class="card">
+        <input class="news-location-input" data-news-location value="${escapeHtml(state.newsLocation)}" aria-label="Kota dateline" placeholder="Rembang" />
+        <div class="switch-row">
+          <div class="text"><div class="t">Foto utama</div><div class="d">Foto monokrom di atas artikel</div></div>
+          <div class="sw ${state.showNewsPhoto ? "on" : ""}" data-sw="showNewsPhoto"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Akses notifikasi</div><div class="d">Simulasi jumlah notifikasi aktif di prototipe</div></div>
+          <div class="sw ${state.notificationAccess ? "on" : ""}" data-sw="notificationAccess"></div>
+        </div>
+        <div class="sub">Isi pesan tidak dibaca atau disimpan. Jumlah adalah estimasi dari notifikasi aktif.</div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
       <div class="card-title">Laci aplikasi</div>
       <div class="card">
         <div class="sub">Tata letak</div>
@@ -1939,6 +2166,13 @@ function renderSettings() {
       renderSettings();
     };
   });
+  const locationInput = $("settings-body").querySelector("[data-news-location]");
+  if (locationInput) {
+    locationInput.oninput = (e) => {
+      state.newsLocation = e.target.value.slice(0, 40);
+      renderHome();
+    };
+  }
   const hiddenRow = $("settings-body").querySelector("[data-open-hidden]");
   if (hiddenRow) hiddenRow.onclick = () => openSheet("hidden-sheet");
 }
@@ -2005,8 +2239,12 @@ function setColumns(cols) {
 
 function setToggle(name, value) {
   state[name] = value;
-  document.querySelectorAll("#seg-home button").forEach((b) => b.classList.toggle("on", !!state[b.dataset.toggle]));
+  document.querySelectorAll("#seg-home button, #seg-news button").forEach((b) => {
+    b.classList.toggle("on", !!state[b.dataset.toggle]);
+  });
   renderHome();
+  renderDrawer();
+  renderSettings();
 }
 
 /* -------------------------------------------------------------------- events */
@@ -2074,7 +2312,7 @@ let homePressTimer = null;
 let lastTap = 0;
 const homeLayer = $("home");
 homeLayer.addEventListener("pointerdown", (e) => {
-  if (e.target.closest(".fav-row, .folio-row, .pill, .circle-btn, .grabber-zone, .folio-btn, [data-open-drawer], [data-open-settings]")) return;
+  if (e.target.closest(".fav-row, .folio-row, .article-link, .news-access, .pill, .circle-btn, .grabber-zone, .folio-btn, [data-open-drawer], [data-open-settings]")) return;
   homePressTimer = setTimeout(() => openSheet("home-sheet"), 500);
   const now = Date.now();
   if (now - lastTap < 320) {
@@ -2132,11 +2370,25 @@ document.querySelectorAll("#seg-layout button").forEach((b) => {
 document.querySelectorAll("#seg-columns button").forEach((b) => {
   b.onclick = () => setColumns(Number(b.dataset.cols));
 });
-document.querySelectorAll("#seg-home button").forEach((b) => {
+document.querySelectorAll("#seg-home button, #seg-news button").forEach((b) => {
   b.onclick = () => setToggle(b.dataset.toggle, !state[b.dataset.toggle]);
 });
 $("trigger-sheet").onclick = () => openAppSheet(appByName("WhatsApp"));
 $("trigger-menu").onclick = () => openSheet("home-sheet");
+$("simulate-news").onclick = () => {
+  state.notifications = { "WhatsApp": 3, "Gmail": 2 };
+  state.notificationAccess = true;
+  renderHome();
+  renderDrawer();
+  renderSettings();
+  toast("3 pesan WhatsApp dan 2 Gmail menanti");
+};
+$("clear-news").onclick = () => {
+  state.notifications = {};
+  renderHome();
+  renderDrawer();
+  toast("Semua notifikasi contoh ditandai dibaca");
+};
 
 // Status bar clock stays in sync with the home clock.
 setInterval(() => {
