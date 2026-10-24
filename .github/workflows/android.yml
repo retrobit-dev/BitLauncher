@@ -7,6 +7,12 @@ on:
       - 'arena/**'
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish the signed APK as the v0.1.0-alpha prerelease
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -81,3 +87,36 @@ jobs:
             app/build/outputs/apk/release/app-release.apk.sha256
             app/build/outputs/apk/release/app-release-signature.txt
           if-no-files-found: error
+
+  publish:
+    name: Publish sideload prerelease
+    needs: assemble
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bitlauncher-release
+          path: release
+
+      - name: Publish APK and verification files
+        shell: bash
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          sha256sum -c app-release.apk.sha256
+          tag='v0.1.0-alpha'
+          sha=$(awk '{print $1}' app-release.apk.sha256)
+          notes="APK release non-debuggable untuk sideload Android 8.0+ (API 26+). Ditandatangani dengan test key publik, bukan kunci produksi/Play Store."
+          notes="${notes}"$'\n\n'"SHA-256: \`${sha}\`"$'\n\n'"Dibangun dan diverifikasi oleh [Android CI](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" app-release.apk app-release.apk.sha256 app-release-signature.txt --clobber
+          else
+            gh release create "$tag" app-release.apk app-release.apk.sha256 app-release-signature.txt               --target "$GITHUB_SHA"               --prerelease               --title 'BitLauncher 0.1.0 alpha — sideload test'               --notes "$notes"
+          fi

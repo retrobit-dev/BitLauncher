@@ -223,7 +223,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 adb shell cmd package set-home-activity dev.retrobit.bitlauncher/.MainActivity
 ```
 
-Jika versi debug atau APK dengan kunci berbeda sudah terpasang, hapus versi lama terlebih dahulu (pengaturan lokal ikut terhapus), lalu jalankan `adb install` tanpa `-r`. Untuk pemasangan tanpa ADB, unduh artifact **`bitlauncher-release`** dari workflow [Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml), ekstrak ZIP, buka APK, dan izinkan **Install unknown apps** bila diminta Android. Cocokkan berkas dengan SHA-256 yang disertakan.
+Jika versi debug atau APK dengan kunci berbeda sudah terpasang, hapus versi lama terlebih dahulu (pengaturan lokal ikut terhapus), lalu jalankan `adb install` tanpa `-r`. Untuk pemasangan tanpa ADB, unduh **`app-release.apk`** dari [prerelease v0.1.0-alpha](https://github.com/retrobit-dev/BitLauncher/releases/tag/v0.1.0-alpha) atau artifact **`bitlauncher-release`** dari workflow [Android CI](https://github.com/retrobit-dev/BitLauncher/actions/workflows/android.yml). Jika memakai artifact, ekstrak ZIP terlebih dahulu. Buka APK dan izinkan **Install unknown apps** bila diminta Android. Cocokkan berkas dengan SHA-256 yang disertakan.
 
 ---
 
