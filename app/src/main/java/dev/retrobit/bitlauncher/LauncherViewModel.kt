@@ -8,6 +8,7 @@ import dev.retrobit.bitlauncher.data.AppLayout
 import dev.retrobit.bitlauncher.data.LaunchableApp
 import dev.retrobit.bitlauncher.data.LauncherRepository
 import dev.retrobit.bitlauncher.data.LauncherSettings
+import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +64,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         settingsRepository.update(transform)
 
     fun setTheme(mode: ThemeMode) = updateSettings { it.copy(themeMode = mode) }
+
+    fun setStyle(style: LauncherStyle) = updateSettings { it.copy(style = style) }
 
     fun setLayout(layout: AppLayout) = updateSettings { it.copy(layout = layout) }
 

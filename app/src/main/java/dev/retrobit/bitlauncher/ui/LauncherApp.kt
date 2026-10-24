@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -25,8 +27,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
+import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.ThemeMode
 import dev.retrobit.bitlauncher.ui.drawer.AppDrawerScreen
+import dev.retrobit.bitlauncher.ui.drawer.FolioDrawerScreen
+import dev.retrobit.bitlauncher.ui.home.FolioHomeScreen
 import dev.retrobit.bitlauncher.ui.home.HomeScreen
 import dev.retrobit.bitlauncher.ui.settings.SettingsScreen
 
@@ -38,6 +43,8 @@ fun LauncherApp(viewModel: LauncherViewModel) {
     var focusSearch by remember { mutableStateOf(false) }
     val homeSignal by viewModel.homeRequests.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+
+    val folio = settings.style == LauncherStyle.FOLIO
 
     LaunchedEffect(homeSignal) {
         if (homeSignal > 0) {
@@ -53,49 +60,73 @@ fun LauncherApp(viewModel: LauncherViewModel) {
         // Launchers stay on the home screen when the user presses back.
     }
 
-    // Home is drawn over the wallpaper, so it always needs light system bar icons. Drawer and
-    // settings follow the theme.
     val systemDark = isSystemInDarkTheme()
     val darkTheme = when (settings.themeMode) {
         ThemeMode.SYSTEM -> systemDark
         ThemeMode.LIGHT -> false
-        ThemeMode.DARK, ThemeMode.AMOLED -> true
+        ThemeMode.DARK, ThemeMode.AMOLED, ThemeMode.KALEIDO_NIGHT -> true
+        ThemeMode.KALEIDO -> false
     }
-    val lightSystemBars = screen == Screen.HOME || !darkTheme
+    // The minimal home sits on the wallpaper and always needs light icons. Folio home is printed
+    // paper, so its icons follow the theme.
+    val lightSystemBarIcons = if (screen == Screen.HOME && !folio) true else !darkTheme
     val view = LocalView.current
     val activity = view.context.findActivity()
     SideEffect {
         val window = activity?.window ?: return@SideEffect
         WindowCompat.getInsetsController(window, view).apply {
-            isAppearanceLightStatusBars = !lightSystemBars
-            isAppearanceLightNavigationBars = !lightSystemBars
+            isAppearanceLightStatusBars = !lightSystemBarIcons
+            isAppearanceLightNavigationBars = !lightSystemBarIcons
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        HomeScreen(
-            viewModel = viewModel,
-            onOpenDrawer = { withSearch ->
-                focusSearch = withSearch
-                screen = Screen.DRAWER
-            },
-            onOpenSettings = { screen = Screen.SETTINGS },
-        )
-
-        AnimatedVisibility(
-            visible = screen == Screen.DRAWER,
-            enter = slideInVertically(initialOffsetY = { it }),
-            exit = slideOutVertically(targetOffsetY = { it }),
-        ) {
-            AppDrawerScreen(
+        if (folio) {
+            FolioHomeScreen(
                 viewModel = viewModel,
-                focusSearch = focusSearch,
-                onClose = {
-                    screen = Screen.HOME
-                    focusSearch = false
+                onOpenDrawer = { withSearch ->
+                    focusSearch = withSearch
+                    screen = Screen.DRAWER
                 },
                 onOpenSettings = { screen = Screen.SETTINGS },
             )
+        } else {
+            HomeScreen(
+                viewModel = viewModel,
+                onOpenDrawer = { withSearch ->
+                    focusSearch = withSearch
+                    screen = Screen.DRAWER
+                },
+                onOpenSettings = { screen = Screen.SETTINGS },
+            )
+        }
+
+        AnimatedVisibility(
+            visible = screen == Screen.DRAWER,
+            enter = if (folio) fadeIn() else slideInVertically(initialOffsetY = { it }),
+            exit = if (folio) fadeOut() else slideOutVertically(targetOffsetY = { it }),
+        ) {
+            if (folio) {
+                FolioDrawerScreen(
+                    viewModel = viewModel,
+                    focusSearch = focusSearch,
+                    onClose = {
+                        screen = Screen.HOME
+                        focusSearch = false
+                    },
+                    onOpenSettings = { screen = Screen.SETTINGS },
+                )
+            } else {
+                AppDrawerScreen(
+                    viewModel = viewModel,
+                    focusSearch = focusSearch,
+                    onClose = {
+                        screen = Screen.HOME
+                        focusSearch = false
+                    },
+                    onOpenSettings = { screen = Screen.SETTINGS },
+                )
+            }
         }
 
         AnimatedVisibility(

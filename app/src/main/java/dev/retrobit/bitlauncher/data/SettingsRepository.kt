@@ -8,12 +8,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
-enum class ThemeMode { SYSTEM, LIGHT, DARK, AMOLED }
+enum class ThemeMode { SYSTEM, LIGHT, DARK, AMOLED, KALEIDO, KALEIDO_NIGHT }
+
+/**
+ * Visual identity of the launcher.
+ * MINIMAL is the original Niagara/Minima inspired look, FOLIO turns the home screen into a
+ * newspaper front page printed on e-paper (Kaleido palette).
+ */
+enum class LauncherStyle { MINIMAL, FOLIO }
 
 enum class AppLayout { LIST, GRID }
 
 data class LauncherSettings(
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val style: LauncherStyle = LauncherStyle.FOLIO,
+    val themeMode: ThemeMode = ThemeMode.KALEIDO,
     val dynamicColor: Boolean = true,
     val showClock: Boolean = true,
     val showDate: Boolean = true,
@@ -42,8 +50,11 @@ class SettingsRepository(context: Context) {
 
     private fun load(): LauncherSettings {
         val theme = runCatching {
-            ThemeMode.valueOf(prefs.getString(KEY_THEME, ThemeMode.SYSTEM.name)!!)
-        }.getOrDefault(ThemeMode.SYSTEM)
+            ThemeMode.valueOf(prefs.getString(KEY_THEME, ThemeMode.KALEIDO.name)!!)
+        }.getOrDefault(ThemeMode.KALEIDO)
+        val style = runCatching {
+            LauncherStyle.valueOf(prefs.getString(KEY_STYLE, LauncherStyle.FOLIO.name)!!)
+        }.getOrDefault(LauncherStyle.FOLIO)
         val layout = runCatching {
             AppLayout.valueOf(prefs.getString(KEY_LAYOUT, AppLayout.LIST.name)!!)
         }.getOrDefault(AppLayout.LIST)
@@ -52,6 +63,7 @@ class SettingsRepository(context: Context) {
             ?.filter { it.isNotBlank() }
             ?: emptyList()
         return LauncherSettings(
+            style = style,
             themeMode = theme,
             dynamicColor = prefs.getBoolean(KEY_DYNAMIC_COLOR, true),
             showClock = prefs.getBoolean(KEY_SHOW_CLOCK, true),
@@ -70,6 +82,7 @@ class SettingsRepository(context: Context) {
 
     private fun persist(settings: LauncherSettings) {
         prefs.edit()
+            .putString(KEY_STYLE, settings.style.name)
             .putString(KEY_THEME, settings.themeMode.name)
             .putBoolean(KEY_DYNAMIC_COLOR, settings.dynamicColor)
             .putBoolean(KEY_SHOW_CLOCK, settings.showClock)
@@ -115,6 +128,7 @@ class SettingsRepository(context: Context) {
         val root = JSONObject()
         root.put("schema", SCHEMA)
         root.put("exportedAt", System.currentTimeMillis())
+        root.put("style", settings.style.name)
         root.put("themeMode", settings.themeMode.name)
         root.put("dynamicColor", settings.dynamicColor)
         root.put("showClock", settings.showClock)
@@ -143,6 +157,9 @@ class SettingsRepository(context: Context) {
             (0 until array.length()).mapNotNull { array.optString(it, null) }.toSet()
         } ?: current.hidden
         val restored = current.copy(
+            style = runCatching {
+                LauncherStyle.valueOf(root.optString("style", current.style.name))
+            }.getOrDefault(current.style),
             themeMode = runCatching {
                 ThemeMode.valueOf(root.optString("themeMode", current.themeMode.name))
             }.getOrDefault(current.themeMode),
@@ -175,6 +192,7 @@ class SettingsRepository(context: Context) {
         private const val PREFS = "bitlauncher_settings"
         private const val SEPARATOR = "\u001f"
 
+        private const val KEY_STYLE = "style"
         private const val KEY_THEME = "theme"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_SHOW_CLOCK = "show_clock"

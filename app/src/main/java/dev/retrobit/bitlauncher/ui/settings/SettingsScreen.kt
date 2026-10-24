@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.retrobit.bitlauncher.LauncherViewModel
 import dev.retrobit.bitlauncher.data.AppLayout
+import dev.retrobit.bitlauncher.data.LauncherStyle
 import dev.retrobit.bitlauncher.data.SettingsRepository
 import dev.retrobit.bitlauncher.data.ThemeMode
 import dev.retrobit.bitlauncher.ui.components.HiddenAppsSheet
@@ -142,9 +143,27 @@ fun SettingsScreen(
         ) {
             item {
                 SettingsCard("Tampilan") {
+                    SettingsSubtitle("Gaya")
+                    ChoiceRow(
+                        options = listOf(
+                            LauncherStyle.FOLIO to "Folio koran",
+                            LauncherStyle.MINIMAL to "Minimalis",
+                        ),
+                        selected = settings.style,
+                        onSelect = { viewModel.setStyle(it) },
+                    )
+                    SettingsSubtitle(
+                        if (settings.style == LauncherStyle.FOLIO) {
+                            "Halaman depan bergaya koran di atas kertas Kaleido: masthead, garis ganda, dan indeks bertitik."
+                        } else {
+                            "Beranda vertikal minimalis di atas wallpaper, gaya Niagara + Minima."
+                        },
+                    )
                     SettingsSubtitle("Tema")
                     ChoiceRow(
                         options = listOf(
+                            ThemeMode.KALEIDO to "Kaleido",
+                            ThemeMode.KALEIDO_NIGHT to "Kaleido malam",
                             ThemeMode.SYSTEM to "Sistem",
                             ThemeMode.LIGHT to "Terang",
                             ThemeMode.DARK to "Gelap",
@@ -304,8 +323,8 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                text = "Minimalis ala Niagara + Minima, lengkap ala Nova. " +
-                                    "Dibangun dengan Jetpack Compose.",
+                                text = "Gaya folio koran di atas kertas Kaleido, atau beranda minimalis " +
+                                    "ala Niagara + Minima. Dibangun dengan Jetpack Compose.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 4.dp),
