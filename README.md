@@ -1,6 +1,6 @@
 # BitLauncher
 
-Launcher Android minimalis yang menggabungkan **ketenangan Niagara Launcher** dengan **kesederhanaan Minima**, dengan ambisi kedalaman fitur ala **Nova Launcher**.
+Launcher Android dengan dua gaya visual: **folio koran di atas kertas E Ink Kaleido** (default) dan **minimalis ala Niagara + Minima**, dengan kedalaman fitur ala **Nova Launcher**.
 
 Dibangun dengan Kotlin + Jetpack Compose, tanpa iklan, tanpa analytics, dan tanpa izin yang tidak perlu.
 
@@ -19,28 +19,37 @@ python3 -m http.server 8080 --directory preview
 
 ### Tangkapan layar
 
+### Folio koran · E Ink Kaleido (default)
+
+| Halaman depan | Arsip aplikasi |
+|---|---|
+| ![Halaman depan folio](docs/preview-folio-home.jpg) | ![Arsip folio](docs/preview-folio-archive.jpg) |
+
+| Kisi arsip | Kaleido malam |
+|---|---|
+| ![Kisi arsip folio](docs/preview-folio-grid.jpg) | ![Kaleido malam](docs/preview-folio-night.jpg) |
+
+### Minimalis (gaya alternatif)
+
 | Beranda | Laci aplikasi |
 |---|---|
-| ![Beranda](docs/preview-home.jpg) | ![Laci aplikasi](docs/preview-drawer.jpg) |
+| ![Beranda minimalis](docs/preview-home.jpg) | ![Laci aplikasi minimalis](docs/preview-drawer.jpg) |
 
 | Pengaturan | Aksi aplikasi (tekan lama) |
 |---|---|
 | ![Pengaturan](docs/preview-settings.jpg) | ![Aksi aplikasi](docs/preview-app-actions.jpg) |
 
-| Tema terang | Tema AMOLED |
-|---|---|
-| ![Tema terang](docs/preview-theme-light.jpg) | ![Tema AMOLED](docs/preview-theme-amoled.jpg) |
-
-Gambar di atas dirender oleh [`tools/render_previews.py`](tools/render_previews.py) memakai palet, ukuran, dan jarak yang sama dengan Compose. Untuk membuat ulang:
+Gambar dirender oleh [`tools/render_previews.py`](tools/render_previews.py) dan [`tools/render_folio_previews.py`](tools/render_folio_previews.py), memakai palet, ukuran, dan jarak yang sama dengan Compose. Untuk membuat ulang:
 
 ```bash
 pip install pillow
 python3 tools/render_previews.py
+python3 tools/render_folio_previews.py
 ```
 
 Yang bisa dicoba di prototipe:
 
-- Ganti tema **Terang / Gelap / AMOLED** dan lihat efeknya ke laci & pengaturan (beranda tetap putih di atas wallpaper, sama seperti APK).
+- Ganti gaya **Folio koran / Minimalis** dan tema **Kaleido / Kaleido malam / Terang / Gelap / AMOLED** secara langsung.
 - Beralih **Daftar / Kisi** dan jumlah kolom 3–6.
 - **Tekan lama** aplikasi untuk membuka lembar aksi (shortcut, pin, sembunyikan, info, uninstall).
 - **Ketuk** aplikasi untuk melihat umpan balik peluncuran.
@@ -54,23 +63,26 @@ Yang bisa dicoba di prototipe:
 
 ## Konsep desain
 
-| Lapisan | Inspirasi | Wujud di BitLauncher |
+| Gaya | Inspirasi | Wujud di BitLauncher |
 |---|---|---|
-| Beranda | Niagara | Jam besar, satu kolom aplikasi favorit, tanpa dock yang ramai, buka laci dengan geser ke atas |
-| Detail | Minima | Tipografi ringan, ruang kosong lega, warna netral/AMOLED, transisi tenang |
-| Kedalaman | Nova | Tekan lama untuk aksi, shortcut, sembunyikan aplikasi, grid, backup/restore, tema |
+| **Folio koran** | Surat kabar + e-paper | Masthead `BITLAUNCHER`, nomor edisi, garis ganda, jam serif, indeks aplikasi dengan *dotted leader*, tombol tinta persegi |
+| **Kaleido** | E Ink Kaleido | Kertas gading, tinta gelap, aksen rose/sage/slate/ochre/mauve yang desaturasi; varian malam dengan tinta kertas terang |
+| **Minimalis** | Niagara + Minima | Jam besar di atas wallpaper, satu kolom favorit, ruang kosong, bar pencarian membulat |
+| **Kedalaman** | Nova | Tekan lama untuk aksi, shortcut, sembunyikan aplikasi, grid, backup/restore, tema |
 
-Prinsipnya: **satu tangan, satu kolom, nol kebisingan.** Semua yang tidak sering dipakai disembunyikan satu lapis di belakang gestur, bukan ditumpuk di beranda.
+Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan koran; fitur yang jarang dipakai tetap berada satu lapis di belakang gestur.
 
 ---
 
 ## Fitur yang sudah berjalan (0.1.0-alpha)
 
 ### Beranda
+- [x] **Gaya folio koran** dengan masthead, dateline, nomor edisi, dan indeks aplikasi editorial
+- [x] Palet **Kaleido** dan **Kaleido malam**, dengan aksen cetak bergilir per entri
 - [x] Menjadi launcher default (`CATEGORY_HOME` + `RoleManager`)
 - [x] Jam besar + tanggal, sadar format 12/24 jam (mengikuti sistem secara default)
 - [x] Ketuk jam → aplikasi alarm, seperti Pixel
-- [x] Daftar aplikasi favorit versi vertikal (gaya Niagara)
+- [x] Daftar aplikasi favorit: indeks koran (folio) atau kolom vertikal (minimalis)
 - [x] Geser ke atas pada bar bawah untuk membuka laci
 - [x] Tekan lama area kosong → menu ala Nova (pengaturan, wallpaper, launcher default, refresh)
 - [x] Wallpaper terlihat di belakang beranda (window transparan + `windowShowWallpaper`)
@@ -94,7 +106,7 @@ Prinsipnya: **satu tangan, satu kolom, nol kebisingan.** Semua yang tidak sering
 - [x] Copot pemasangan lewat dialog sistem (fallback ke info untuk aplikasi profil kerja)
 
 ### Pengaturan
-- [x] Tema: Sistem / Terang / Gelap / AMOLED
+- [x] Gaya Folio / Minimalis dan tema Kaleido / Kaleido malam / Sistem / Terang / Gelap / AMOLED
 - [x] Warna dinamis Material You (Android 12+)
 - [x] Toggle jam, tanggal, format 24 jam, baris ringkas
 - [x] Tata letak laci, jumlah kolom, rel alfabet, autofocus pencarian, getaran
@@ -123,8 +135,8 @@ app/src/main/java/dev/retrobit/bitlauncher/
 │   └── SettingsRepository.kt    # preferensi + backup JSON
 ├── ui/
 │   ├── LauncherApp.kt           # navigasi Beranda / Laci / Pengaturan
-│   ├── home/HomeScreen.kt
-│   ├── drawer/AppDrawerScreen.kt
+│   ├── home/{HomeScreen,FolioHomeScreen}.kt
+│   ├── drawer/{AppDrawerScreen,FolioDrawerScreen}.kt
 │   ├── settings/…
 │   ├── components/…             # ikon, jam, rel alfabet, bottom sheet
 │   └── theme/Theme.kt

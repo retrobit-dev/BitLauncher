@@ -138,7 +138,10 @@ fun FolioHomeScreen(
                 )
             },
     ) {
-        Masthead(edition = edition, dateline = dateline)
+        Masthead(
+            edition = edition,
+            dateline = if (settings.showDate) dateline else "LAUNCHER EDITORIAL",
+        )
 
         if (!isDefaultLauncher) {
             DefaultLauncherNotice(
@@ -149,6 +152,7 @@ fun FolioHomeScreen(
         }
 
         // ------------------------------------------------------------ clock
+        if (settings.showClock) {
         Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -169,6 +173,7 @@ fun FolioHomeScreen(
                 color = colors.onBackground,
                 maxLines = 1,
             )
+        }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -198,6 +203,7 @@ fun FolioHomeScreen(
                         app = app,
                         index = index + 1,
                         accent = folioAccent(index),
+                        compact = settings.compactRows,
                         onClick = { viewModel.launch(app) },
                         onLongClick = {
                             if (settings.haptics) {
@@ -387,6 +393,7 @@ private fun FolioAppRow(
     app: LaunchableApp,
     index: Int,
     accent: Color,
+    compact: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -395,7 +402,7 @@ private fun FolioAppRow(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = if (compact) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -404,12 +411,12 @@ private fun FolioAppRow(
             color = accent,
             modifier = Modifier.width(24.dp),
         )
-        AppIcon(app = app, size = 26.dp)
+        AppIcon(app = app, size = if (compact) 22.dp else 26.dp)
         Spacer(Modifier.width(12.dp))
         Column {
             Text(
                 text = app.label,
-                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 23.sp),
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = if (compact) 20.sp else 23.sp),
                 color = colors.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

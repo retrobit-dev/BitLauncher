@@ -1,10 +1,59 @@
 # BitLauncher — Bahasa Desain
 
-Tujuan visual: **tenang, satu tangan, tanpa kebisingan.** Niagara memberi struktur, Minima memberi napas, Nova memberi kedalaman saat dibutuhkan.
+Tujuan visual: **tenang, satu tangan, tanpa kebisingan.** Gaya utama adalah **folio koran di atas kertas E Ink Kaleido**. Gaya minimalis Niagara + Minima tetap tersedia; Nova memberi kedalaman saat dibutuhkan.
 
 ---
 
-## 1. Prinsip
+## Gaya utama — Folio koran + E Ink Kaleido
+
+Beranda diperlakukan sebagai **halaman depan surat kabar**, bukan sebagai deretan ikon di atas wallpaper. Informasi disusun dengan hierarki editorial: masthead, dateline, jam besar, lalu indeks aplikasi.
+
+```
+┌──────────────────────────────┐
+│ BITLAUNCHER        EDISI 297 │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │  ← garis ganda
+│     SABTU, 24 OKTOBER 2026   │
+│ WAKTU SETEMPAT   FORMAT 24 JAM│
+│ 09:41                        │  ← serif 84sp
+│──────────────────────────────│
+│ INDEKS APLIKASI      05 ENTRI│
+│──────────────────────────────│
+│ 01 ▣ WhatsApp ············ › │  ← nomor aksen + leader
+│ 02 ▣ Spotify ·············· › │
+│ 03 ▣ Kamera ··············· › │
+│                              │
+│──────────────────────────────│
+│ [ ⌕ CARI DI ARSIP ] [▦] [☷] │  ← tombol tinta persegi
+└──────────────────────────────┘
+```
+
+Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian bergaris tinta, huruf seksi dengan rule, dan nomor entri berkelanjutan. Mode kisi memakai sel persegi dengan garis tipis, bukan kartu membulat.
+
+### Palet Kaleido
+
+| Peran | Kaleido | Kaleido malam |
+|---|---|---|
+| Kertas / latar | `#E9E4D8` | `#171612` |
+| Permukaan | `#F2EDE3` | `#1E1D18` |
+| Tinta utama | `#171614` | `#ECE6D6` |
+| Tinta sekunder | `#5C574C` | `#A9A291` |
+| Garis | `#8C8677` | `#6E6858` |
+| Aksen utama | `#2F4B44` | `#C6B17E` |
+
+Aksen indeks berputar melalui rose, sage, slate, ochre, dan mauve. Semuanya sengaja desaturasi agar menyerupai filter warna Kaleido, bukan layar OLED yang jenuh.
+
+### Tipografi dan bentuk
+
+- Judul, jam, dan nama aplikasi memakai **serif**; metadata memakai sans uppercase dengan tracking 1.2–3.4sp.
+- Jam 84sp; nama favorit 23sp; label arsip 18sp; label metadata 9–11sp.
+- Sudut tombol dan sel kisi **2dp**; tidak ada pill, glass, blur, atau bayangan pada gaya folio.
+- Garis ganda 2.5dp + 0.8dp menjadi penanda masthead; *dotted leader* menghubungkan nama aplikasi dengan chevron.
+- Transisi beranda → arsip memakai fade agar terasa seperti pergantian halaman, bukan laci mengambang.
+
+
+---
+
+## 1. Prinsip — gaya minimalis
 
 1. **Wallpaper adalah latar, bukan hiasan.** Beranda transparan di atas wallpaper, dengan scrim vertikal tipis agar teks putih selalu terbaca.
 2. **Satu kolom, satu keputusan.** Hal pertama yang dilihat adalah jam, lalu aplikasi yang benar-benar sering dipakai.
