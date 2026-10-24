@@ -1,0 +1,3270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BitLauncher — Preview UI</title>
+<style>
+  @font-face {
+    font-family: "Lora";
+    src: url("assets/fonts/Lora.ttf") format("truetype-variations");
+    font-weight: 400 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Roboto";
+    src: url("assets/fonts/Roboto.ttf") format("truetype-variations");
+    font-weight: 100 900;
+    font-display: block;
+  }
+
+
+  @font-face { font-family: "Courier Prime"; src: url("assets/fonts/CourierPrime-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Courier Prime"; src: url("assets/fonts/CourierPrime-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "Silkscreen"; src: url("assets/fonts/Silkscreen-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Silkscreen"; src: url("assets/fonts/Silkscreen-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "Space Mono"; src: url("assets/fonts/SpaceMono-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Space Mono"; src: url("assets/fonts/SpaceMono-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+
+  /* ------------------------------------------------------------------ tokens
+     Nilai di bawah disalin dari app/src/main/java/.../ui/theme/Theme.kt,
+     HomeScreen.kt dan AppDrawerScreen.kt agar preview setara dengan APK. */
+  :root {
+    --serif: "Lora", Georgia, "Times New Roman", serif;
+    --sans: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --bg: #101014;
+    --surface: #15151a;
+    --on-surface: #f3f3f6;
+    --surface-variant: #202027;
+    --on-surface-variant: #a9a9b3;
+    --outline: #3b3b44;
+    --outline-variant: #2a2a32;
+    --primary: #8fd8c8;
+    --on-primary: #08211c;
+    --error: #ffb4ab;
+    --home-bar: rgba(0, 0, 0, 0.42);
+    --page: #08080a;
+  }
+
+  .screen[data-theme="light"] {
+    --bg: #f7f7fa;
+    --surface: #ffffff;
+    --on-surface: #141418;
+    --surface-variant: #ececf1;
+    --on-surface-variant: #5b5b66;
+    --outline: #c8c8d0;
+    --outline-variant: #e0e0e6;
+    --primary: #0f6b5c;
+    --on-primary: #ffffff;
+    --error: #ba1a1a;
+  }
+
+  .screen[data-theme="amoled"] {
+    --bg: #000000;
+    --surface: #0b0b0f;
+    --on-surface: #f3f3f6;
+    --surface-variant: #1b1b21;
+    --on-surface-variant: #a9a9b3;
+    --outline: #3b3b44;
+    --outline-variant: #26262d;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #1c2634 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 100%, #17211f 0%, transparent 55%),
+      #08080a;
+    color: #e9e9ee;
+    font-family: var(--sans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 20px;
+  }
+
+  .stage {
+    display: flex;
+    gap: 56px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ------------------------------------------------------------------ device */
+  .device {
+    position: relative;
+    width: 393px;
+    height: 852px;
+    border-radius: 52px;
+    padding: 11px;
+    background: linear-gradient(160deg, #2b2b31, #0c0c10 45%, #232329);
+    box-shadow:
+      0 40px 90px rgba(0, 0, 0, 0.65),
+      0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+      0 2px 3px rgba(255, 255, 255, 0.12) inset;
+    flex: 0 0 auto;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 42px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--on-surface);
+    isolation: isolate;
+    transition: background 240ms ease;
+  }
+
+  .wall {
+    position: absolute;
+    inset: 0;
+    background-image: url("assets/wallpaper.jpg");
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.38) 0%,
+      rgba(0, 0, 0, 0.1) 30%,
+      rgba(0, 0, 0, 0) 68%,
+      rgba(0, 0, 0, 0.58) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* ------------------------------------------------------------------ chrome */
+  .statusbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    padding: 14px 30px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 30;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    pointer-events: none;
+  }
+
+  .screen[data-theme="light"] .statusbar.on-app { color: #141418; }
+  .statusbar .icons { display: flex; gap: 6px; align-items: center; }
+  .statusbar svg { display: block; }
+
+  .navbar {
+    position: absolute;
+    bottom: 8px; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 30;
+    pointer-events: none;
+  }
+  .navbar i {
+    width: 118px; height: 4px; border-radius: 4px;
+    background: rgba(255, 255, 255, 0.55);
+    display: block;
+  }
+  .screen[data-theme="light"] .navbar i { background: rgba(0, 0, 0, 0.35); }
+
+  /* ------------------------------------------------------------------ screens */
+  .layer {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    transition: transform 300ms cubic-bezier(0.2, 0.7, 0, 1), opacity 220ms ease;
+  }
+
+  #drawer { background: var(--bg); z-index: 20; transform: translateY(101%); }
+  #drawer.open { transform: translateY(0); }
+  #settings { background: var(--bg); z-index: 25; transform: translateX(101%); }
+  #settings.open { transform: translateX(0); }
+
+  /* ------------------------------------------------------------------ home */
+  #home { z-index: 10; padding-top: 44px; }
+
+  .clockwrap {
+    padding: 10px 24px 0;
+    cursor: pointer;
+  }
+  .clock {
+    margin: 0;
+    font-size: 76px;
+    line-height: 78px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    color: #fff;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+    font-variant-numeric: tabular-nums;
+  }
+  .date {
+    margin-top: 2px;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  }
+
+  .favorites {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 0 4px;
+    scrollbar-width: none;
+  }
+  .favorites::-webkit-scrollbar { display: none; }
+
+  .fav-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 11px 24px;
+    cursor: pointer;
+    transition: transform 120ms ease, background 160ms ease;
+  }
+  .fav-row:active { transform: scale(0.985); background: rgba(255, 255, 255, 0.05); }
+  .fav-row .icon { width: 30px; height: 30px; border-radius: 9px; }
+  .fav-name {
+    font-size: 26px;
+    font-weight: 300;
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fav-sub {
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: -2px;
+  }
+
+  .compact .fav-row { padding: 7px 24px; gap: 16px; }
+  .compact .fav-row .icon { width: 24px; height: 24px; border-radius: 7px; }
+  .compact .fav-name { font-size: 21px; }
+
+  .home-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 24px;
+    gap: 8px;
+    color: #fff;
+  }
+  .home-empty h3 { margin: 0; font-size: 24px; font-weight: 400; }
+  .home-empty p { margin: 0; font-size: 14px; line-height: 20px; color: rgba(255, 255, 255, 0.72); max-width: 280px; }
+  .home-empty button {
+    margin-top: 12px; align-self: flex-start;
+    background: none; border: 0; color: #fff; font: inherit; font-size: 16px; font-weight: 500;
+    padding: 0; cursor: pointer;
+  }
+
+  .home-bottom { padding-bottom: 22px; }
+
+  .grabber-zone {
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+  }
+  .grabber {
+    width: 40px; height: 4px; border-radius: 4px;
+    background: rgba(255, 255, 255, 0.45);
+  }
+
+  .barbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 6px;
+  }
+  .pill {
+    flex: 1;
+    height: 48px;
+    border-radius: 28px;
+    background: var(--home-bar);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    cursor: pointer;
+    border: 0;
+    font-family: inherit;
+    transition: background 180ms ease;
+  }
+  .pill:hover { background: rgba(0, 0, 0, 0.52); }
+  .pill span { flex: 1; text-align: left; }
+  .circle-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--home-bar);
+    border: 0; color: #fff; display: grid; place-items: center;
+    cursor: pointer;
+    transition: background 180ms ease;
+  }
+  .circle-btn:hover { background: rgba(0, 0, 0, 0.52); }
+
+  /* ------------------------------------------------------------------ drawer */
+  .drawer-head { padding-top: 44px; }
+  .drawer-grab { height: 28px; display: grid; place-items: center; cursor: pointer; }
+  .drawer-grab .grabber { background: var(--outline); }
+
+  .drawer-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px 10px 20px;
+  }
+  .search {
+    flex: 1;
+    height: 48px;
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--surface-variant) 55%, transparent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    transition: box-shadow 160ms ease;
+  }
+  .search.focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 55%, transparent); }
+  .search input {
+    flex: 1;
+    background: none;
+    border: 0;
+    outline: 0;
+    color: var(--on-surface);
+    font: inherit;
+    font-size: 17px;
+  }
+  .search input::placeholder { color: var(--on-surface-variant); }
+  .icon-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 0; background: none; color: var(--on-surface-variant);
+    display: grid; place-items: center; cursor: pointer;
+    transition: background 160ms ease;
+  }
+  .icon-btn:hover { background: color-mix(in srgb, var(--surface-variant) 70%, transparent); }
+
+  .divider { height: 1px; background: var(--outline-variant); flex: 0 0 auto; }
+
+  .drawer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 28px 48px 4px;
+    scrollbar-width: none;
+  }
+  .drawer-list::-webkit-scrollbar { display: none; }
+
+  .section-title {
+    padding: 18px 20px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+  }
+
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 14px;
+    transition: background 150ms ease;
+  }
+  .list-row:hover { background: color-mix(in srgb, var(--surface-variant) 55%, transparent); }
+  .list-row .icon { width: 34px; height: 34px; border-radius: 10px; }
+  .list-row .label {
+    font-size: 16px; font-weight: 500; flex: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .badge {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.4px;
+    padding: 2px 5px; border-radius: 4px;
+    background: var(--surface-variant); color: var(--on-surface-variant);
+  }
+
+  .grid-row { display: flex; gap: 2px; padding: 0 6px; }
+  .grid-cell {
+    flex: 1;
+    min-width: 0;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 2px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .grid-cell:hover { background: color-mix(in srgb, var(--surface-variant) 55%, transparent); }
+  .grid-cell .icon { width: 46px; height: 46px; border-radius: 13px; }
+  .grid-cell .label {
+    margin-top: 8px;
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .empty-note {
+    position: absolute; left: 0; right: 0; top: 120px;
+    text-align: center; color: var(--on-surface-variant); font-size: 14px;
+  }
+
+  .rail {
+    position: absolute;
+    right: 2px; top: 6px; bottom: 12px;
+    width: 24px;
+    display: flex; flex-direction: column;
+    padding: 8px 0;
+    z-index: 4;
+  }
+  .rail button {
+    flex: 1;
+    border: 0; background: none; padding: 0;
+    color: var(--on-surface-variant);
+    font-size: 9px; font-family: inherit; cursor: pointer;
+    border-radius: 6px;
+  }
+  .rail button:hover { background: color-mix(in srgb, var(--surface-variant) 70%, transparent); color: var(--on-surface); }
+
+  /* ------------------------------------------------------------------ settings */
+  .settings-head {
+    padding: 52px 20px 4px 8px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .settings-head h2 { margin: 0; font-size: 24px; font-weight: 500; }
+  .settings-body {
+    flex: 1; overflow-y: auto; padding: 6px 0 32px;
+    scrollbar-width: none;
+  }
+  .settings-body::-webkit-scrollbar { display: none; }
+  .card-wrap { padding: 6px 16px; }
+  .card-title {
+    font-size: 11px; letter-spacing: 1.2px; font-weight: 500;
+    color: var(--on-surface-variant);
+    padding: 0 8px 8px;
+    text-transform: uppercase;
+  }
+  .card {
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--surface-variant) 50%, transparent);
+    padding: 8px 18px;
+  }
+  .card .sub { font-size: 12px; color: var(--on-surface-variant); padding-top: 12px; }
+  .switch-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+  }
+  .switch-row .text { flex: 1; }
+  .switch-row .t { font-size: 16px; font-weight: 500; }
+  .switch-row .d { font-size: 12px; color: var(--on-surface-variant); margin-top: 2px; }
+  .sw {
+    width: 44px; height: 26px; border-radius: 26px;
+    background: var(--surface-variant);
+    border: 1px solid var(--outline);
+    position: relative; cursor: pointer; flex: 0 0 auto;
+    transition: background 180ms ease, border-color 180ms ease;
+  }
+  .sw::after {
+    content: ""; position: absolute; top: 50%; left: 4px;
+    width: 16px; height: 16px; margin-top: -8px; border-radius: 50%;
+    background: var(--on-surface-variant);
+    transition: transform 180ms ease, background 180ms ease;
+  }
+  .sw.on { background: var(--primary); border-color: transparent; }
+  .sw.on::after { transform: translateX(18px); background: var(--on-primary); }
+
+  .chips { display: flex; gap: 8px; padding: 4px 0 8px; flex-wrap: wrap; }
+  .chip {
+    border-radius: 50px; border: 1px solid var(--outline);
+    background: none; color: var(--on-surface-variant);
+    font: inherit; font-size: 13px; font-weight: 500;
+    padding: 8px 14px; cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .chip.on { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+
+  .action-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 0; cursor: pointer;
+  }
+  .action-row .text { flex: 1; }
+  .action-row .t { font-size: 16px; font-weight: 500; }
+  .action-row .d { font-size: 12px; color: var(--on-surface-variant); }
+  .action-row .v { font-size: 12px; color: var(--on-surface-variant); }
+  .action-row svg { color: var(--on-surface-variant); }
+
+  /* ------------------------------------------------------------------ sheets */
+  .sheet-scrim {
+    position: absolute; inset: 0; z-index: 40;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0; pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+  .sheet-scrim.show { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 41;
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
+    transform: translateY(101%);
+    transition: transform 300ms cubic-bezier(0.2, 0.7, 0, 1);
+    padding-bottom: 18px;
+    max-height: 86%;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .sheet::-webkit-scrollbar { display: none; }
+  .sheet.show { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 32px; height: 4px; border-radius: 4px;
+    background: var(--outline);
+    margin: 10px auto 4px;
+  }
+
+  .sheet-app {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 24px;
+    cursor: pointer;
+  }
+  .sheet-app .icon { width: 44px; height: 44px; border-radius: 12px; }
+  .sheet-app .name { font-size: 20px; font-weight: 500; }
+  .sheet-app .hint { font-size: 12px; color: var(--on-surface-variant); }
+
+  .shortcuts { display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto; }
+  .shortcut {
+    width: 76px; flex: 0 0 auto;
+    background: var(--surface-variant);
+    border-radius: 16px;
+    padding: 12px 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer;
+  }
+  .shortcut .sq {
+    width: 32px; height: 32px; border-radius: 10px;
+  }
+  .shortcut .label { font-size: 11px; text-align: center; line-height: 14px; }
+
+  .sheet-action {
+    display: flex; align-items: center; gap: 20px;
+    padding: 16px 24px;
+    font-size: 16px; font-weight: 500;
+    cursor: pointer;
+  }
+  .sheet-action:hover { background: color-mix(in srgb, var(--surface-variant) 45%, transparent); }
+  .sheet-action.danger { color: var(--error); }
+
+  /* hidden apps sheet */
+  .hidden-head { padding: 4px 24px 12px; }
+  .hidden-head h3 { margin: 0; font-size: 24px; font-weight: 400; }
+  .hidden-head p { margin: 4px 0 0; font-size: 12px; color: var(--on-surface-variant); line-height: 16px; }
+  .hidden-search {
+    margin: 0 24px 8px; height: 52px; border-radius: 14px;
+    border: 1px solid var(--outline);
+    display: flex; align-items: center; padding: 0 14px; gap: 10px;
+    color: var(--on-surface-variant);
+  }
+  .hidden-search input { flex: 1; background: none; border: 0; outline: 0; color: var(--on-surface); font: inherit; }
+  .hidden-row { display: flex; align-items: center; gap: 14px; padding: 6px 24px; }
+  .hidden-row .icon { width: 32px; height: 32px; border-radius: 9px; }
+  .hidden-row .label { flex: 1; font-size: 16px; font-weight: 500; }
+
+  /* manual article editor */
+  .article-editor { padding: 4px 24px 12px; }
+  .article-editor h3 { margin: 0; font-size: 24px; font-weight: 400; }
+  .article-editor > p { margin: 4px 0 10px; font-size: 12px; color: var(--on-surface-variant); line-height: 17px; }
+  .editor-mode { color: var(--primary); font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .5px; }
+  .article-editor label { display: block; margin-top: 10px; font-family: var(--sans); font-size: 12px; color: var(--on-surface-variant); }
+  .article-editor input, .article-editor textarea {
+    display: block; box-sizing: border-box; width: 100%; margin-top: 6px;
+    border: 1px solid var(--outline); border-radius: 8px; background: var(--bg); color: var(--on-surface);
+    padding: 12px; font: inherit; font-size: 15px; outline: none;
+  }
+  .article-editor input:focus, .article-editor textarea:focus { border-color: var(--primary); }
+  .article-editor textarea { min-height: 190px; resize: vertical; line-height: 22px; }
+  .editor-meta { min-height: 17px; margin-top: 3px; text-align: right; font-size: 10px; color: var(--on-surface-variant); }
+  .editor-error { min-height: 18px; color: var(--error); font-size: 12px; }
+  .editor-save, .editor-auto { width: 100%; min-height: 44px; margin-top: 6px; cursor: pointer; font: inherit; font-weight: 600; }
+  .editor-save { border: 1px solid var(--primary); background: var(--primary); color: var(--surface); }
+  .editor-auto { border: 0; background: none; color: var(--primary); }
+  .manual-links { margin: 8px 0 10px; padding-top: 12px; border-top: 1px solid var(--outline-variant); }
+  .manual-links h4 { margin: 0; font: 600 17px var(--sans); }
+  .manual-links > p { margin: 4px 0 8px; color: var(--on-surface-variant); font-size: 11px; line-height: 16px; }
+  .manual-link-row { display: flex; align-items: center; gap: 5px; padding: 6px 0; border-bottom: 1px solid var(--outline-variant); }
+  .manual-link-row .link-copy { flex: 1; min-width: 0; }
+  .manual-link-row .link-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .manual-link-row .link-target { color: var(--on-surface-variant); font-size: 10px; }
+  .manual-link-row button { border: 0; background: none; color: var(--primary); padding: 7px 4px; font: 600 11px var(--sans); cursor: pointer; }
+  .manual-link-empty { color: var(--on-surface-variant); font-size: 11px; }
+  .manual-link-app { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 0; border: 0; background: none; color: var(--on-surface); text-align: left; cursor: pointer; }
+  .manual-link-app .app-name { flex: 1; font-size: 13px; }
+  .manual-link-app .selected { color: var(--primary); }
+  .editor-link-save, .editor-link-cancel { width: 100%; min-height: 40px; margin-top: 7px; cursor: pointer; font: 600 13px var(--sans); }
+  .editor-link-save { border: 1px solid var(--primary); background: transparent; color: var(--primary); }
+  .editor-link-cancel { border: 0; background: none; color: var(--on-surface-variant); }
+
+  /* toast */
+  .toast {
+    position: absolute; left: 50%; bottom: 108px; z-index: 60;
+    transform: translate(-50%, 16px);
+    background: #ececf1; color: #141418;
+    font-size: 13px; font-weight: 500;
+    padding: 10px 18px; border-radius: 22px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ------------------------------------------------------------------ icons */
+  .icon {
+    display: grid; place-items: center;
+    color: #fff;
+    font-weight: 600;
+    flex: 0 0 auto;
+    overflow: hidden;
+    position: relative;
+  }
+  .icon span { font-size: 46%; letter-spacing: 0; }
+  .icon .icon-badge {
+    position: absolute; top: 0; right: 0; min-width: 15px; height: 15px;
+    padding: 0 3px; border: 1px solid var(--bg); border-radius: 9px;
+    background: var(--on-surface); color: var(--bg);
+    display: grid; place-items: center;
+    font-family: var(--sans); font-size: 8px; line-height: 1; letter-spacing: 0;
+  }
+  .gesture-setting { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+  .gesture-setting > label { flex: 1; font-family: var(--sans); font-size: 14px; }
+  .news-image-picker {
+    display: block; margin: 10px 0; padding: 12px; border: 1px dashed var(--outline);
+    font-family: var(--sans); font-size: 13px; color: var(--on-surface-variant); cursor: pointer;
+  }
+  .news-image-picker input { display: block; width: 100%; margin-top: 8px; font: inherit; }
+  .text-action { border: 0; background: none; color: var(--primary); padding: 8px 0; font: inherit; cursor: pointer; }
+  .gesture-select {
+    max-width: 170px; padding: 8px; border: 1px solid var(--outline); border-radius: 2px;
+    background: var(--bg); color: var(--on-surface); font: inherit; font-size: 12px;
+  }
+
+  /* ------------------------------------------------------------------ panel */
+  .panel {
+    width: 320px;
+    display: flex; flex-direction: column; gap: 18px;
+    flex: 0 0 auto;
+  }
+  .panel h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.4px;
+  }
+  .panel .lede { margin: 6px 0 0; font-size: 13px; line-height: 19px; color: #9a9aa5; }
+  .panel .group { display: flex; flex-direction: column; gap: 8px; }
+  .panel .group-label {
+    font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: #74747f; font-weight: 600;
+  }
+  .seg { display: flex; gap: 6px; }
+  .seg button {
+    flex: 1;
+    padding: 9px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: #d6d6de;
+    font: inherit; font-size: 12.5px; font-weight: 500;
+    cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .seg button:hover { background: rgba(255, 255, 255, 0.08); }
+  .seg button.on { background: #e9e9ee; color: #101014; border-color: transparent; }
+
+  .note {
+    font-size: 12px; line-height: 18px; color: #85858f;
+    border-left: 2px solid rgba(255, 255, 255, 0.14);
+    padding-left: 10px;
+  }
+  .note b { color: #cfcfd6; font-weight: 600; }
+
+  .hint-keys {
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 12px; color: #85858f;
+  }
+  .hint-keys kbd {
+    font-family: inherit; font-size: 11px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px; padding: 1px 6px; color: #cfcfd6;
+  }
+
+  @media (max-width: 820px) {
+    body { padding: 18px 12px 32px; align-items: flex-start; }
+    .stage { gap: 24px; }
+    .device { transform: scale(0.86); transform-origin: top center; margin-bottom: -120px; }
+    .panel { width: 100%; max-width: 393px; }
+  }
+
+  /* ================================================================= folio */
+  .screen[data-theme="kaleido"] {
+    --bg: #e3dfd5;
+    --surface: #eae6dd;
+    --on-surface: #1d1c19;
+    --surface-variant: #d6d1c6;
+    --on-surface-variant: #666159;
+    --outline: #979185;
+    --outline-variant: #c7c1b6;
+    --primary: #3e433d;
+    --on-primary: #f0ece2;
+    --secondary: #7b584d;
+    --error: #8b4b42;
+  }
+
+  .screen[data-theme="kaleido-night"] {
+    --bg: #191816;
+    --surface: #201f1c;
+    --on-surface: #e2ded2;
+    --surface-variant: #2b2925;
+    --on-surface-variant: #a29c90;
+    --outline: #6b665d;
+    --outline-variant: #37342e;
+    --primary: #b9b09c;
+    --on-primary: #24221c;
+    --secondary: #b58c7d;
+    --error: #c58c7d;
+  }
+
+  .screen.folio .wall,
+  .screen.folio .scrim { display: none; }
+  .screen.folio { background: var(--bg); }
+  .screen.folio .statusbar { color: var(--on-surface); }
+  .screen.folio .navbar i { background: color-mix(in srgb, var(--on-surface) 45%, transparent); }
+
+
+  /* Newspaper e-paper: retain only a trace of chroma in app and shortcut icons. */
+  .screen[data-theme="kaleido"] .icon:not(.icon-pack),
+  .screen[data-theme="kaleido-night"] .icon:not(.icon-pack),
+  .screen[data-theme="kaleido"] .shortcut .sq,
+  .screen[data-theme="kaleido-night"] .shortcut .sq {
+    filter: saturate(0.08);
+  }
+
+  .folio-home {
+    position: absolute;
+    inset: 0;
+    padding-top: 44px;
+    display: flex;
+    flex-direction: column;
+    color: var(--on-surface);
+    font-family: var(--serif);
+  }
+
+  .folio-masthead { padding: 10px 20px 0; }
+  .folio-topline {
+    display: flex; align-items: center; min-height: 34px; gap: 8px;
+    font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 3.4px;
+  }
+  .folio-topline .masthead-name { flex: 0 0 auto; white-space: nowrap; }
+  .folio-topline.search-open { letter-spacing: 1.4px; font-size: 9px; }
+  .folio-topline .folio-tag { margin-left: auto; }
+  .masthead-search-toggle {
+    width: 34px; height: 34px; flex: 0 0 34px; padding: 0;
+    border: 0; background: none; color: var(--on-surface);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .masthead-search {
+    min-width: 0; flex: 1; height: 34px;
+    border: 1px solid var(--outline); border-radius: 2px;
+    background: transparent; color: var(--on-surface);
+    padding: 0 8px; outline: 0;
+    font-family: var(--serif); font-size: 14px; font-weight: 400; letter-spacing: 0;
+  }
+  .masthead-search::placeholder { color: var(--on-surface-variant); }
+  .rule-double {
+    margin: 7px 0 0;
+    border-top: 2.5px solid var(--on-surface);
+    border-bottom: 0.8px solid var(--on-surface);
+    height: 3px;
+  }
+  .folio-dateline {
+    text-align: center;
+    font-family: var(--sans); font-size: 10px; letter-spacing: 2.2px;
+    color: var(--on-surface-variant);
+    padding: 7px 0;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .folio-tag {
+    font-family: var(--sans); font-size: 9px; letter-spacing: 1.6px;
+    color: var(--on-surface-variant);
+  }
+
+  .folio-clock-label {
+    display: flex; justify-content: space-between;
+    font-family: var(--sans); font-size: 9.5px; letter-spacing: 1.6px;
+    color: var(--on-surface-variant);
+    padding: 14px 20px 0;
+  }
+  .folio-clock {
+    font-size: 84px; line-height: 88px; letter-spacing: -3px;
+    padding: 0 20px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .folio-section {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 1.6px;
+    padding: 8px 20px;
+    border-top: 1px solid var(--outline-variant);
+    border-bottom: 1px solid var(--outline-variant);
+  }
+
+  .article-edit-trigger {
+    width: 100%; min-height: 48px; border-left: 0; border-right: 0;
+    background: none; color: inherit; cursor: pointer; text-align: left;
+  }
+  .article-edit-trigger:hover { background: color-mix(in srgb, var(--surface-variant) 45%, transparent); }
+
+  .folio-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+  }
+  .folio-row:active { background: color-mix(in srgb, var(--surface-variant) 45%, transparent); }
+  .folio-row .num {
+    font-family: var(--sans); font-size: 9.5px; font-weight: 600;
+    width: 24px; flex: 0 0 24px;
+  }
+  .folio-row .icon { width: 26px; height: 26px; border-radius: 6px; }
+  .folio-row .label {
+    font-size: 23px; line-height: 1.1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 62%;
+  }
+  .folio-row .tag {
+    font-family: var(--sans); font-size: 8px; letter-spacing: 1.4px;
+    color: var(--on-surface-variant);
+    flex: 0 0 auto;
+  }
+  .folio-leader { flex: 1; min-width: 12px; border-top: 1px dashed var(--outline); }
+  .folio-row .chev { color: var(--on-surface-variant); font-size: 13px; line-height: 1; }
+
+  .folio-empty {
+    padding: 24px 20px;
+    font-family: var(--serif);
+  }
+  .folio-empty h3 { margin: 0 0 6px; font-size: 24px; font-weight: 400; }
+  .folio-empty p { margin: 0 0 16px; font-size: 15px; line-height: 22px; color: var(--on-surface-variant); }
+  .folio-empty button {
+    border: 0; background: none; padding: 0; cursor: pointer;
+    font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 1.6px;
+    color: var(--primary);
+  }
+
+  .news-gesture-footer {
+    min-height: 52px; padding: 7px 20px 22px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    cursor: grab; touch-action: none; user-select: none;
+  }
+  .news-gesture-footer i { width: 40px; height: 3px; background: var(--outline); }
+  .news-gesture-footer span {
+    font-family: var(--sans); font-size: 8px; letter-spacing: 1.2px;
+    color: var(--on-surface-variant);
+  }
+
+  /* ------------------------------------------------------------- news page */
+  .news-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+  .news-scroll::-webkit-scrollbar { display: none; }
+  .news-headline {
+    margin: 0;
+    padding: 0 20px 10px;
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 38px;
+    letter-spacing: -0.5px;
+    color: var(--on-surface);
+  }
+  .news-photo {
+    display: block;
+    width: calc(100% - 40px);
+    height: 176px;
+    margin: 0 20px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--on-surface);
+    filter: saturate(0.08);
+  }
+  .news-caption {
+    margin: 0 20px;
+    padding: 5px 0;
+    font-family: var(--sans);
+    font-size: 8px;
+    letter-spacing: 1.4px;
+    color: var(--on-surface-variant);
+  }
+  .news-article {
+    margin: 0;
+    padding: 8px 20px;
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 26px;
+    text-align: justify;
+    color: var(--on-surface);
+  }
+  .news-article strong { font-weight: 700; }
+  .article-link {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--primary);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .news-app-shelf {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+    padding: 0 20px 6px;
+  }
+  .news-app-chip, .news-app-empty {
+    min-width: 0; min-height: 48px; padding: 6px;
+    border: 1px solid var(--outline-variant); border-radius: 2px;
+    background: transparent; color: var(--on-surface);
+    display: flex; align-items: center; gap: 6px; text-align: left;
+  }
+  .news-app-chip { cursor: pointer; }
+  .news-app-chip:disabled { cursor: default; opacity: 0.78; }
+  .news-app-chip > .label {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: var(--serif); font-size: 11px;
+  }
+  .news-app-empty { width: calc(100% - 40px); margin: 6px 20px; padding: 12px; cursor: pointer; }
+  .news-app-choice { cursor: pointer; }
+  .news-app-check { width: 24px; color: var(--primary); font-size: 20px; text-align: center; }
+  .news-widgets {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding: 10px 20px;
+  }
+  .news-widget {
+    min-width: 0; min-height: 118px; padding: 14px;
+    border: 1px solid var(--outline); border-radius: 2px;
+    background: transparent; color: var(--on-surface);
+    display: flex; flex-direction: column; align-items: flex-start;
+    text-align: left; cursor: pointer;
+  }
+  .news-widget .k {
+    font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 1.6px;
+    color: var(--on-surface-variant);
+  }
+  .news-widget .day { margin-top: 2px; font-family: var(--serif); font-size: 36px; line-height: 42px; }
+  .news-widget .v { margin-top: 4px; font-family: var(--serif); font-size: 20px; line-height: 24px; }
+  .news-widget .s {
+    margin-top: auto; padding-top: 4px;
+    font-family: var(--sans); font-size: 8px; letter-spacing: 1px;
+    color: var(--on-surface-variant); text-transform: uppercase;
+  }
+  .news-search-results { padding-bottom: 12px; }
+  .news-search-row {
+    width: 100%; padding: 10px 20px; border: 0; background: none;
+    color: var(--on-surface); display: flex; align-items: center; gap: 12px;
+    text-align: left; cursor: pointer;
+  }
+  .news-search-row .name { flex: 1; min-width: 0; font-family: var(--serif); font-size: 20px; }
+  .news-search-row .unread {
+    font-family: var(--sans); font-size: 8px; letter-spacing: 1px;
+    color: var(--on-surface-variant); text-transform: uppercase;
+  }
+  .news-search-empty { padding: 12px 20px; font-family: var(--serif); font-size: 15px; color: var(--on-surface-variant); }
+  .news-access {
+    margin: 6px 20px;
+    padding: 14px;
+    border: 1px solid var(--outline);
+    border-radius: 2px;
+    background: none;
+    color: var(--on-surface);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .news-access .t {
+    display: block;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+  }
+  .news-access .d {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--serif);
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--on-surface-variant);
+  }
+  .news-location-input {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid var(--outline);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--on-surface);
+    font: inherit;
+    font-size: 15px;
+  }
+
+  /* folio archive (drawer) */
+  .folio-archive-wrap {
+    position: absolute; inset: 0;
+    padding-top: 44px;
+    display: flex; flex-direction: column;
+    background: var(--bg);
+    color: var(--on-surface);
+    font-family: var(--serif);
+  }
+  .folio-archive-head { padding: 0 20px; }
+  .folio-grab {
+    height: 26px; display: grid; place-items: center; cursor: pointer;
+  }
+  .folio-grab i { width: 40px; height: 3px; background: var(--outline); display: block; }
+  .folio-archive-title {
+    display: flex; align-items: baseline; gap: 10px;
+    padding-bottom: 8px;
+  }
+  .folio-archive-title h2 {
+    margin: 0; font-size: 34px; font-weight: 400; letter-spacing: -0.5px;
+  }
+  .folio-archive-title .folio-close {
+    margin-left: auto;
+    font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 1.6px;
+    cursor: pointer;
+  }
+  .folio-search {
+    margin-top: 12px;
+    height: 46px;
+    border: 1px solid var(--outline);
+    border-radius: 2px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 14px;
+    color: var(--on-surface-variant);
+  }
+  .folio-search input {
+    flex: 1; background: none; border: 0; outline: 0;
+    color: var(--on-surface); font-family: var(--serif); font-size: 16px;
+  }
+  .folio-search input::placeholder { color: var(--on-surface-variant); }
+  .folio-tools {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 0 4px;
+    font-family: var(--sans); font-size: 10px; letter-spacing: 1.4px;
+    color: var(--on-surface-variant);
+  }
+  .folio-tool {
+    border: 0; background: none; color: var(--on-surface-variant);
+    font: inherit; letter-spacing: inherit;
+    padding: 8px; cursor: pointer;
+  }
+  .folio-tool:hover { color: var(--on-surface); }
+
+  .folio-archive {
+    flex: 1; overflow-y: auto; scrollbar-width: none;
+    padding-bottom: 32px;
+    position: relative;
+  }
+  .folio-archive::-webkit-scrollbar { display: none; }
+
+  .folio-letter {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px 4px;
+  }
+  .folio-letter span { font-size: 28px; line-height: 1; }
+  .folio-letter i { flex: 1; border-top: 1px solid var(--outline); }
+
+  .folio-archive .folio-row { padding: 9px 20px 9px 20px; }
+  .folio-archive .folio-row .icon { width: 28px; height: 28px; border-radius: 6px; }
+  .folio-archive .folio-row .label { font-size: 18px; max-width: none; }
+  .folio-archive .folio-row .num { font-size: 9px; width: 22px; flex-basis: 22px; }
+
+  .folio-grid-row { display: flex; gap: 6px; padding: 2px 20px; }
+  .folio-grid-cell {
+    flex: 1; min-width: 0;
+    border: 1px solid var(--outline-variant);
+    border-radius: 2px;
+    padding: 12px 4px;
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer;
+  }
+  .folio-grid-cell .icon { width: 40px; height: 40px; border-radius: 8px; }
+  .folio-grid-cell .label {
+    margin-top: 8px; width: 100%; text-align: center;
+    font-family: var(--serif); font-size: 11px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .folio-rail {
+    position: absolute; right: 2px; top: 172px; bottom: 16px; width: 22px;
+    display: flex; flex-direction: column;
+  }
+  .folio-rail button {
+    flex: 1; border: 0; background: none; padding: 0;
+    font-family: var(--sans); font-size: 8px; letter-spacing: 0.5px;
+    color: var(--on-surface-variant); cursor: pointer;
+  }
+  .folio-rail button:hover { color: var(--on-surface); }
+
+  /* folio settings: printed cards */
+  .screen.folio .settings-head h2 { font-family: var(--serif); font-weight: 400; }
+  .screen.folio .sheet { border-radius: 2px 2px 0 0; }
+  .screen.folio .sheet-app .name { font-family: var(--serif); font-weight: 400; }
+  .screen.folio .sheet-action { font-family: var(--sans); font-size: 14px; }
+  .screen.folio .shortcut { border-radius: 2px; }
+  .screen.folio .card { background: transparent; border: 1px solid var(--outline-variant); border-radius: 2px; }
+  .screen.folio .card-title,
+  .screen.folio .card .sub,
+  .screen.folio .switch-row .t { font-family: var(--sans); }
+  .screen.folio .switch-row .t { font-size: 14px; letter-spacing: 0.2px; }
+  .screen.folio .switch-row .d { font-family: var(--serif); }
+  .screen.folio .action-row .t,
+  .screen.folio .action-row .d { font-family: var(--sans); }
+  .screen.folio .chip { border-radius: 2px; font-family: var(--sans); letter-spacing: 1px; text-transform: uppercase; font-size: 10px; }
+  .screen.folio .sw { border-radius: 2px; }
+  .screen.folio .sw::after { border-radius: 1px; }
+
+  @media (max-width: 820px) {
+    .folio-clock { font-size: 72px; line-height: 76px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ============================================================ DEVICE -->
+  <div class="device">
+    <div class="screen" id="screen" data-theme="dark">
+
+      <div class="wall"></div>
+      <div class="scrim"></div>
+
+      <!-- status bar -->
+      <div class="statusbar" id="statusbar">
+        <span id="sb-time">09:41</span>
+        <span class="icons">
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><path d="M7.5 9.6a1.3 1.3 0 100 2.6 1.3 1.3 0 000-2.6z" transform="translate(0 -1.6)"/><path d="M7.5 6.1c1.2 0 2.3.5 3.1 1.3l-1.2 1.2a2.7 2.7 0 00-3.8 0L4.4 7.4c.8-.8 1.9-1.3 3.1-1.3z"/><path d="M7.5 2.4c2.2 0 4.2.9 5.7 2.3l-1.2 1.2a6.3 6.3 0 00-9 0L1.8 4.7A8 8 0 017.5 2.4z"/></svg>
+          <svg width="24" height="11" viewBox="0 0 24 11" fill="none"><rect x=".5" y=".5" width="20" height="10" rx="3" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="15" height="7" rx="1.6" fill="currentColor"/><path d="M22 4v3a2 2 0 000-3z" fill="currentColor" opacity=".45"/></svg>
+        </span>
+      </div>
+
+      <!-- ------------------------------------------------ HOME -->
+      <div class="layer" id="home">
+        <div class="clockwrap" id="clockwrap">
+          <h1 class="clock" id="clock">09:41</h1>
+          <div class="date" id="date">Sabtu, 24 Oktober</div>
+        </div>
+
+        <div class="favorites" id="favorites"></div>
+
+        <div class="home-bottom">
+          <div class="grabber-zone" id="grabber-zone">
+            <div class="grabber"></div>
+          </div>
+          <div class="barbar">
+            <button class="pill" id="pill-search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+              <span>Cari aplikasi</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 14l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="circle-btn" id="home-settings" aria-label="Pengaturan launcher">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4" stroke-linecap="round"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="17" r="2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------------ DRAWER -->
+      <div class="layer" id="drawer">
+        <div class="drawer-head">
+          <div class="drawer-grab" id="drawer-grab"><div class="grabber"></div></div>
+          <div class="drawer-tools">
+            <label class="search" id="search-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--on-surface-variant)"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+              <input id="search-input" placeholder="Cari aplikasi" autocomplete="off" spellcheck="false" />
+              <button class="icon-btn" id="search-clear" style="width:24px;height:24px;display:none" aria-label="Hapus">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+              </button>
+            </label>
+            <button class="icon-btn" id="toggle-view" aria-label="Ubah tampilan">
+              <svg id="view-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+            </button>
+            <button class="icon-btn" id="drawer-settings" aria-label="Pengaturan">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>
+            </button>
+          </div>
+          <div class="divider"></div>
+        </div>
+
+        <div style="position:relative; flex:1; display:flex; min-height:0">
+          <div class="drawer-list" id="drawer-list"></div>
+          <div class="empty-note" id="drawer-empty" style="display:none">Tidak ada aplikasi yang cocok</div>
+          <div class="rail" id="rail"></div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------------ SETTINGS -->
+      <div class="layer" id="settings">
+        <div class="settings-head">
+          <button class="icon-btn" id="settings-close" aria-label="Tutup">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+          </button>
+          <h2>Pengaturan</h2>
+        </div>
+        <div class="settings-body" id="settings-body"></div>
+      </div>
+
+      <!-- ------------------------------------------------ SHEETS -->
+      <div class="sheet-scrim" id="sheet-scrim"></div>
+
+      <div class="sheet" id="app-sheet">
+        <div class="sheet-handle"></div>
+        <div id="app-sheet-content"></div>
+      </div>
+
+      <div class="sheet" id="home-sheet">
+        <div class="sheet-handle"></div>
+        <div id="home-sheet-content">
+          <div class="sheet-action" data-menu="settings">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:var(--on-surface-variant)"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4" stroke-linecap="round"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="17" r="2"/></svg>
+            Pengaturan launcher
+          </div>
+          <div class="sheet-action" data-menu="wallpaper">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:var(--on-surface-variant)"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.8-4.6a2 2 0 012.7 0l6.5 6" stroke-linecap="round"/></svg>
+            Ganti wallpaper
+          </div>
+          <div class="sheet-action" data-menu="default">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:var(--on-surface-variant)"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z" stroke-linejoin="round"/></svg>
+            Jadikan launcher default
+          </div>
+          <div class="sheet-action" data-menu="refresh">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:var(--on-surface-variant)"><path d="M20 11a8 8 0 10-2.6 6.1" stroke-linecap="round"/><path d="M20 5v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Muat ulang daftar aplikasi
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet" id="hidden-sheet">
+        <div class="sheet-handle"></div>
+        <div class="hidden-head">
+          <h3>Aplikasi tersembunyi</h3>
+          <p>Aplikasi yang disembunyikan tidak tampil di beranda maupun laci aplikasi.</p>
+        </div>
+        <div class="hidden-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+          <input placeholder="Cari aplikasi" />
+        </div>
+        <div id="hidden-list" style="max-height:420px; overflow:auto; padding-bottom:12px"></div>
+      </div>
+
+      <div class="sheet" id="article-editor-sheet">
+        <div class="sheet-handle"></div>
+        <div class="article-editor">
+          <h3>Edit artikel manual</h3>
+          <p>Tulis judul, isi, dan hyperlink aplikasi sendiri. Notifikasi tidak menimpa teks manual; chip aplikasi mengikuti pengaturan.</p>
+          <div class="editor-mode" id="article-editor-status">Saat ini: artikel otomatis</div>
+          <label>Judul artikel
+            <input id="manual-headline" maxlength="160" placeholder="Tulis headline utama" autocomplete="off" />
+          </label>
+          <div class="editor-meta" id="manual-headline-count">0/160</div>
+          <label>Isi artikel
+            <textarea id="manual-body" maxlength="6000" placeholder="Tulis kabar Anda. Gunakan kontrol Hyperlink aplikasi di bawah."></textarea>
+          </label>
+          <div class="editor-meta" id="manual-body-count">0/6000 · Baris baru dipertahankan</div>
+          <section class="manual-links" aria-label="Hyperlink aplikasi">
+            <h4>Hyperlink aplikasi</h4>
+            <p>Pilih aplikasi dan teks tautan. Pada artikel hanya teks tautan yang terlihat.</p>
+            <div id="manual-link-list"></div>
+            <label>Teks hyperlink
+              <input id="manual-link-label" maxlength="120" placeholder="Contoh: obrolan keluarga" autocomplete="off" />
+            </label>
+            <label>Cari aplikasi tujuan
+              <input id="manual-link-search" placeholder="Cari aplikasi" autocomplete="off" />
+            </label>
+            <div id="manual-link-apps"></div>
+            <div class="editor-error" id="manual-link-error" role="alert"></div>
+            <button type="button" class="editor-link-save" id="insert-manual-link">Sisipkan hyperlink</button>
+            <button type="button" class="editor-link-cancel" id="cancel-edit-manual-link" hidden>Batal edit hyperlink</button>
+            <p>Setelah menyusun hyperlink, simpan artikel manual di bawah.</p>
+          </section>
+          <div class="editor-error" id="article-editor-error" role="alert"></div>
+          <button type="button" class="editor-save" id="save-manual-article">Simpan &amp; gunakan artikel manual</button>
+          <button type="button" class="editor-auto" id="save-automatic-article">Simpan draf &amp; gunakan otomatis</button>
+          <p>Hyperlink Manual membuka aplikasi dari editor. Nama aplikasi biasa mengikuti daftar artikel; keduanya mengikuti saklar shortcut.</p>
+        </div>
+      </div>
+
+      <div class="sheet" id="news-apps-sheet">
+        <div class="sheet-handle"></div>
+        <div class="hidden-head">
+          <h3>Aplikasi di artikel</h3>
+          <p>Hanya aplikasi terpilih yang menjadi shortcut dan sumber notifikasi artikel.</p>
+        </div>
+        <div class="hidden-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="news-apps-search" placeholder="Cari aplikasi" />
+        </div>
+        <div id="news-apps-list" style="max-height:420px; overflow:auto; padding-bottom:12px"></div>
+      </div>
+
+      <div class="toast" id="toast">Membuka aplikasi</div>
+
+      <div class="navbar"><i></i></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ PANEL -->
+  <aside class="panel">
+    <div>
+      <h1>BitLauncher</h1>
+      <p class="lede">Prototipe UI interaktif dari kode Compose. Gaya <b>folio koran</b> di atas kertas <b>E Ink Kaleido</b>, atau beranda minimalis. Warna, ukuran, dan gestur mengikuti APK.</p>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Layar</span>
+      <div class="seg" id="seg-screen">
+        <button data-screen="home" class="on">Beranda</button>
+        <button data-screen="drawer">Laci</button>
+        <button data-screen="settings">Pengaturan</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Gaya</span>
+      <div class="seg" id="seg-style">
+        <button data-style="folio" class="on">Folio koran</button>
+        <button data-style="minimal">Minimalis</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Tema</span>
+      <div class="seg" id="seg-theme">
+        <button data-theme="kaleido" class="on">Kaleido</button>
+        <button data-theme="kaleido-night">Kaleido malam</button>
+      </div>
+      <div class="seg" id="seg-theme-classic">
+        <button data-theme="dark">Gelap</button>
+        <button data-theme="light">Terang</button>
+        <button data-theme="amoled">AMOLED</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Laci aplikasi</span>
+      <div class="seg" id="seg-layout">
+        <button data-layout="list" class="on">Daftar</button>
+        <button data-layout="grid">Kisi</button>
+      </div>
+      <div class="seg" id="seg-columns">
+        <button data-cols="3">3</button>
+        <button data-cols="4" class="on">4</button>
+        <button data-cols="5">5</button>
+        <button data-cols="6">6</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Beranda</span>
+      <div class="seg" id="seg-home">
+        <button data-toggle="clock" class="on">Jam</button>
+        <button data-toggle="date" class="on">Tanggal</button>
+        <button data-toggle="compact">Ringkas</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Halaman berita</span>
+      <div class="seg" id="seg-news">
+        <button data-toggle="showNewsPhoto" class="on">Foto</button>
+        <button data-toggle="showNewsWidgets" class="on">Widget</button>
+        <button data-toggle="showNewsAppShelf" class="on">Chip aplikasi</button>
+        <button data-toggle="notificationAccess" class="on">Notifikasi</button>
+      </div>
+      <div class="seg">
+        <button id="simulate-news">3 pesan baru</button>
+        <button id="clear-news">Tandai dibaca</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Aksi</span>
+      <div class="seg">
+        <button id="trigger-sheet">Tekan lama aplikasi</button>
+        <button id="trigger-menu">Menu beranda</button>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Catatan:</b> ini prototipe HTML, bukan emulator. APK asli dibangun oleh CI dan tersedia pada prerelease <b>v0.5.0-alpha</b> atau artifact <b>bitlauncher-release</b>.
+    </p>
+
+    <div class="hint-keys">
+      <div><kbd>klik</kbd> aplikasi → buka · <kbd>tekan</kbd> → lembar aksi</div>
+      <div><kbd>geser atas</kbd> footer → laci · <kbd>2× ketuk</kbd> beranda → cari (default)</div>
+      <div><kbd>geser kiri/kanan</kbd> dan <kbd>2 jari</kbd> → aksi dapat diatur di Pengaturan</div>
+      <div><kbd>tekan lama</kbd> → menu (default) · semua gestur dapat dinonaktifkan</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+/* --------------------------------------------------------------- data model */
+const APPS = [
+  { name: "WhatsApp",  c1: "#2fbf6a", c2: "#128c4a", i: "W",  short: ["Chat baru", "Kamera", "Status"] },
+  { name: "Spotify",   c1: "#3ee07a", c2: "#0b6b34", i: "S",  short: ["Putar", "Cari", "Pustaka"] },
+  { name: "Kamera",    c1: "#6b7788", c2: "#2b3138", i: "K",  short: ["Video", "Potret", "Selfie"] },
+  { name: "Catatan",   c1: "#f6c85f", c2: "#c9962e", i: "C",  short: ["Catatan baru", "Checklist"] },
+  { name: "Chrome",    c1: "#5aa9f7", c2: "#2762b8", i: "C",  short: ["Tab baru", "Inkognito"] },
+  { name: "Gmail",     c1: "#f2685f", c2: "#b4332c", i: "M",  short: ["Tulis", "Cari"] },
+  { name: "Maps",      c1: "#5fc98a", c2: "#22795c", i: "M",  short: ["Rute", "Tersimpan"] },
+  { name: "YouTube",   c1: "#f2554f", c2: "#a51d1a", i: "Y",  short: ["Cari", "Langganan"] },
+  { name: "Instagram", c1: "#e26ba0", c2: "#8b3a86", i: "I",  short: ["Kamera", "Pesan"] },
+  { name: "Telegram",  c1: "#59b8ee", c2: "#2a7ab5", i: "T",  short: ["Chat baru"] },
+  { name: "Kalender",  c1: "#eef1f7", c2: "#c3c9d6", i: "K",  short: ["Acara baru", "Hari ini"], dark: true },
+  { name: "Kalkulator",c1: "#40444d", c2: "#22252b", i: "=",  short: [] },
+  { name: "Drive",     c1: "#4ea9f3", c2: "#2e7a4f", i: "D",  short: ["Pindai", "Unggah"] },
+  { name: "Foto",      c1: "#8e7ff0", c2: "#4b3aa8", i: "P",  short: ["Ulang tahun", "Sorotan"] },
+  { name: "Play Store",c1: "#58c3f0", c2: "#2b7bb3", i: "▶",  short: [] },
+  { name: "Pengaturan",c1: "#8d95a3", c2: "#4c525c", i: "⚙",  short: [] },
+  { name: "Dompet",    c1: "#6fd0b8", c2: "#24796a", i: "D",  short: ["Scan", "Top up"] },
+  { name: "Gojek",     c1: "#3fbf74", c2: "#187a41", i: "G",  short: ["GoRide"] },
+  { name: "Tokopedia", c1: "#5fd18f", c2: "#1d8a52", i: "T",  short: [] },
+  { name: "Discord",   c1: "#7b86f0", c2: "#3d43a8", i: "D",  short: [] },
+  { name: "Notion",    c1: "#3a3d44", c2: "#16181c", i: "N",  short: [], hidden: true },
+  { name: "Files",     c1: "#6ea8ee", c2: "#2c5c9e", i: "F",  short: ["Baru-baru ini"] },
+  { name: "Zoom",      c1: "#5ea9f5", c2: "#2260b0", i: "Z",  short: ["Rapat baru"], hidden: true },
+  { name: "Netflix",   c1: "#dd4b3f", c2: "#7e1a14", i: "N",  short: [] },
+  { name: "X",         c1: "#33363c", c2: "#111215", i: "X",  short: [] },
+  { name: "Trello",    c1: "#3aa7e0", c2: "#1f6f9c", i: "T",  short: [], hidden: true },
+  { name: "Slack",     c1: "#8a63c9", c2: "#4c2f7c", i: "S",  short: [], work: true },
+];
+
+const FAVORITE_NAMES = ["WhatsApp", "Spotify", "Kamera", "Catatan", "Chrome"];
+const GESTURE_ACTIONS = {
+  NONE: "Tidak ada",
+  OPEN_DRAWER: "Buka arsip aplikasi",
+  OPEN_SEARCH: "Cari aplikasi",
+  OPEN_SETTINGS: "Buka pengaturan",
+  OPEN_HOME_MENU: "Menu launcher",
+  OPEN_NOTIFICATIONS: "Panel notifikasi",
+  OPEN_QUICK_SETTINGS: "Pengaturan cepat",
+  OPEN_RECENTS: "Aplikasi terbaru",
+  LOCK_SCREEN: "Kunci layar",
+  TAKE_SCREENSHOT: "Ambil screenshot",
+  OPEN_CALENDAR: "Buka kalender",
+  OPEN_NOTES: "Buka catatan",
+};
+
+const FONT_CHOICES = {
+  STYLE_DEFAULT: { label: "Bawaan", description: "Mengikuti gaya Folio atau Minimal." },
+  LORA: { label: "Lora", stack: '"Lora", Georgia, serif', description: "Serif editorial untuk seluruh tampilan." },
+  ROBOTO: { label: "Roboto", stack: '"Roboto", sans-serif', description: "Sans bersih untuk seluruh tampilan." },
+  TYPEWRITER: { label: "Typewriter", stack: '"Courier Prime", monospace', description: "Courier Prime bergaya mesin ketik." },
+  PIXEL: { label: "Pixel", stack: '"Silkscreen", monospace', description: "Silkscreen bergaya bitmap/pixel." },
+  OPERATOR: { label: "Operator", stack: '"Space Mono", monospace', description: "Space Mono bergaya Operator/terminal, open-source." },
+};
+
+const ICON_PACK_CHOICES = {
+  SYSTEM: { label: "Ikon sistem", description: "Ikon asli aplikasi dengan penyesuaian e-paper bila aktif." },
+  THEME: { label: "Ikon tema", description: "Glyph monochrome dengan tinta dan bentuk yang mengikuti tema." },
+  THIRD_PARTY: { label: "Pack pihak ketiga", description: "Simulasi appfilter.xml; APK menampilkan pack yang benar-benar terpasang." },
+};
+
+const state = {
+  theme: "kaleido",
+  style: "folio",
+  focusDrawerSearch: false,
+  notificationAccess: true,
+  notifications: { "WhatsApp": 3, "Gmail": 2 },
+  newsLocation: "Rembang",
+  showNewsArticle: true,
+  showNewsAppLinks: true,
+  showNewsAppShelf: true,
+  showNewsUnread: true,
+  newsApps: null,
+  newsManualEnabled: false,
+  newsManualHeadline: "",
+  newsManualBody: "",
+  showNewsPhoto: true,
+  newsImage: "",
+  fontChoice: "STYLE_DEFAULT",
+  iconPack: "SYSTEM",
+  showNewsWidgets: true,
+  showNotificationBadges: true,
+  doubleTapAction: "OPEN_SEARCH",
+  longPressAction: "OPEN_HOME_MENU",
+  swipeLeftAction: "OPEN_SETTINGS",
+  swipeRightAction: "OPEN_NOTIFICATIONS",
+  swipeUpAction: "OPEN_DRAWER",
+  twoFingerSwipeUpAction: "NONE",
+  twoFingerSwipeDownAction: "NONE",
+  homeSearchExpanded: false,
+  homeQuery: "",
+  notesApp: "Catatan",
+  layout: "list",
+  columns: 4,
+  clock: true,
+  date: true,
+  compact: false,
+  favoriteNames: [...FAVORITE_NAMES],
+  hiddenNames: APPS.filter((a) => a.hidden).map((a) => a.name),
+  screen: "home",
+  query: "",
+};
+
+/* ------------------------------------------------------------------ helpers */
+const $ = (id) => document.getElementById(id);
+const screenEl = $("screen");
+const appByName = (name) => APPS.find((a) => a.name === name);
+const visibleApps = () => APPS.filter((a) => !state.hiddenNames.includes(a.name));
+
+// The minimal screens are kept as templates so switching styles never loses markup.
+let HOME_MINIMAL = "";
+let DRAWER_MINIMAL = "";
+
+function iconStyle(app, radius) {
+  const darkText = app.dark ? "#22252b" : "#fff";
+  return `background:linear-gradient(150deg, ${app.c1}, ${app.c2}); color:${darkText}; border-radius:${radius}px;`;
+}
+
+function iconHtml(app, size, radius, badge = 0) {
+  const badgeHtml = badge > 0 ? `<span class="icon-badge">${badge > 99 ? "99+" : badge}</span>` : "";
+  let className = "icon";
+  let style = iconStyle(app, radius);
+  let glyphStyle = "";
+  if (state.iconPack === "THEME") {
+    className += " icon-themed";
+    const themedRadius = state.style === "folio" ? 2 : size / 2;
+    style = `background:var(--surface-variant);color:var(--primary);border:1px solid var(--outline);border-radius:${themedRadius}px;`;
+    glyphStyle = `font-size:${Math.max(10, Math.round(size * 0.4))}px`;
+  } else if (state.iconPack === "THIRD_PARTY") {
+    className += " icon-pack";
+    style = `background:var(--bg);color:${app.c1};border:2px solid ${app.c1};border-radius:${radius}px;box-shadow:inset 0 0 0 2px var(--bg);`;
+    glyphStyle = `font-size:${Math.max(10, Math.round(size * 0.4))}px`;
+  }
+  return `<div class="${className}" data-icon-mode="${state.iconPack}" style="width:${size}px;height:${size}px;${style}"><span style="${glyphStyle}">${app.i}</span>${badgeHtml}</div>`;
+}
+
+function clockNow() {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function dateNow() {
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const d = new Date();
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function toast(text) {
+  const el = $("toast");
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("show"), 1600);
+}
+
+/* --------------------------------------------------------------- home render */
+function renderMinimalHome() {
+  $("clockwrap").style.display = state.clock ? "" : "none";
+  $("date").style.display = state.date ? "" : "none";
+  $("clock").textContent = clockNow();
+  $("date").textContent = dateNow();
+
+  const wrap = $("favorites");
+  wrap.classList.toggle("compact", state.compact);
+
+  if (!state.favoriteNames.length) {
+    wrap.innerHTML = `
+      <div class="home-empty">
+        <h3>Beranda masih kosong</h3>
+        <p>Buka laci aplikasi, lalu tekan lama sebuah aplikasi untuk mem-pin ke beranda.</p>
+        <button id="empty-open">Buka laci aplikasi ›</button>
+      </div>`;
+    const btn = $("empty-open");
+    if (btn) btn.onclick = () => openDrawer(false);
+    return;
+  }
+
+  wrap.innerHTML = state.favoriteNames
+    .map((name) => {
+      const app = appByName(name);
+      if (!app) return "";
+      return `
+        <div class="fav-row" data-app="${app.name}">
+          ${iconHtml(app, state.compact ? 24 : 30, state.compact ? 7 : 9, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
+          <div style="min-width:0">
+            <div class="fav-name">${app.name}</div>
+            ${app.work ? '<div class="fav-sub">Profil kerja</div>' : ""}
+          </div>
+        </div>`;
+    })
+    .join("");
+
+  bindAppTargets(wrap);
+}
+
+
+/* ---------------------------------------------------------------- folio render */
+const ICONS = {
+  bell: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 16V10a6 6 0 0112 0v6l2 2H4l2-2zM10 20a2 2 0 004 0" stroke-linejoin="round"/></svg>',
+  search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>',
+  close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>',
+  grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg>',
+  list: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>',
+  tune: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4" stroke-linecap="round"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="17" r="2"/></svg>',
+  settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>',
+};
+
+const PRINT_ACCENTS = {
+  light: ["#625d55", "#746d61", "#585b56"],
+  night: ["#a29c90", "#b0a795", "#93958c"],
+};
+
+function isNightTheme() {
+  return state.theme === "kaleido-night" || state.theme === "dark" || state.theme === "amoled";
+}
+
+function printAccent(index) {
+  const list = isNightTheme() ? PRINT_ACCENTS.night : PRINT_ACCENTS.light;
+  return list[index % list.length];
+}
+
+function editionNumber() {
+  const start = new Date(new Date().getFullYear(), 0, 0);
+  return String(Math.floor((Date.now() - start) / 86400000)).padStart(3, "0");
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
+}
+
+function newsDateNow() {
+  return `${dateNow()} ${new Date().getFullYear()}`;
+}
+
+function newsNoun(app) {
+  return ["WhatsApp", "Gmail", "Telegram"].includes(app.name) ? "pesan" : "notifikasi";
+}
+
+function articleLink(app, text) {
+  if (!state.showNewsAppLinks) return `<span>${escapeHtml(text)}</span>`;
+  return `<button type="button" class="article-link" data-app="${escapeHtml(app.name)}">${escapeHtml(text)}</button>`;
+}
+
+function articleAppLinks(apps) {
+  return apps.map((app, index) => {
+    const separator = index === 0 ? "" : index === apps.length - 1 ? " dan " : ", ";
+    return separator + articleLink(app, app.name);
+  }).join("");
+}
+
+function buildNewsArticle(entries, shortcutApps) {
+  const location = escapeHtml(state.newsLocation.trim() || "Rembang");
+  const time = state.clock ? `Pada pukul ${clockNow().replace(":", ".")}` : "Pada edisi ini";
+  const calendarLink = `<button type="button" class="article-link" data-open-calendar>${newsDateNow()}</button>`;
+  const notesLink = '<button type="button" class="article-link" data-open-notes>Catatan</button>';
+  const finish = (body) => `${body} Untuk mencatat kabar ini, buka ${notesLink}.`;
+  let body = `<strong>${location}</strong>${state.date ? `, ${calendarLink}` : ""}<strong> — </strong>`;
+
+  if (!state.showNewsUnread) {
+    body += `${time}, ringkasan notifikasi tidak ditampilkan. `;
+    body += shortcutApps.length
+      ? `Aplikasi ${articleAppLinks(shortcutApps.slice(0, 3))} tercantum tanpa jumlah notifikasi.`
+      : "Belum ada aplikasi yang dipilih. Tambahkan aplikasi melalui Pengaturan.";
+    return finish(body);
+  }
+
+  if (!state.notificationAccess) {
+    body += `${time}, halaman ini belum dapat membaca jumlah pesan. Aktifkan akses notifikasi untuk kabar terbaru. `;
+    body += shortcutApps.length
+      ? `Sementara itu, ${articleAppLinks(shortcutApps.slice(0, 3))} siap dibuka dari artikel ini.`
+      : "Pilih aplikasi di Pengaturan agar kabar tidak bercampur dengan aplikasi lain.";
+    return finish(body);
+  }
+
+  if (!entries.length) {
+    body += `${time}, tidak ada pesan baru yang menanti. Suasana redaksi tenang. `;
+    body += shortcutApps.length
+      ? `Namun ${articleAppLinks(shortcutApps.slice(0, 3))} tetap dapat dibuka dengan satu ketukan.`
+      : "Belum ada aplikasi yang dipilih. Tambahkan aplikasi melalui Pengaturan.";
+    return finish(body);
+  }
+
+  // Prose stays concise; the shelf below still contains every selected app.
+  const proseEntries = entries.slice(0, 3);
+  const lead = proseEntries[0];
+  body += `${time} terjadi sebuah fenomena aneh: ada ${articleLink(lead.app, `${lead.count} ${newsNoun(lead.app)} belum dibaca di ${lead.app.name}`)}.`;
+  proseEntries.slice(1).forEach((entry) => {
+    body += ` Kabar lain datang dari ${articleLink(entry.app, `${entry.app.name}, dengan ${entry.count} ${newsNoun(entry.app)} yang menanti`)}.`;
+  });
+  const additional = shortcutApps.filter((app) => !proseEntries.some((entry) => entry.app.name === app.name));
+  if (additional.length) body += ` Untuk kabar berikutnya, buka ${articleAppLinks(additional.slice(0, 3 - proseEntries.length))}.`;
+  return finish(body);
+}
+
+function escapeManualSegment(value) {
+  return escapeHtml(value).replace(/\r?\n/g, "<br>");
+}
+
+function regexEscape(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseManualArticleLinks(text) {
+  const pattern = /\[([^\]\n]+)]\(app:([^)\s]+)\)/g;
+  return [...text.matchAll(pattern)].map((match) => ({
+    label: match[1],
+    appKey: match[2],
+    raw: match[0],
+    start: match.index,
+    endExclusive: match.index + match[0].length,
+  }));
+}
+
+function manualArticleLinkToken(label, appKey) {
+  return `[${label.trim()}](app:${appKey})`;
+}
+
+function insertManualArticleLink(text, label, appKey) {
+  const separator = !text || /[ \n]$/.test(text) ? "" : " ";
+  return text + separator + manualArticleLinkToken(label, appKey);
+}
+
+function replaceManualArticleLink(text, link, label, appKey) {
+  return text.slice(0, link.start) + manualArticleLinkToken(label, appKey) + text.slice(link.endExclusive);
+}
+
+function removeManualArticleLink(text, link) {
+  return text.slice(0, link.start) + link.label + text.slice(link.endExclusive);
+}
+
+function automaticManualAppLinks(text, apps) {
+  const choices = apps.filter((app, index) =>
+    apps.findIndex((other) => other.name.toLowerCase() === app.name.toLowerCase()) === index
+  ).sort((a, b) => b.name.length - a.name.length);
+  if (!state.showNewsAppLinks || !choices.length) return escapeManualSegment(text);
+  const labels = choices.map((app) => regexEscape(app.name)).join("|");
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])(${labels})(?![\\p{L}\\p{N}])`, "giu");
+  let result = "";
+  let previousEnd = 0;
+  for (const match of text.matchAll(pattern)) {
+    const prefix = match[1];
+    const label = match[2];
+    const labelStart = match.index + prefix.length;
+    const app = choices.find((item) => item.name.toLowerCase() === label.toLowerCase());
+    result += escapeManualSegment(text.slice(previousEnd, labelStart));
+    result += app ? articleLink(app, label) : escapeHtml(label);
+    previousEnd = match.index + match[0].length;
+  }
+  return result + escapeManualSegment(text.slice(previousEnd));
+}
+
+function manualAppLinks(text, apps) {
+  const links = parseManualArticleLinks(text);
+  let result = "";
+  let previousEnd = 0;
+  links.forEach((link) => {
+    result += automaticManualAppLinks(text.slice(previousEnd, link.start), apps);
+    const app = appByName(link.appKey);
+    result += app ? articleLink(app, link.label) : escapeManualSegment(link.label);
+    previousEnd = link.endExclusive;
+  });
+  return result + automaticManualAppLinks(text.slice(previousEnd), apps);
+}
+
+function buildManualNewsArticle(shortcutApps) {
+  const location = escapeHtml(state.newsLocation.trim() || "Rembang");
+  const calendarLink = `<button type="button" class="article-link" data-open-calendar>${newsDateNow()}</button>`;
+  const notesLink = '<button type="button" class="article-link" data-open-notes>Catatan</button>';
+  const content = state.newsManualBody || "Artikel manual masih kosong. Ketuk EDIT untuk menulis isi artikel.";
+  const separator = content.endsWith("\n") ? "" : " ";
+  return `<strong>${location}</strong>${state.date ? `, ${calendarLink}` : ""}<strong> — </strong>${manualAppLinks(content, shortcutApps)}${separator}Untuk mencatat kabar ini, buka ${notesLink}.`;
+}
+
+let manualLinkEditingStart = null;
+let manualLinkSelectedApp = APPS[0]?.name || "";
+
+function currentManualLink() {
+  return parseManualArticleLinks($("manual-body").value)
+    .find((link) => link.start === manualLinkEditingStart) || null;
+}
+
+function updateManualBody(value) {
+  $("manual-body").value = value.slice(0, 6000);
+  $("manual-body-count").textContent = `${$("manual-body").value.length}/6000 · Baris baru dipertahankan`;
+  renderManualLinkList();
+}
+
+function renderManualLinkList() {
+  const links = parseManualArticleLinks($("manual-body").value);
+  const list = $("manual-link-list");
+  list.innerHTML = links.length ? links.map((link) => {
+    const app = appByName(link.appKey);
+    return `<div class="manual-link-row">
+      <div class="link-copy"><div class="link-label">${escapeHtml(link.label)}</div><div class="link-target">${escapeHtml(app?.name || "Aplikasi tidak ditemukan")}</div></div>
+      <button type="button" data-manual-link-edit="${link.start}">Edit</button>
+      <button type="button" data-manual-link-remove="${link.start}">Hapus</button>
+    </div>`;
+  }).join("") : '<div class="manual-link-empty">Belum ada hyperlink manual.</div>';
+
+  list.querySelectorAll("[data-manual-link-edit]").forEach((button) => {
+    button.onclick = () => {
+      const link = links.find((item) => item.start === Number(button.dataset.manualLinkEdit));
+      if (!link) return;
+      manualLinkEditingStart = link.start;
+      manualLinkSelectedApp = appByName(link.appKey)?.name || APPS[0]?.name || "";
+      $("manual-link-label").value = link.label;
+      $("manual-link-search").value = "";
+      $("manual-link-error").textContent = "";
+      renderManualLinkAppChoices();
+      renderManualLinkList();
+    };
+  });
+  list.querySelectorAll("[data-manual-link-remove]").forEach((button) => {
+    button.onclick = () => {
+      const link = links.find((item) => item.start === Number(button.dataset.manualLinkRemove));
+      if (!link) return;
+      if (manualLinkEditingStart === link.start) {
+        manualLinkEditingStart = null;
+        $("manual-link-label").value = "";
+      }
+      updateManualBody(removeManualArticleLink($("manual-body").value, link));
+    };
+  });
+  $("insert-manual-link").textContent = currentManualLink() ? "Simpan perubahan hyperlink" : "Sisipkan hyperlink";
+  $("cancel-edit-manual-link").hidden = manualLinkEditingStart === null;
+}
+
+function renderManualLinkAppChoices() {
+  const query = $("manual-link-search").value.trim().toLowerCase();
+  const matches = APPS.filter((app) => app.name.toLowerCase().includes(query));
+  const selected = appByName(manualLinkSelectedApp) || APPS[0];
+  let choices = matches.slice(0, 3);
+  if (!query && selected && !choices.some((app) => app.name === selected.name)) {
+    choices = [selected, ...choices.slice(0, 2)];
+  }
+  const container = $("manual-link-apps");
+  container.innerHTML = choices.length ? choices.map((app) => `
+    <button type="button" class="manual-link-app" data-manual-link-app="${escapeHtml(app.name)}">
+      ${iconHtml(app, 28, 7)}<span class="app-name">${escapeHtml(app.name)}</span><span class="selected">${selected?.name === app.name ? "✓" : ""}</span>
+    </button>`).join("") : '<div class="manual-link-empty">Tidak ada aplikasi yang cocok</div>';
+  container.querySelectorAll("[data-manual-link-app]").forEach((button) => {
+    button.onclick = () => {
+      manualLinkSelectedApp = button.dataset.manualLinkApp;
+      if (!$("manual-link-label").value.trim()) $("manual-link-label").value = manualLinkSelectedApp;
+      $("manual-link-error").textContent = "";
+      renderManualLinkAppChoices();
+    };
+  });
+}
+
+function resetManualLinkEditor() {
+  manualLinkEditingStart = null;
+  manualLinkSelectedApp = APPS[0]?.name || "";
+  $("manual-link-label").value = "";
+  $("manual-link-search").value = "";
+  $("manual-link-error").textContent = "";
+  renderManualLinkList();
+  renderManualLinkAppChoices();
+}
+
+function insertManualLinkFromEditor() {
+  const label = $("manual-link-label").value.trim();
+  const app = appByName(manualLinkSelectedApp) || APPS[0];
+  if (!label || label.includes("]")) {
+    $("manual-link-error").textContent = "Teks hyperlink wajib diisi dan tidak boleh mengandung ]";
+    return;
+  }
+  if (!app) {
+    $("manual-link-error").textContent = "Pilih aplikasi tujuan";
+    return;
+  }
+  const body = $("manual-body").value;
+  const editing = currentManualLink();
+  const updated = editing
+    ? replaceManualArticleLink(body, editing, label, app.name)
+    : insertManualArticleLink(body, label, app.name);
+  if (updated.length > 6000) {
+    $("manual-link-error").textContent = "Artikel terlalu panjang untuk menambahkan hyperlink";
+    return;
+  }
+  manualLinkEditingStart = null;
+  $("manual-link-label").value = "";
+  $("manual-link-error").textContent = "";
+  updateManualBody(updated);
+  renderManualLinkAppChoices();
+}
+
+function openArticleEditor() {
+  $("manual-headline").value = state.newsManualHeadline;
+  $("manual-body").value = state.newsManualBody;
+  $("article-editor-status").textContent = state.newsManualEnabled
+    ? "Saat ini: artikel manual"
+    : "Saat ini: artikel otomatis";
+  $("article-editor-error").textContent = "";
+  $("manual-headline-count").textContent = `${state.newsManualHeadline.length}/160`;
+  $("manual-body-count").textContent = `${state.newsManualBody.length}/6000 · Baris baru dipertahankan`;
+  resetManualLinkEditor();
+  openSheet("article-editor-sheet");
+}
+
+function saveArticleEditor(manual) {
+  const headline = $("manual-headline").value.trim().slice(0, 160);
+  const body = $("manual-body").value.trim().slice(0, 6000);
+  if (manual && (!headline || !body)) {
+    $("article-editor-error").textContent = "Judul dan isi wajib diisi untuk mode manual.";
+    return;
+  }
+  state.newsManualEnabled = manual;
+  state.newsManualHeadline = headline;
+  state.newsManualBody = body;
+  if (manual) state.showNewsArticle = true;
+  closeSheets();
+  renderHome();
+  renderSettings();
+  toast(manual ? "Artikel manual disimpan" : "Draf disimpan; artikel otomatis aktif");
+}
+
+function folioRow(app, index, compact) {
+  const unread = state.notificationAccess && state.showNotificationBadges ? (state.notifications[app.name] || 0) : 0;
+  return `
+    <div class="folio-row" data-app="${app.name}">
+      <span class="num" style="color:${printAccent(index)}">${String(index + 1).padStart(2, "0")}</span>
+      ${iconHtml(app, compact ? 28 : 26, 6, unread)}
+      <span class="label">${app.name}</span>
+      ${app.work ? '<span class="tag">KERJA</span>' : ""}
+      ${unread ? `<span class="tag">${unread} ${newsNoun(app).toUpperCase()}</span>` : ""}
+      <span class="folio-leader"></span>
+      <span class="chev">›</span>
+    </div>`;
+}
+
+function renderFolioHome() {
+  const home = $("home");
+  home.dataset.style = "folio";
+  const favorites = state.favoriteNames.map(appByName).filter(Boolean);
+  const available = visibleApps();
+  const articleApps = state.newsApps === null
+    ? (favorites.length ? favorites : available).slice(0, 3)
+    : state.newsApps.map(appByName).filter(Boolean);
+  const entries = (state.showNewsUnread && state.notificationAccess ? articleApps : [])
+    .filter((app) => (state.notifications[app.name] || 0) > 0)
+    .map((app) => ({ app, count: state.notifications[app.name] }))
+    .sort((a, b) => b.count - a.count);
+  const shortcutApps = articleApps;
+  const lead = entries[0];
+  const headline = state.newsManualEnabled
+    ? state.newsManualHeadline || "Artikel manual"
+    : state.newsApps !== null && !articleApps.length
+      ? "Pilih aplikasi untuk artikel Anda"
+      : lead
+        ? `${lead.count} ${newsNoun(lead.app)} menanti di ${lead.app.name}`
+        : state.notificationAccess && state.showNewsUnread ? "Tidak ada kabar dari aplikasi pilihan" : "Kabar dari aplikasi pilihan";
+  const homeResults = state.homeQuery.trim()
+    ? available.filter((app) => matches(app, state.homeQuery.trim().toLowerCase())).slice(0, 6)
+    : [];
+
+  const photo = state.showNewsPhoto
+    ? `<img class="news-photo" src="${escapeHtml(state.newsImage || "assets/news-photo.jpg")}" alt="Gambar artikel" />
+       <div class="news-caption">${state.newsImage ? "FOTO · PILIHAN PENGGUNA" : "ILUSTRASI · SUASANA PAGI"}</div>`
+    : "";
+  const accessNotice = state.showNewsUnread && !state.notificationAccess
+    ? `<button class="news-access" data-enable-notifications>
+         ${ICONS.bell}
+         <span><span class="t">AKTIFKAN AKSES NOTIFIKASI</span><span class="d">Hanya jumlah notifikasi aktif yang digunakan; isi pesan tidak disimpan.</span></span>
+       </button>`
+    : "";
+  const widgets = state.showNewsWidgets
+    ? `<div class="news-widgets">
+         <button type="button" class="news-widget" data-open-calendar>
+           <span class="k">KALENDER</span><span class="day">${new Date().getDate()}</span>
+           <span class="s">${new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(new Date())}</span>
+         </button>
+         <button type="button" class="news-widget" data-open-notes>
+           <span class="k">CATATAN</span><span class="v">${escapeHtml(state.notesApp)}</span>
+           <span class="s">Ketuk untuk membuka</span>
+         </button>
+       </div>`
+    : "";
+  const article = state.showNewsArticle
+    ? `<p class="news-article">${state.newsManualEnabled ? buildManualNewsArticle(shortcutApps) : buildNewsArticle(entries, shortcutApps)}</p>`
+    : "";
+  const appShelf = state.showNewsArticle && state.showNewsAppShelf
+    ? `<div class="folio-section"><span>APLIKASI DALAM ARTIKEL</span><span>${articleApps.length} APLIKASI</span></div>
+       ${articleApps.length
+         ? `<div class="news-app-shelf">${articleApps.map((app) => {
+             const unread = state.showNewsUnread && state.notificationAccess ? (state.notifications[app.name] || 0) : 0;
+             return `<button type="button" class="news-app-chip" data-app="${escapeHtml(app.name)}" ${state.showNewsAppLinks ? "" : "disabled"}>
+               ${iconHtml(app, 24, 6, unread)}<span class="label">${escapeHtml(app.name)}</span>
+             </button>`;
+           }).join("")}</div>`
+         : '<button type="button" class="news-app-empty" data-open-settings>Pilih aplikasi untuk menjadi shortcut dan sumber notifikasi artikel</button>'}`
+    : "";
+  const searchContent = state.homeQuery.trim()
+    ? `<div class="news-search-results">
+         <div class="folio-section"><span>HASIL PENCARIAN</span><span>${homeResults.length} APLIKASI</span></div>
+         ${homeResults.length
+           ? homeResults.map((app) => {
+               const unread = state.notificationAccess && state.showNotificationBadges ? (state.notifications[app.name] || 0) : 0;
+               return `<button type="button" class="news-search-row" data-app="${escapeHtml(app.name)}">
+                 ${iconHtml(app, 28, 6, unread)}<span class="name">${escapeHtml(app.name)}</span>
+                 ${unread ? `<span class="unread">${unread} ${newsNoun(app)}</span>` : ""}
+               </button>`;
+             }).join("")
+           : '<div class="news-search-empty">Tidak ada aplikasi yang cocok</div>'}
+       </div>`
+    : `<button type="button" class="folio-section article-edit-trigger" data-edit-article><span>KABAR UTAMA</span><span>${state.newsManualEnabled ? "MANUAL · EDIT" : "HLM. 1 · EDIT"}</span></button>
+       <h2 class="news-headline">${escapeHtml(headline)}</h2>
+       ${photo}
+       ${article}
+       ${appShelf}
+       ${accessNotice}${widgets}`;
+  const mastheadControl = state.homeSearchExpanded
+    ? `<input id="home-search-input" class="masthead-search" value="${escapeHtml(state.homeQuery)}" placeholder="Cari aplikasi" autocomplete="off" aria-label="Cari aplikasi" />`
+    : `<span class="folio-tag">EDISI ${editionNumber()}</span>`;
+
+  home.innerHTML = `
+    <div class="folio-home ${state.compact ? "compact" : ""}">
+      <div class="news-scroll">
+        <div class="folio-masthead">
+          <div class="folio-topline ${state.homeSearchExpanded ? "search-open" : ""}">
+            <span class="masthead-name">BITLAUNCHER</span>${mastheadControl}
+            <button type="button" class="masthead-search-toggle" aria-label="${state.homeSearchExpanded ? "Tutup pencarian" : "Cari aplikasi"}">${state.homeSearchExpanded ? ICONS.close : ICONS.search}</button>
+          </div>
+          <div class="rule-double"></div>
+          <div class="folio-dateline">${state.date ? newsDateNow().toUpperCase() : "LAUNCHER EDITORIAL"}</div>
+        </div>
+        ${searchContent}
+      </div>
+      <div class="news-gesture-footer" data-folio-grab role="button" tabindex="0" aria-label="Geser ke atas untuk membuka arsip">
+        <i></i><span>GESER ATAS · ${GESTURE_ACTIONS[state.swipeUpAction].toUpperCase()} · HLM. 1</span>
+      </div>
+    </div>`;
+
+  bindAppTargets(home);
+  home.querySelectorAll("[data-open-calendar]").forEach((el) => {
+    el.onclick = () => performGesture("OPEN_CALENDAR");
+  });
+  home.querySelectorAll("[data-open-notes]").forEach((el) => {
+    el.onclick = () => performGesture("OPEN_NOTES");
+  });
+  home.querySelectorAll("[data-edit-article]").forEach((el) => {
+    el.onclick = () => openArticleEditor();
+  });
+  home.querySelectorAll("[data-open-settings]").forEach((el) => {
+    el.onclick = () => openSettings();
+  });
+  home.querySelectorAll("[data-enable-notifications]").forEach((el) => {
+    el.onclick = () => {
+      state.notificationAccess = true;
+      renderHome();
+      renderSettings();
+      toast("Akses notifikasi contoh diaktifkan");
+    };
+  });
+
+  const searchToggle = home.querySelector(".masthead-search-toggle");
+  searchToggle.onclick = () => {
+    state.homeSearchExpanded = !state.homeSearchExpanded;
+    if (!state.homeSearchExpanded) state.homeQuery = "";
+    renderFolioHome();
+    if (state.homeSearchExpanded) setTimeout(() => $("home-search-input")?.focus(), 0);
+  };
+  const searchInput = $("home-search-input");
+  if (searchInput) {
+    searchInput.oninput = (event) => {
+      state.homeQuery = event.target.value;
+      renderFolioHome();
+      const again = $("home-search-input");
+      if (again) {
+        again.focus();
+        again.setSelectionRange(again.value.length, again.value.length);
+      }
+    };
+    searchInput.onkeydown = (event) => {
+      if (event.key !== "Enter" || !homeResults.length) return;
+      event.preventDefault();
+      toast(`Membuka ${homeResults[0].name}`);
+      state.homeQuery = "";
+      state.homeSearchExpanded = false;
+      renderFolioHome();
+    };
+  }
+
+  const grab = home.querySelector("[data-folio-grab]");
+  let grabStart = null;
+  let grabbed = false;
+  grab.addEventListener("pointerdown", (event) => {
+    grabStart = event.clientY;
+    grabbed = false;
+    if (grab.setPointerCapture) grab.setPointerCapture(event.pointerId);
+  });
+  grab.addEventListener("pointermove", (event) => {
+    if (grabStart !== null && event.clientY - grabStart < -28) {
+      grabbed = true;
+      grabStart = null;
+      performGesture(state.swipeUpAction);
+    }
+  });
+  grab.addEventListener("pointerup", () => { grabStart = null; });
+  grab.addEventListener("click", () => { if (!grabbed) performGesture(state.swipeUpAction); grabbed = false; });
+  grab.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") performGesture(state.swipeUpAction);
+  });
+}
+
+function renderFolioDrawer() {
+  const drawer = $("drawer");
+  drawer.dataset.style = "folio";
+  const q = state.query.trim().toLowerCase();
+  const apps = visibleApps().filter((a) => matches(a, q));
+  const isGrid = state.layout === "grid";
+
+  const sections = new Map();
+  apps.forEach((app) => {
+    const letter = app.name[0].toUpperCase();
+    if (!sections.has(letter)) sections.set(letter, []);
+    sections.get(letter).push(app);
+  });
+  const numbers = new Map(apps.map((a, i) => [a.name, i]));
+
+  let body = "";
+  [...sections.keys()].sort().forEach((letter) => {
+    body += `<div class="folio-letter" id="folio-sec-${letter}"><span>${letter}</span><i></i></div>`;
+    const group = sections.get(letter);
+    if (isGrid) {
+      for (let i = 0; i < group.length; i += state.columns) {
+        const row = group.slice(i, i + state.columns);
+        body += `<div class="folio-grid-row">${row
+          .map(
+            (app) => `
+            <div class="folio-grid-cell" data-app="${app.name}">
+              ${iconHtml(app, 40, 8, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
+              <span class="label">${app.name}</span>
+            </div>`
+          )
+          .join("")}${Array.from({ length: state.columns - row.length }).map(() => '<div style="flex:1"></div>').join("")}</div>`;
+      }
+    } else {
+      body += group.map((app) => folioRow(app, numbers.get(app.name), true)).join("");
+    }
+  });
+
+  drawer.innerHTML = `
+    <div class="folio-archive-wrap">
+      <div class="folio-archive-head">
+        <div class="folio-grab" data-close-drawer><i></i></div>
+        <div class="folio-archive-title">
+          <h2>ARSIP</h2>
+          <span class="folio-tag">${apps.length} JUDUL</span>
+          <span class="folio-close" data-close-drawer>TUTUP</span>
+        </div>
+        <div class="rule-double"></div>
+        <div class="folio-search">
+          ${ICONS.search}
+          <input id="folio-search-input" placeholder="Cari di arsip" autocomplete="off" value="${state.query.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" />
+        </div>
+        <div class="folio-tools">
+          <button class="folio-tool" data-toggle-layout>TAMPILAN: ${isGrid ? "KISI" : "DAFTAR"}</button>
+          <span style="flex:1"></span>
+          <button class="folio-tool" data-toggle-layout aria-label="Ubah tata letak">${isGrid ? ICONS.list : ICONS.grid}</button>
+          <button class="folio-tool" data-open-settings aria-label="Pengaturan">${ICONS.settings}</button>
+        </div>
+        <div class="divider" style="background:var(--outline-variant)"></div>
+      </div>
+      <div class="folio-archive" id="folio-archive">
+        ${body || '<div class="folio-empty" style="padding-top:56px;text-align:center"><p>Tidak ada judul yang cocok</p></div>'}
+      </div>
+      ${
+        q
+          ? ""
+          : `<div class="folio-rail">${[...sections.keys()]
+              .sort()
+              .map((l) => `<button data-letter="${l}">${l}</button>`)
+              .join("")}</div>`
+      }
+    </div>`;
+
+  bindAppTargets(drawer);
+  drawer.querySelectorAll("[data-close-drawer]").forEach((el) => {
+    el.onclick = () => closeDrawer();
+  });
+  drawer.querySelectorAll("[data-toggle-layout]").forEach((el) => {
+    el.onclick = () => setLayout(state.layout === "grid" ? "list" : "grid");
+  });
+  drawer.querySelectorAll("[data-open-settings]").forEach((el) => {
+    el.onclick = () => openSettings();
+  });
+  drawer.querySelectorAll("[data-letter]").forEach((el) => {
+    el.onclick = () => {
+      const target = $("folio-sec-" + el.dataset.letter);
+      if (target) target.scrollIntoView({ block: "start", behavior: "smooth" });
+    };
+  });
+
+  const input = $("folio-search-input");
+  if (input) {
+    input.addEventListener("input", (e) => {
+      state.query = e.target.value;
+      renderDrawer();
+      const again = $("folio-search-input");
+      if (again) {
+        again.focus();
+        again.setSelectionRange(again.value.length, again.value.length);
+      }
+    });
+    if (state.focusDrawerSearch) {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }
+}
+
+/* ------------------------------------------------------------- dispatchers */
+function renderHome() {
+  if (state.style === "folio") {
+    renderFolioHome();
+    return;
+  }
+  if ($("home").dataset.style !== "minimal") {
+    $("home").innerHTML = HOME_MINIMAL;
+    $("home").dataset.style = "minimal";
+    bindHomeChrome();
+  }
+  renderMinimalHome();
+}
+
+function renderDrawer() {
+  if (state.style === "folio") {
+    renderFolioDrawer();
+    return;
+  }
+  if ($("drawer").dataset.style !== "minimal") {
+    $("drawer").innerHTML = DRAWER_MINIMAL;
+    $("drawer").dataset.style = "minimal";
+    bindDrawerChrome();
+  }
+  renderMinimalDrawer();
+}
+
+/* ------------------------------------------------------------- drawer render */
+function matches(app, q) {
+  if (!q) return true;
+  const label = app.name.toLowerCase();
+  const initials = app.name.split(/[\s-]/).map((w) => w[0]).join("").toLowerCase();
+  return label.startsWith(q) || label.includes(q) || initials.startsWith(q);
+}
+
+function renderMinimalDrawer() {
+  const list = $("drawer-list");
+  const q = state.query.trim().toLowerCase();
+  const apps = visibleApps().filter((a) => matches(a, q));
+  const isGrid = state.layout === "grid";
+
+  const sections = new Map();
+  apps.forEach((app) => {
+    const letter = app.name[0].toUpperCase();
+    if (!sections.has(letter)) sections.set(letter, []);
+    sections.get(letter).push(app);
+  });
+
+  let html = "";
+  [...sections.keys()].sort().forEach((letter) => {
+    html += `<div class="section-title" id="sec-${letter}">${letter}</div>`;
+    const group = sections.get(letter);
+    if (isGrid) {
+      for (let i = 0; i < group.length; i += state.columns) {
+        const row = group.slice(i, i + state.columns);
+        html += `<div class="grid-row">${row
+          .map(
+            (app) => `
+            <div class="grid-cell" data-app="${app.name}">
+              ${iconHtml(app, 46, 13, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
+              <div class="label">${app.name}</div>
+            </div>`
+          )
+          .join("")}
+          ${Array.from({ length: state.columns - row.length }).map(() => '<div style="flex:1"></div>').join("")}
+        </div>`;
+      }
+    } else {
+      html += group
+        .map(
+          (app) => `
+          <div class="list-row" data-app="${app.name}">
+            ${iconHtml(app, 34, 10, state.showNotificationBadges && state.notificationAccess ? (state.notifications[app.name] || 0) : 0)}
+            <div class="label">${app.name}</div>
+            ${app.work ? '<span class="badge">kerja</span>' : ""}
+          </div>`
+        )
+        .join("");
+    }
+  });
+
+  list.innerHTML = html;
+  list.scrollTop = 0;
+  $("drawer-empty").style.display = apps.length ? "none" : "block";
+  bindAppTargets(list);
+
+  $("view-icon").innerHTML = isGrid
+    ? '<path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/>'
+    : '<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>';
+
+  const rail = $("rail");
+  const showRail = !q;
+  rail.style.display = showRail ? "" : "none";
+  if (showRail) {
+    const letters = [...sections.keys()].sort();
+    rail.innerHTML = letters.map((l) => `<button data-letter="${l}">${l}</button>`).join("");
+    rail.querySelectorAll("button").forEach((btn) => {
+      btn.onclick = () => {
+        const target = $(`sec-${btn.dataset.letter}`);
+        if (target) target.scrollIntoView({ block: "start", behavior: "smooth" });
+      };
+    });
+  }
+}
+
+/* --------------------------------------------------------------- app actions */
+function openAppSheet(app) {
+  const content = $("app-sheet-content");
+  content.innerHTML = `
+    <div class="sheet-app" data-sheet-open>
+      ${iconHtml(app, 44, 12)}
+      <div>
+        <div class="name">${app.name}</div>
+        <div class="hint">${app.work ? "Profil kerja · " : ""}Ketuk untuk buka</div>
+      </div>
+    </div>
+    ${
+      app.short && app.short.length
+        ? `<div class="divider" style="margin:4px 0"></div>
+           <div class="shortcuts">
+             ${app.short
+               .map(
+                 (s, idx) => `
+               <div class="shortcut" data-shortcut="${s}">
+                 <div class="sq" style="${iconStyle(app, 10)}opacity:${0.95 - idx * 0.12}"></div>
+                 <div class="label">${s}</div>
+               </div>`
+               )
+               .join("")}
+           </div>`
+        : ""
+    }
+    <div class="divider" style="margin:4px 0"></div>
+    <div class="sheet-action" data-action="pin">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4l2.4 5 5.6.8-4 4 .9 5.6L12 16.8 7.1 19.4l.9-5.6-4-4 5.6-.8z" stroke-linejoin="round"/></svg>
+      ${state.favoriteNames.includes(app.name) ? "Lepas dari favorit" : "Pin ke beranda"}
+    </div>
+    <div class="sheet-action" data-action="hide">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3l18 18M10.6 10.7a2 2 0 002.8 2.8" stroke-linecap="round"/><path d="M6.3 6.5C4.4 7.9 3 10 3 12c1.8 3.6 5.1 6 9 6 1.4 0 2.7-.3 3.9-.9M9.9 6.2A9.7 9.7 0 0112 6c3.9 0 7.2 2.4 9 6a12 12 0 01-2.2 3"/></svg>
+      Sembunyikan aplikasi
+    </div>
+    <div class="sheet-action" data-action="info">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>
+      Info aplikasi
+    </div>
+    <div class="sheet-action danger" data-action="uninstall">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v6M14 11v6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Copot pemasangan
+    </div>`;
+
+  content.querySelector("[data-sheet-open]").onclick = () => {
+    closeSheets();
+    toast(`Membuka ${app.name}`);
+  };
+  content.querySelectorAll("[data-shortcut]").forEach((el) => {
+    el.onclick = () => {
+      closeSheets();
+      toast(`${app.name} · ${el.dataset.shortcut}`);
+    };
+  });
+  content.querySelectorAll("[data-action]").forEach((el) => {
+    el.onclick = () => {
+      const action = el.dataset.action;
+      closeSheets();
+      if (action === "pin") {
+        const idx = state.favoriteNames.indexOf(app.name);
+        if (idx >= 0) {
+          state.favoriteNames.splice(idx, 1);
+          toast(`Lepas ${app.name} dari beranda`);
+        } else {
+          state.favoriteNames.push(app.name);
+          toast(`${app.name} dipin ke beranda`);
+        }
+        renderHome();
+      } else if (action === "hide") {
+        if (!state.hiddenNames.includes(app.name)) state.hiddenNames.push(app.name);
+        state.favoriteNames = state.favoriteNames.filter((n) => n !== app.name);
+        renderHome();
+        renderDrawer();
+        renderHiddenList();
+        toast(`${app.name} disembunyikan`);
+      } else if (action === "info") {
+        toast(`Info aplikasi ${app.name}`);
+      } else {
+        toast(`Dialog copot ${app.name}`);
+      }
+    };
+  });
+
+  openSheet("app-sheet");
+}
+
+function openSheet(id) {
+  $("sheet-scrim").classList.add("show");
+  $(id).classList.add("show");
+}
+
+function closeSheets() {
+  $("sheet-scrim").classList.remove("show");
+  ["app-sheet", "home-sheet", "hidden-sheet", "news-apps-sheet", "article-editor-sheet"].forEach((id) => $(id).classList.remove("show"));
+}
+
+/* --------------------------------------------------------- long press binder */
+function bindAppTargets(root) {
+  root.querySelectorAll("[data-app]").forEach((el) => {
+    const app = appByName(el.dataset.app);
+    if (!app) return;
+    let timer = null;
+    let longPressed = false;
+
+    const start = (e) => {
+      if (e.type === "mousedown" && e.button !== 0) return;
+      longPressed = false;
+      timer = setTimeout(() => {
+        longPressed = true;
+        openAppSheet(app);
+      }, 480);
+    };
+    const cancel = () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
+    };
+    const end = (e) => {
+      cancel();
+      if (longPressed) {
+        e.preventDefault();
+        return;
+      }
+      if (state.screen === "drawer") closeDrawer();
+      toast(`Membuka ${app.name}`);
+    };
+
+    el.addEventListener("pointerdown", start);
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointerleave", cancel);
+    el.addEventListener("pointercancel", cancel);
+    // Pointerup handles touch/mouse. A zero-detail click is keyboard activation;
+    // handling it here keeps inline article buttons accessible without double launches.
+    el.addEventListener("click", (e) => {
+      if (e.detail !== 0) return;
+      if (state.screen === "drawer") closeDrawer();
+      toast(`Membuka ${app.name}`);
+    });
+    el.addEventListener("contextmenu", (e) => e.preventDefault());
+  });
+}
+
+/* -------------------------------------------------------------- navigation */
+function setScreen(name) {
+  state.screen = name;
+  if (name === "home") closeDrawer();
+  if (name === "drawer") openDrawer(false);
+  if (name === "settings") openSettings();
+  document.querySelectorAll("#seg-screen button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.screen === name);
+  });
+}
+
+function openDrawer(focus) {
+  state.screen = "drawer";
+  state.focusDrawerSearch = focus;
+  renderDrawer();
+  $("settings").classList.remove("open");
+  $("statusbar").classList.add("on-app");
+  $("drawer").classList.add("open");
+  $("drawer").setAttribute("aria-hidden", "false");
+  document.querySelectorAll("#seg-screen button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.screen === "drawer");
+  });
+  if (focus) {
+    setTimeout(() => {
+      const input = state.style === "folio" ? $("folio-search-input") : $("search-input");
+      if (input) input.focus();
+      const box = $("search-box");
+      if (box) box.classList.add("focus");
+    }, 220);
+  }
+}
+
+function closeDrawer() {
+  state.screen = "home";
+  state.focusDrawerSearch = false;
+  $("statusbar").classList.remove("on-app");
+  $("drawer").classList.remove("open");
+  const input = state.style === "folio" ? $("folio-search-input") : $("search-input");
+  if (input) input.blur();
+  const box = $("search-box");
+  if (box) box.classList.remove("focus");
+  document.querySelectorAll("#seg-screen button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.screen === "home");
+  });
+}
+
+function openSettings() {
+  state.screen = "settings";
+  $("drawer").classList.remove("open");
+  $("statusbar").classList.add("on-app");
+  $("settings").classList.add("open");
+  document.querySelectorAll("#seg-screen button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.screen === "settings");
+  });
+}
+
+function closeSettings() {
+  $("settings").classList.remove("open");
+  $("statusbar").classList.remove("on-app");
+  state.screen = "home";
+  document.querySelectorAll("#seg-screen button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.screen === "home");
+  });
+}
+
+function performGesture(action) {
+  switch (action) {
+    case "NONE": return;
+    case "OPEN_DRAWER": openDrawer(false); return;
+    case "OPEN_SEARCH":
+      if (state.style === "folio") {
+        state.homeSearchExpanded = true;
+        renderFolioHome();
+        setTimeout(() => $("home-search-input")?.focus(), 0);
+      } else {
+        openDrawer(true);
+      }
+      return;
+    case "OPEN_SETTINGS": openSettings(); return;
+    case "OPEN_HOME_MENU": openSheet("home-sheet"); return;
+    case "OPEN_NOTIFICATIONS": toast("Membuka panel notifikasi sistem"); return;
+    case "OPEN_QUICK_SETTINGS": toast("Membuka pengaturan cepat"); return;
+    case "OPEN_RECENTS": toast("Membuka aplikasi terbaru"); return;
+    case "LOCK_SCREEN": toast("Kunci layar (simulasi)"); return;
+    case "TAKE_SCREENSHOT": toast("Mengambil screenshot (simulasi)"); return;
+    case "OPEN_CALENDAR": toast("Membuka Kalender"); return;
+    case "OPEN_NOTES": toast(`Membuka ${state.notesApp}`); return;
+  }
+}
+
+/* ----------------------------------------------------------- settings screen */
+function renderSettings() {
+  const themeChip = (value, label) =>
+    `<button class="chip ${state.theme === value ? "on" : ""}" data-set-theme="${value}">${label}</button>`;
+  const layoutChip = (value, label) =>
+    `<button class="chip ${state.layout === value ? "on" : ""}" data-set-layout="${value}">${label}</button>`;
+  const colChip = (value) =>
+    `<button class="chip ${state.columns === value ? "on" : ""}" data-set-cols="${value}">${value}</button>`;
+
+  const styleChip = (value, label) =>
+    `<button class="chip ${state.style === value ? "on" : ""}" data-set-style="${value}">${label}</button>`;
+  const fontChip = (value) => `
+    <button class="chip ${state.fontChoice === value ? "on" : ""}" data-set-font="${value}">${FONT_CHOICES[value].label}</button>`;
+  const iconPackChip = (value) => `
+    <button class="chip ${state.iconPack === value ? "on" : ""}" data-set-icon-pack="${value}">${ICON_PACK_CHOICES[value].label}</button>`;
+  const gestureRow = (slot, label) => `
+    <div class="gesture-setting"><label>${label}</label>
+      <select class="gesture-select" data-gesture-slot="${slot}" aria-label="${label}">
+        ${Object.entries(GESTURE_ACTIONS).map(([action, text]) => `<option value="${action}" ${state[slot] === action ? "selected" : ""}>${text}</option>`).join("")}
+      </select>
+    </div>`;
+
+  $("settings-body").innerHTML = `
+    <div class="card-wrap">
+      <div class="card-title">Tampilan</div>
+      <div class="card">
+        <div class="sub">Gaya</div>
+        <div class="chips">${styleChip("folio", "Folio koran")}${styleChip("minimal", "Minimalis")}</div>
+        <div class="sub">Jenis font</div>
+        <div class="chips">${Object.keys(FONT_CHOICES).map(fontChip).join("")}</div>
+        <div class="sub">${FONT_CHOICES[state.fontChoice].description}</div>
+        <div class="sub">Paket ikon</div>
+        <div class="chips">${Object.keys(ICON_PACK_CHOICES).map(iconPackChip).join("")}</div>
+        <div class="sub">${ICON_PACK_CHOICES[state.iconPack].description}</div>
+        <div class="sub">Tema</div>
+        <div class="chips">${themeChip("kaleido", "Kaleido")}${themeChip("kaleido-night", "Kaleido malam")}${themeChip("light", "Terang")}${themeChip("dark", "Gelap")}${themeChip("amoled", "AMOLED")}</div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Warna dinamis</div><div class="d">Ikuti warna wallpaper (Android 12+)</div></div>
+          <div class="sw on"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Jam besar</div></div>
+          <div class="sw ${state.clock ? "on" : ""}" data-sw="clock"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Tampilkan tanggal</div></div>
+          <div class="sw ${state.date ? "on" : ""}" data-sw="date"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Baris ringkas</div><div class="d">Ikon dan teks lebih kecil di beranda</div></div>
+          <div class="sw ${state.compact ? "on" : ""}" data-sw="compact"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Gestur beranda</div>
+      <div class="card">
+        ${gestureRow("doubleTapAction", "Ketuk dua kali")}
+        ${gestureRow("longPressAction", "Tekan lama")}
+        ${gestureRow("swipeLeftAction", "Geser ke kiri")}
+        ${gestureRow("swipeRightAction", "Geser ke kanan")}
+        ${gestureRow("swipeUpAction", "Geser ke atas")}
+        ${gestureRow("twoFingerSwipeUpAction", "Geser dua jari ke atas")}
+        ${gestureRow("twoFingerSwipeDownAction", "Geser dua jari ke bawah")}
+        <div class="sub">Aksi kunci layar, panel, recents, pengaturan cepat, dan screenshot memakai aksi sistem tanpa membaca konten layar.</div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Halaman berita</div>
+      <div class="card">
+        <input class="news-location-input" data-news-location value="${escapeHtml(state.newsLocation)}" aria-label="Kota dateline" placeholder="Rembang" />
+        <div class="switch-row">
+          <div class="text"><div class="t">Artikel berita</div><div class="d">Artikel otomatis atau manual di halaman depan</div></div>
+          <div class="sw ${state.showNewsArticle ? "on" : ""}" data-sw="showNewsArticle"></div>
+        </div>
+        <div class="action-row" data-edit-article>
+          <div class="text"><div class="t">Edit artikel manual</div><div class="d">Tulis judul dan isi sendiri tanpa ditimpa notifikasi</div></div>
+          <div class="v">${state.newsManualEnabled ? "Manual aktif" : (state.newsManualHeadline || state.newsManualBody ? "Draf tersimpan" : "Otomatis")}</div>
+        </div>
+        <div class="action-row" data-news-apps>
+          <div class="text"><div class="t">Aplikasi di artikel</div><div class="d">Hanya aplikasi ini yang menjadi shortcut dan sumber notifikasi</div></div>
+          <div class="v">${state.newsApps === null ? "Otomatis" : `${state.newsApps.length} dipilih`}</div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Daftar aplikasi di artikel</div><div class="d">Sembunyikan chip tanpa mengubah artikel dan filter notifikasi</div></div>
+          <div class="sw ${state.showNewsAppShelf ? "on" : ""}" data-sw="showNewsAppShelf"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Shortcut aplikasi di artikel</div><div class="d">Nama aplikasi dan hyperlink Manual dapat diketuk</div></div>
+          <div class="sw ${state.showNewsAppLinks ? "on" : ""}" data-sw="showNewsAppLinks"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Ringkasan notifikasi di artikel</div><div class="d">Jumlah notifikasi aktif menjadi berita</div></div>
+          <div class="sw ${state.showNewsUnread ? "on" : ""}" data-sw="showNewsUnread"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Foto utama</div><div class="d">Foto monokrom di atas artikel</div></div>
+          <div class="sw ${state.showNewsPhoto ? "on" : ""}" data-sw="showNewsPhoto"></div>
+        </div>
+        <label class="news-image-picker">Gambar artikel: ${state.newsImage ? "kustom" : "bawaan"}
+          <input type="file" accept="image/*" data-news-image />
+        </label>
+        ${state.newsImage ? '<button type="button" class="text-action" data-reset-news-image>Gunakan gambar bawaan</button>' : ""}
+        <div class="switch-row">
+          <div class="text"><div class="t">Widget kalender & catatan</div><div class="d">Dua kartu interaktif setelah artikel</div></div>
+          <div class="sw ${state.showNewsWidgets ? "on" : ""}" data-sw="showNewsWidgets"></div>
+        </div>
+        <div class="action-row" data-notes-app>
+          <div class="text"><div class="t">Aplikasi catatan</div><div class="d">Dipakai tautan dan widget Catatan</div></div>
+          <div class="v">${escapeHtml(state.notesApp)}</div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Akses notifikasi</div><div class="d">Simulasi jumlah notifikasi aktif di prototipe</div></div>
+          <div class="sw ${state.notificationAccess ? "on" : ""}" data-sw="notificationAccess"></div>
+        </div>
+        <div class="sub">Isi pesan tidak dibaca atau disimpan. Jumlah adalah estimasi dari notifikasi aktif.</div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Laci aplikasi</div>
+      <div class="card">
+        <div class="sub">Tata letak</div>
+        <div class="chips">${layoutChip("list", "Daftar")}${layoutChip("grid", "Kisi")}</div>
+        <div class="sub">Jumlah kolom</div>
+        <div class="chips">${[3, 4, 5, 6].map(colChip).join("")}</div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Rel alfabet</div><div class="d">Lompat cepat antar huruf</div></div>
+          <div class="sw on"></div>
+        </div>
+        <div class="switch-row">
+          <div class="text"><div class="t">Getaran</div></div>
+          <div class="sw on"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Aplikasi</div>
+      <div class="card">
+        <div class="switch-row">
+          <div class="text"><div class="t">Badge notifikasi</div><div class="d">Jumlah pada ikon beranda dan laci</div></div>
+          <div class="sw ${state.showNotificationBadges ? "on" : ""}" data-sw="showNotificationBadges"></div>
+        </div>
+        <div class="action-row" data-open-hidden>
+          <div class="text"><div class="t">Aplikasi tersembunyi</div></div>
+          <div class="v">${state.hiddenNames.length}</div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Sistem</div>
+      <div class="card">
+        <div class="action-row">
+          <div class="text"><div class="t">Launcher default</div></div>
+          <div class="v">Aktif</div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="action-row">
+          <div class="text"><div class="t">Wallpaper</div><div class="d">Buka pemilih wallpaper sistem</div></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="action-row">
+          <div class="text"><div class="t">Muat ulang aplikasi</div><div class="d">Sinkronkan daftar aplikasi terpasang</div></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Cadangan</div>
+      <div class="card">
+        <div class="action-row">
+          <div class="text"><div class="t">Ekspor pengaturan</div><div class="d">Simpan tema, favorit, dan aplikasi tersembunyi</div></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="action-row">
+          <div class="text"><div class="t">Impor pengaturan</div><div class="d">Pulihkan dari file backup BitLauncher</div></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-title">Tentang</div>
+      <div class="card">
+        <div class="action-row">
+          <div class="text">
+            <div class="t">BitLauncher 0.5.0</div>
+            <div class="d" style="margin-top:4px; line-height:16px">Folio koran di atas kertas Kaleido, atau minimalis ala Niagara + Minima.</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  $("settings-body").querySelectorAll("[data-set-style]").forEach((b) => {
+    b.onclick = () => applyStyle(b.dataset.setStyle);
+  });
+  $("settings-body").querySelectorAll("[data-set-font]").forEach((b) => {
+    b.onclick = () => setFontChoice(b.dataset.setFont);
+  });
+  $("settings-body").querySelectorAll("[data-set-icon-pack]").forEach((b) => {
+    b.onclick = () => setIconPack(b.dataset.setIconPack);
+  });
+  $("settings-body").querySelectorAll("[data-set-theme]").forEach((b) => {
+    b.onclick = () => {
+      applyTheme(b.dataset.setTheme);
+      renderSettings();
+    };
+  });
+  $("settings-body").querySelectorAll("[data-set-layout]").forEach((b) => {
+    b.onclick = () => {
+      setLayout(b.dataset.setLayout);
+      renderSettings();
+    };
+  });
+  $("settings-body").querySelectorAll("[data-set-cols]").forEach((b) => {
+    b.onclick = () => {
+      setColumns(Number(b.dataset.setCols));
+      renderSettings();
+    };
+  });
+  $("settings-body").querySelectorAll("[data-sw]").forEach((sw) => {
+    sw.onclick = () => {
+      const key = sw.dataset.sw;
+      state[key] = !state[key];
+      renderHome();
+      renderDrawer();
+      renderSettings();
+    };
+  });
+  const locationInput = $("settings-body").querySelector("[data-news-location]");
+  if (locationInput) {
+    locationInput.oninput = (e) => {
+      state.newsLocation = e.target.value.slice(0, 40);
+      renderHome();
+    };
+  }
+  $("settings-body").querySelectorAll("[data-gesture-slot]").forEach((select) => {
+    select.onchange = () => {
+      state[select.dataset.gestureSlot] = select.value;
+      renderHome();
+      toast(`${GESTURE_ACTIONS[select.value]} dipilih`);
+    };
+  });
+  const imageInput = $("settings-body").querySelector("[data-news-image]");
+  if (imageInput) imageInput.onchange = () => {
+    const file = imageInput.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Pilih gambar berukuran maksimal 10 MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.newsImage = String(reader.result);
+      renderHome();
+      renderSettings();
+      toast("Gambar artikel diganti");
+    };
+    reader.onerror = () => toast("Gambar tidak dapat dibaca");
+    reader.readAsDataURL(file);
+  };
+  const resetImage = $("settings-body").querySelector("[data-reset-news-image]");
+  if (resetImage) resetImage.onclick = () => {
+    state.newsImage = "";
+    renderHome();
+    renderSettings();
+    toast("Gambar bawaan dipulihkan");
+  };
+  const editArticleRow = $("settings-body").querySelector("[data-edit-article]");
+  if (editArticleRow) editArticleRow.onclick = () => openArticleEditor();
+  const newsAppsRow = $("settings-body").querySelector("[data-news-apps]");
+  if (newsAppsRow) newsAppsRow.onclick = () => {
+    renderNewsAppsList();
+    openSheet("news-apps-sheet");
+  };
+  const notesRow = $("settings-body").querySelector("[data-notes-app]");
+  if (notesRow) notesRow.onclick = () => {
+    state.notesApp = state.notesApp === "Catatan" ? "Notion" : "Catatan";
+    renderHome();
+    renderSettings();
+    toast(`Aplikasi catatan: ${state.notesApp}`);
+  };
+  const hiddenRow = $("settings-body").querySelector("[data-open-hidden]");
+  if (hiddenRow) hiddenRow.onclick = () => openSheet("hidden-sheet");
+}
+
+function automaticNewsAppNames() {
+  const favorites = state.favoriteNames.map(appByName).filter(Boolean);
+  return (favorites.length ? favorites : visibleApps()).slice(0, 3).map((app) => app.name);
+}
+
+function renderNewsAppsList() {
+  const query = $("news-apps-search").value.trim().toLowerCase();
+  const effective = state.newsApps === null ? automaticNewsAppNames() : state.newsApps;
+  const choices = APPS.filter((app) => !query || app.name.toLowerCase().includes(query));
+  $("news-apps-list").innerHTML = `
+    <div class="hidden-row news-app-choice" data-news-apps-auto>
+      <div class="label">Otomatis<div class="d">Favorit atau tiga aplikasi pertama</div></div>
+      <span class="news-app-check">${state.newsApps === null ? "✓" : ""}</span>
+    </div>
+    ${choices.map((app) => `
+      <div class="hidden-row news-app-choice" data-news-app-toggle="${escapeHtml(app.name)}">
+        ${iconHtml(app, 32, 9)}
+        <div class="label">${escapeHtml(app.name)}</div>
+        <span class="news-app-check">${effective.includes(app.name) ? "✓" : ""}</span>
+      </div>`).join("")}`;
+  $("news-apps-list").querySelector("[data-news-apps-auto]").onclick = () => {
+    state.newsApps = null;
+    renderNewsAppsList(); renderHome(); renderSettings();
+  };
+  $("news-apps-list").querySelectorAll("[data-news-app-toggle]").forEach((row) => {
+    row.onclick = () => {
+      const name = row.dataset.newsAppToggle;
+      const current = (state.newsApps === null ? automaticNewsAppNames() : [...state.newsApps]);
+      state.newsApps = current.includes(name) ? current.filter((item) => item !== name) : [...current, name];
+      renderNewsAppsList(); renderHome(); renderSettings();
+    };
+  });
+}
+
+function renderHiddenList() {
+  $("hidden-list").innerHTML = state.hiddenNames
+    .map((name) => appByName(name))
+    .filter(Boolean)
+    .map(
+      (app) => `
+      <div class="hidden-row" data-hidden="${app.name}">
+        ${iconHtml(app, 32, 9)}
+        <div class="label">${app.name}</div>
+        <div class="sw on" data-unhide="${app.name}"></div>
+      </div>`
+    )
+    .join("");
+
+  $("hidden-list").querySelectorAll("[data-unhide]").forEach((sw) => {
+    sw.onclick = () => {
+      state.hiddenNames = state.hiddenNames.filter((n) => n !== sw.dataset.unhide);
+      renderHiddenList();
+      renderDrawer();
+      renderSettings();
+      toast(`${sw.dataset.unhide} ditampilkan lagi`);
+    };
+  });
+}
+
+/* ------------------------------------------------------------- state setters */
+function updateFontVariables() {
+  const choice = FONT_CHOICES[state.fontChoice] || FONT_CHOICES.STYLE_DEFAULT;
+  screenEl.style.setProperty("--serif", choice.stack || '"Lora", Georgia, "Times New Roman", serif');
+  screenEl.style.setProperty("--sans", choice.stack || '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif');
+}
+
+function setFontChoice(choice) {
+  if (!FONT_CHOICES[choice]) return;
+  state.fontChoice = choice;
+  updateFontVariables();
+  renderSettings();
+}
+
+function setIconPack(choice) {
+  if (!ICON_PACK_CHOICES[choice]) return;
+  state.iconPack = choice;
+  renderHome();
+  renderDrawer();
+  renderHiddenList();
+  renderSettings();
+  toast(`${ICON_PACK_CHOICES[choice].label} dipilih`);
+}
+
+function applyTheme(theme) {
+  state.theme = theme;
+  screenEl.dataset.theme = theme;
+  document.querySelectorAll("#seg-theme button, #seg-theme-classic button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.theme === theme);
+  });
+  renderHome();
+  renderDrawer();
+}
+
+function applyStyle(style) {
+  state.style = style;
+  updateFontVariables();
+  screenEl.dataset.theme = state.theme;
+  screenEl.classList.toggle("folio", style === "folio");
+  document.querySelectorAll("#seg-style button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.style === style);
+  });
+  renderHome();
+  renderDrawer();
+  renderSettings();
+}
+
+function setLayout(layout) {
+  state.layout = layout;
+  document.querySelectorAll("#seg-layout button").forEach((b) => b.classList.toggle("on", b.dataset.layout === layout));
+  renderDrawer();
+}
+
+function setColumns(cols) {
+  state.columns = cols;
+  document.querySelectorAll("#seg-columns button").forEach((b) => b.classList.toggle("on", Number(b.dataset.cols) === cols));
+  renderDrawer();
+}
+
+function setToggle(name, value) {
+  state[name] = value;
+  document.querySelectorAll("#seg-home button, #seg-news button").forEach((b) => {
+    b.classList.toggle("on", !!state[b.dataset.toggle]);
+  });
+  renderHome();
+  renderDrawer();
+  renderSettings();
+}
+
+/* -------------------------------------------------------------------- events */
+function bindHomeChrome() {
+  const pill = $("pill-search");
+  if (pill) pill.onclick = () => openDrawer(true);
+  const settings = $("home-settings");
+  if (settings) settings.onclick = () => openSettings();
+
+  const zone = $("grabber-zone");
+  if (!zone) return;
+  let dragStart = null;
+  zone.onpointerdown = (e) => {
+    dragStart = e.clientY;
+    if (zone.setPointerCapture) zone.setPointerCapture(e.pointerId);
+  };
+  zone.onpointerup = (e) => {
+    if (dragStart !== null && e.clientY - dragStart < -18) performGesture(state.swipeUpAction);
+    dragStart = null;
+  };
+  zone.onpointermove = (e) => {
+    if (dragStart !== null && e.clientY - dragStart < -40) {
+      performGesture(state.swipeUpAction);
+      dragStart = null;
+    }
+  };
+}
+
+function bindDrawerChrome() {
+  const grab = $("drawer-grab");
+  if (grab) grab.onclick = () => closeDrawer();
+  const settings = $("drawer-settings");
+  if (settings) settings.onclick = () => openSettings();
+  const toggle = $("toggle-view");
+  if (toggle) toggle.onclick = () => setLayout(state.layout === "grid" ? "list" : "grid");
+
+  const input = $("search-input");
+  if (input) {
+    input.oninput = (e) => {
+      state.query = e.target.value;
+      $("search-clear").style.display = state.query ? "grid" : "none";
+      renderMinimalDrawer();
+    };
+    input.onfocus = () => $("search-box").classList.add("focus");
+    input.onblur = () => $("search-box").classList.remove("focus");
+  }
+  const clear = $("search-clear");
+  if (clear) {
+    clear.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      state.query = "";
+      $("search-input").value = "";
+      clear.style.display = "none";
+      renderMinimalDrawer();
+      $("search-input").focus();
+    };
+  }
+}
+
+$("sheet-scrim").onclick = closeSheets;
+$("save-manual-article").onclick = () => saveArticleEditor(true);
+$("save-automatic-article").onclick = () => saveArticleEditor(false);
+$("manual-headline").addEventListener("input", (event) => {
+  $("manual-headline-count").textContent = `${event.target.value.length}/160`;
+});
+$("manual-body").addEventListener("input", (event) => {
+  $("manual-body-count").textContent = `${event.target.value.length}/6000 · Baris baru dipertahankan`;
+  renderManualLinkList();
+});
+$("manual-link-search").addEventListener("input", renderManualLinkAppChoices);
+$("insert-manual-link").onclick = insertManualLinkFromEditor;
+$("cancel-edit-manual-link").onclick = resetManualLinkEditor;
+
+// Configurable home gestures: tap, long-press, horizontal, and two-finger vertical swipes.
+let homePressTimer = null;
+let lastTap = 0;
+let homeSwipe = null;
+let twoFingerStartY = null;
+let twoFingerTriggered = false;
+const homePointers = new Map();
+const homeLayer = $("home");
+const homeTargetExcluded = (target) => target.closest(
+  "button, input, select, .fav-row, .folio-row, .news-access, .pill, .circle-btn, .grabber-zone, .news-gesture-footer, [data-open-drawer], [data-open-settings]"
+);
+const pointerCenterY = () => [...homePointers.values()].reduce((sum, point) => sum + point.y, 0) / homePointers.size;
+
+homeLayer.addEventListener("pointerdown", (e) => {
+  if (homeTargetExcluded(e.target)) return;
+  if (e.isPrimary !== false) homePointers.clear();
+  homePointers.set(e.pointerId ?? 1, { x: e.clientX, y: e.clientY });
+  if (homePointers.size >= 2) {
+    clearTimeout(homePressTimer);
+    homeSwipe = null;
+    lastTap = 0;
+    if (homePointers.size === 2) {
+      twoFingerStartY = pointerCenterY();
+      twoFingerTriggered = false;
+    }
+    return;
+  }
+
+  homeSwipe = { x: e.clientX, y: e.clientY };
+  homePressTimer = setTimeout(() => performGesture(state.longPressAction), 500);
+  const now = Date.now();
+  if (now - lastTap < 320) {
+    clearTimeout(homePressTimer);
+    performGesture(state.doubleTapAction);
+    lastTap = 0;
+  } else {
+    lastTap = now;
+  }
+});
+
+homeLayer.addEventListener("pointermove", (e) => {
+  const id = e.pointerId ?? 1;
+  if (!homePointers.has(id)) return;
+  homePointers.set(id, { x: e.clientX, y: e.clientY });
+  if (homePointers.size < 2 || twoFingerStartY === null || twoFingerTriggered) return;
+  const distance = pointerCenterY() - twoFingerStartY;
+  if (Math.abs(distance) > 80) {
+    const action = distance < 0 ? state.twoFingerSwipeUpAction : state.twoFingerSwipeDownAction;
+    if (action !== "NONE") {
+      twoFingerTriggered = true;
+      homePointers.clear();
+      twoFingerStartY = null;
+      twoFingerTriggered = false;
+      homeSwipe = null;
+      clearTimeout(homePressTimer);
+      performGesture(action);
+    }
+  }
+});
+
+homeLayer.addEventListener("pointerup", (e) => {
+  const id = e.pointerId ?? 1;
+  const wasTwoFinger = twoFingerStartY !== null || homePointers.size > 1;
+  homePointers.delete(id);
+  clearTimeout(homePressTimer);
+  if (wasTwoFinger) {
+    if (homePointers.size < 2) {
+      twoFingerStartY = null;
+      twoFingerTriggered = false;
+    }
+    homeSwipe = null;
+    return;
+  }
+  if (homeSwipe && state.screen === "home") {
+    const dx = e.clientX - homeSwipe.x;
+    const dy = e.clientY - homeSwipe.y;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
+      lastTap = 0;
+      performGesture(dx < 0 ? state.swipeLeftAction : state.swipeRightAction);
+    }
+  }
+  homeSwipe = null;
+});
+
+homeLayer.addEventListener("pointercancel", (e) => {
+  homePointers.delete(e.pointerId ?? 1);
+  clearTimeout(homePressTimer);
+  homeSwipe = null;
+  if (homePointers.size < 2) {
+    twoFingerStartY = null;
+    twoFingerTriggered = false;
+  }
+});
+homeLayer.addEventListener("pointerleave", () => clearTimeout(homePressTimer));
+
+// Swipe up on the minimal grabber to run the configured action.
+let dragStart = null;
+$("grabber-zone").addEventListener("pointerdown", (e) => {
+  dragStart = e.clientY;
+  e.currentTarget.setPointerCapture(e.pointerId);
+});
+$("grabber-zone").addEventListener("pointerup", (e) => {
+  if (dragStart !== null && e.clientY - dragStart < -18) performGesture(state.swipeUpAction);
+  dragStart = null;
+});
+$("grabber-zone").addEventListener("pointermove", (e) => {
+  if (dragStart !== null && e.clientY - dragStart < -40) {
+    performGesture(state.swipeUpAction);
+    dragStart = null;
+  }
+});
+
+// Home menu events.
+$("home-sheet-content").querySelectorAll("[data-menu]").forEach((el) => {
+  el.onclick = () => {
+    closeSheets();
+    const menu = el.dataset.menu;
+    if (menu === "settings") openSettings();
+    if (menu === "wallpaper") toast("Pemilih wallpaper sistem");
+    if (menu === "default") toast("Dialog launcher default");
+    if (menu === "refresh") toast("Daftar aplikasi dimuat ulang");
+  };
+});
+
+// Panel controls.
+document.querySelectorAll("#seg-screen button").forEach((b) => {
+  b.onclick = () => setScreen(b.dataset.screen);
+});
+document.querySelectorAll("#seg-theme button, #seg-theme-classic button").forEach((b) => {
+  b.onclick = () => applyTheme(b.dataset.theme);
+});
+document.querySelectorAll("#seg-style button").forEach((b) => {
+  b.onclick = () => applyStyle(b.dataset.style);
+});
+document.querySelectorAll("#seg-layout button").forEach((b) => {
+  b.onclick = () => setLayout(b.dataset.layout);
+});
+document.querySelectorAll("#seg-columns button").forEach((b) => {
+  b.onclick = () => setColumns(Number(b.dataset.cols));
+});
+document.querySelectorAll("#seg-home button, #seg-news button").forEach((b) => {
+  b.onclick = () => setToggle(b.dataset.toggle, !state[b.dataset.toggle]);
+});
+$("trigger-sheet").onclick = () => openAppSheet(appByName("WhatsApp"));
+$("trigger-menu").onclick = () => openSheet("home-sheet");
+$("simulate-news").onclick = () => {
+  state.notifications = { "WhatsApp": 3, "Gmail": 2 };
+  state.notificationAccess = true;
+  renderHome();
+  renderDrawer();
+  renderSettings();
+  toast("3 pesan WhatsApp dan 2 Gmail menanti");
+};
+$("clear-news").onclick = () => {
+  state.notifications = {};
+  renderHome();
+  renderDrawer();
+  toast("Semua notifikasi contoh ditandai dibaca");
+};
+
+// Status bar clock stays in sync with the home clock.
+setInterval(() => {
+  const minimalClock = $("clock");
+  if (minimalClock) minimalClock.textContent = clockNow();
+  const folioClock = document.querySelector(".folio-clock");
+  if (folioClock) folioClock.textContent = clockNow();
+  $("sb-time").textContent = clockNow();
+}, 15000);
+
+/* ------------------------------------------------------------------- initial */
+HOME_MINIMAL = $("home").innerHTML;
+DRAWER_MINIMAL = $("drawer").innerHTML;
+applyStyle(state.style);
+renderHiddenList();
+$("news-apps-search").addEventListener("input", renderNewsAppsList);
+</script>
+</body>
+</html>

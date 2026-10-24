@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">BitLauncher</string>
+    <string name="search_hint">Cari aplikasi</string>
+    <string name="launcher_accessibility_title">BitLauncher — gestur sistem</string>
+    <string name="launcher_accessibility_description">Menjalankan aksi sistem yang dipilih untuk gestur launcher, seperti kunci layar atau panel notifikasi. Tidak membaca, merekam, atau menyimpan konten layar.</string>
+</resources>

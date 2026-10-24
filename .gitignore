@@ -1,0 +1,22 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+.kotlin/
+
+# Local Python caches from the preview renderers
+__pycache__/
+*.py[cod]
+
+# Downloaded CI APKs and verification reports
+artifacts/
