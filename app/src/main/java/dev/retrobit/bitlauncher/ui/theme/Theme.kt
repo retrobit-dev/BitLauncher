@@ -9,6 +9,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
@@ -68,64 +70,63 @@ private val LightScheme = lightColorScheme(
 // E Ink Kaleido renders ~4096 desaturated colours on warm newsprint. Both schemes keep the
 // paper tint, low saturation and a single dark ink colour so the UI looks printed, not lit.
 
-val KaleidoPaper = Color(0xFFE9E4D8)
-val KaleidoPaperDeep = Color(0xFFDED7C7)
-val KaleidoInk = Color(0xFF171614)
-val KaleidoInkSoft = Color(0xFF5C574C)
-val KaleidoRule = Color(0xFF8C8677)
-val KaleidoHairline = Color(0xFFCFC8B9)
+val KaleidoPaper = Color(0xFFE3DFD5)
+val KaleidoPaperDeep = Color(0xFFD6D1C6)
+val KaleidoInk = Color(0xFF1D1C19)
+val KaleidoInkSoft = Color(0xFF666159)
+val KaleidoRule = Color(0xFF979185)
+val KaleidoHairline = Color(0xFFC7C1B6)
 
 private val KaleidoScheme = lightColorScheme(
-    primary = Color(0xFF2F4B44),
-    onPrimary = Color(0xFFF5F0E4),
-    secondary = Color(0xFF9C4B3F),
-    onSecondary = Color(0xFFF5F0E4),
+    primary = Color(0xFF3E433D),
+    onPrimary = Color(0xFFF0ECE2),
+    secondary = Color(0xFF7B584D),
+    onSecondary = Color(0xFFF0ECE2),
     background = KaleidoPaper,
     onBackground = KaleidoInk,
-    surface = Color(0xFFF2EDE3),
+    surface = Color(0xFFEAE6DD),
     onSurface = KaleidoInk,
     surfaceVariant = KaleidoPaperDeep,
     onSurfaceVariant = KaleidoInkSoft,
     outline = KaleidoRule,
     outlineVariant = KaleidoHairline,
-    error = Color(0xFF8E2F26),
+    error = Color(0xFF8B4B42),
 )
 
 private val KaleidoNightScheme = darkColorScheme(
-    primary = Color(0xFFC6B17E),
-    onPrimary = Color(0xFF231E12),
-    secondary = Color(0xFFC98A7C),
-    onSecondary = Color(0xFF231E12),
-    background = Color(0xFF171612),
-    onBackground = Color(0xFFECE6D6),
-    surface = Color(0xFF1E1D18),
-    onSurface = Color(0xFFECE6D6),
-    surfaceVariant = Color(0xFF2A2822),
-    onSurfaceVariant = Color(0xFFA9A291),
-    outline = Color(0xFF6E6858),
-    outlineVariant = Color(0xFF35322A),
-    error = Color(0xFFD97A6C),
+    primary = Color(0xFFB9B09C),
+    onPrimary = Color(0xFF24221C),
+    secondary = Color(0xFFB58C7D),
+    onSecondary = Color(0xFF24221C),
+    background = Color(0xFF191816),
+    onBackground = Color(0xFFE2DED2),
+    surface = Color(0xFF201F1C),
+    onSurface = Color(0xFFE2DED2),
+    surfaceVariant = Color(0xFF2B2925),
+    onSurfaceVariant = Color(0xFFA29C90),
+    outline = Color(0xFF6B665D),
+    outlineVariant = Color(0xFF37342E),
+    error = Color(0xFFC58C7D),
 )
 
 /**
- * Printed accent colours used for index numbers, section marks and rules. They rotate so the
- * front page keeps a subtle four-colour print feel without ever shouting.
+ * Newspaper ink rather than a rainbow accent system. The slight warm-grey variation keeps
+ * adjacent entries legible while remaining close to a monochrome e-paper print.
  */
 private val KaleidoAccentsLight = listOf(
-    Color(0xFF9C4B3F), // rose
-    Color(0xFF4F6B47), // sage
-    Color(0xFF3F5C74), // slate
-    Color(0xFF8A6A25), // ochre
-    Color(0xFF63557A), // mauve
+    Color(0xFF625D55),
+    Color(0xFF746D61),
+    Color(0xFF585B56),
 )
 
 private val KaleidoAccentsNight = listOf(
-    Color(0xFFC98A7C),
-    Color(0xFF92AE86),
-    Color(0xFF8AA6BC),
-    Color(0xFFC4A25E),
-    Color(0xFFA899BE),
+    Color(0xFFA29C90),
+    Color(0xFFB0A795),
+    Color(0xFF93958C),
 )
+
+/** True while an e-paper theme is active; used to desaturate app and shortcut icons. */
+val LocalEpaper = compositionLocalOf { false }
 
 @Composable
 fun folioAccent(index: Int): Color {
@@ -248,9 +249,13 @@ fun BitLauncherTheme(
         dark -> DarkScheme
         else -> LightScheme
     }
-    MaterialTheme(
-        colorScheme = scheme,
-        typography = if (settings.style == LauncherStyle.FOLIO) FolioTypography else MinimalTypography,
-        content = content,
-    )
+    val epaper = settings.themeMode == ThemeMode.KALEIDO ||
+        settings.themeMode == ThemeMode.KALEIDO_NIGHT
+    CompositionLocalProvider(LocalEpaper provides epaper) {
+        MaterialTheme(
+            colorScheme = scheme,
+            typography = if (settings.style == LauncherStyle.FOLIO) FolioTypography else MinimalTypography,
+            content = content,
+        )
+    }
 }

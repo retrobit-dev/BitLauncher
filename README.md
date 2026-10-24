@@ -68,7 +68,7 @@ Yang bisa dicoba di prototipe:
 | Gaya | Inspirasi | Wujud di BitLauncher |
 |---|---|---|
 | **Folio koran** | Surat kabar + e-paper | Masthead `BITLAUNCHER`, nomor edisi, garis ganda, jam serif, indeks aplikasi dengan *dotted leader*, tombol tinta persegi |
-| **Kaleido** | E Ink Kaleido | Kertas gading, tinta gelap, aksen rose/sage/slate/ochre/mauve yang desaturasi; varian malam dengan tinta kertas terang |
+| **Kaleido** | E Ink Kaleido | Kertas koran abu-abu hangat, tinta lembut, aksen abu-abu sepi, dan ikon dengan chroma tersisa 8%; varian malam memakai tinta kertas terang |
 | **Minimalis** | Niagara + Minima | Jam besar di atas wallpaper, satu kolom favorit, ruang kosong, bar pencarian membulat |
 | **Kedalaman** | Nova | Tekan lama untuk aksi, shortcut, sembunyikan aplikasi, grid, backup/restore, tema |
 
@@ -80,7 +80,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 
 ### Beranda
 - [x] **Gaya folio koran** dengan masthead, dateline, nomor edisi, dan indeks aplikasi editorial
-- [x] Palet **Kaleido** dan **Kaleido malam**, dengan aksen cetak bergilir per entri
+- [x] Palet **Kaleido** dan **Kaleido malam** seperti koran e-paper, dengan ikon aplikasi yang didesaturasi
 - [x] Menjadi launcher default (`CATEGORY_HOME` + `RoleManager`)
 - [x] Jam besar + tanggal, sadar format 12/24 jam (mengikuti sistem secara default)
 - [x] Ketuk jam → aplikasi alarm, seperti Pixel

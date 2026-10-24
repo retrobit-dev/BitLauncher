@@ -667,31 +667,31 @@
 
   /* ================================================================= folio */
   .screen[data-theme="kaleido"] {
-    --bg: #e9e4d8;
-    --surface: #f2ede3;
-    --on-surface: #171614;
-    --surface-variant: #ded7c7;
-    --on-surface-variant: #5c574c;
-    --outline: #8c8677;
-    --outline-variant: #cfc8b9;
-    --primary: #2f4b44;
-    --on-primary: #f5f0e4;
-    --secondary: #9c4b3f;
-    --error: #8e2f26;
+    --bg: #e3dfd5;
+    --surface: #eae6dd;
+    --on-surface: #1d1c19;
+    --surface-variant: #d6d1c6;
+    --on-surface-variant: #666159;
+    --outline: #979185;
+    --outline-variant: #c7c1b6;
+    --primary: #3e433d;
+    --on-primary: #f0ece2;
+    --secondary: #7b584d;
+    --error: #8b4b42;
   }
 
   .screen[data-theme="kaleido-night"] {
-    --bg: #171612;
-    --surface: #1e1d18;
-    --on-surface: #ece6d6;
-    --surface-variant: #2a2822;
-    --on-surface-variant: #a9a291;
-    --outline: #6e6858;
-    --outline-variant: #35322a;
-    --primary: #c6b17e;
-    --on-primary: #231e12;
-    --secondary: #c98a7c;
-    --error: #d97a6c;
+    --bg: #191816;
+    --surface: #201f1c;
+    --on-surface: #e2ded2;
+    --surface-variant: #2b2925;
+    --on-surface-variant: #a29c90;
+    --outline: #6b665d;
+    --outline-variant: #37342e;
+    --primary: #b9b09c;
+    --on-primary: #24221c;
+    --secondary: #b58c7d;
+    --error: #c58c7d;
   }
 
   .screen.folio .wall,
@@ -699,6 +699,15 @@
   .screen.folio { background: var(--bg); }
   .screen.folio .statusbar { color: var(--on-surface); }
   .screen.folio .navbar i { background: color-mix(in srgb, var(--on-surface) 45%, transparent); }
+
+
+  /* Newspaper e-paper: retain only a trace of chroma in app and shortcut icons. */
+  .screen[data-theme="kaleido"] .icon,
+  .screen[data-theme="kaleido-night"] .icon,
+  .screen[data-theme="kaleido"] .shortcut .sq,
+  .screen[data-theme="kaleido-night"] .shortcut .sq {
+    filter: saturate(0.08);
+  }
 
   .folio-home {
     position: absolute;
@@ -1295,8 +1304,8 @@ const ICONS = {
 };
 
 const PRINT_ACCENTS = {
-  light: ["#9c4b3f", "#4f6b47", "#3f5c74", "#8a6a25", "#63557a"],
-  night: ["#c98a7c", "#92ae86", "#8aa6bc", "#c4a25e", "#a899be"],
+  light: ["#625d55", "#746d61", "#585b56"],
+  night: ["#a29c90", "#b0a795", "#93958c"],
 };
 
 function isNightTheme() {

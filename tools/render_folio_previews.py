@@ -35,30 +35,42 @@ from render_previews import (
 SERIF_FILE = Path(__file__).resolve().parent.parent / "preview" / "assets" / "fonts" / "Lora.ttf"
 
 KALEIDO = {
-    "bg": "#e9e4d8",
-    "surface": "#f2ede3",
-    "surface_variant": "#ded7c7",
-    "on_surface": "#171614",
-    "on_surface_variant": "#5c574c",
-    "outline": "#8c8677",
-    "outline_variant": "#cfc8b9",
-    "primary": "#2f4b44",
-    "secondary": "#9c4b3f",
-    "accents": ["#9c4b3f", "#4f6b47", "#3f5c74", "#8a6a25", "#63557a"],
+    "bg": "#e3dfd5",
+    "surface": "#eae6dd",
+    "surface_variant": "#d6d1c6",
+    "on_surface": "#1d1c19",
+    "on_surface_variant": "#666159",
+    "outline": "#979185",
+    "outline_variant": "#c7c1b6",
+    "primary": "#3e433d",
+    "secondary": "#7b584d",
+    "accents": ["#625d55", "#746d61", "#585b56"],
 }
 
 KALEIDO_NIGHT = {
-    "bg": "#171612",
-    "surface": "#1e1d18",
-    "surface_variant": "#2a2822",
-    "on_surface": "#ece6d6",
-    "on_surface_variant": "#a9a291",
-    "outline": "#6e6858",
-    "outline_variant": "#35322a",
-    "primary": "#c6b17e",
-    "secondary": "#c98a7c",
-    "accents": ["#c98a7c", "#92ae86", "#8aa6bc", "#c4a25e", "#a899be"],
+    "bg": "#191816",
+    "surface": "#201f1c",
+    "surface_variant": "#2b2925",
+    "on_surface": "#e2ded2",
+    "on_surface_variant": "#a29c90",
+    "outline": "#6b665d",
+    "outline_variant": "#37342e",
+    "primary": "#b9b09c",
+    "secondary": "#b58c7d",
+    "accents": ["#a29c90", "#b0a795", "#93958c"],
 }
+
+
+def paper_hex(value: str) -> str:
+    """Reduce a tile to 8% of its original chroma, leaving luminance intact."""
+    r, g, b, _ = color(value)
+    luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    channels = [round(luma + (channel - luma) * 0.08) for channel in (r, g, b)]
+    return "#" + "".join(f"{channel:02x}" for channel in channels)
+
+
+def paper_tile(img, box, radius, c1, c2, glyph="") -> None:
+    app_tile(img, box, radius, paper_hex(c1), paper_hex(c2), glyph)
 
 
 def serif(size: float, weight: str = "Regular") -> ImageFont.FreeTypeFont:
@@ -131,7 +143,7 @@ def editorial_row(
 
     icon_size = 26 if large else 28
     icon_y = y + (10 if large else 9)
-    app_tile(img, (48, icon_y, 48 + icon_size, icon_y + icon_size), 6, c1, c2, glyph)
+    paper_tile(img, (48, icon_y, 48 + icon_size, icon_y + icon_size), 6, c1, c2, glyph)
     draw = ImageDraw.Draw(img)
 
     label_face = serif(23 if large else 18)
@@ -274,7 +286,7 @@ def render_folio_grid(palette: dict = KALEIDO) -> Image.Image:
             for column, app in enumerate(group[start : start + 4]):
                 x = 20 + column * (cell_w + gap)
                 rounded_rect(img, (x, y, x + cell_w, y + cell_h), 2, outline=color(palette["outline_variant"]))
-                app_tile(img, (x + cell_w / 2 - 20, y + 10, x + cell_w / 2 + 20, y + 50), 8, app[1], app[2], app[3])
+                paper_tile(img, (x + cell_w / 2 - 20, y + 10, x + cell_w / 2 + 20, y + 50), 8, app[1], app[2], app[3])
                 draw = ImageDraw.Draw(img)
                 draw.text((px(x + cell_w / 2), px(y + 68)), app[0], font=serif(11), fill=color(palette["on_surface"]), anchor="mm")
             y += cell_h + gap

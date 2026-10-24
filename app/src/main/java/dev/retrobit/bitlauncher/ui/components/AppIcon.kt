@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -20,6 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.core.graphics.drawable.toBitmap
 import dev.retrobit.bitlauncher.data.LaunchableApp
+import dev.retrobit.bitlauncher.ui.theme.LocalEpaper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -38,6 +41,21 @@ private object IconCache {
 
     fun clear() = cache.evictAll()
 }
+
+/**
+ * Leave only a trace of chroma, similar to colour photos printed by an e-paper newspaper.
+ * The cached bitmap remains untouched; this filter is applied only while drawing.
+ */
+private val EpaperColorFilter = ColorFilter.colorMatrix(
+    ColorMatrix(
+        floatArrayOf(
+            0.275592f, 0.657984f, 0.066424f, 0f, 0f,
+            0.195592f, 0.737984f, 0.066424f, 0f, 0f,
+            0.195592f, 0.657984f, 0.146424f, 0f, 0f,
+            0f, 0f, 0f, 1f, 0f,
+        ),
+    ),
+)
 
 private suspend fun loadAppIcon(app: LaunchableApp, sizePx: Int): ImageBitmap? =
     withContext(Dispatchers.IO) {
@@ -85,6 +103,7 @@ fun AppIcon(
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit,
+                colorFilter = if (LocalEpaper.current) EpaperColorFilter else null,
             )
         }
     }
@@ -110,6 +129,7 @@ fun ShortcutIcon(
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit,
+                colorFilter = if (LocalEpaper.current) EpaperColorFilter else null,
             )
         }
     }

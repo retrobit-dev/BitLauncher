@@ -33,14 +33,14 @@ Laci menjadi **arsip**: judul besar `ARSIP`, jumlah judul, kolom pencarian berga
 
 | Peran | Kaleido | Kaleido malam |
 |---|---|---|
-| Kertas / latar | `#E9E4D8` | `#171612` |
-| Permukaan | `#F2EDE3` | `#1E1D18` |
-| Tinta utama | `#171614` | `#ECE6D6` |
-| Tinta sekunder | `#5C574C` | `#A9A291` |
-| Garis | `#8C8677` | `#6E6858` |
-| Aksen utama | `#2F4B44` | `#C6B17E` |
+| Kertas / latar | `#E3DFD5` | `#191816` |
+| Permukaan | `#EAE6DD` | `#201F1C` |
+| Tinta utama | `#1D1C19` | `#E2DED2` |
+| Tinta sekunder | `#666159` | `#A29C90` |
+| Garis | `#979185` | `#6B665D` |
+| Aksen utama | `#3E433D` | `#B9B09C` |
 
-Aksen indeks berputar melalui rose, sage, slate, ochre, dan mauve. Semuanya sengaja desaturasi agar menyerupai filter warna Kaleido, bukan layar OLED yang jenuh.
+Aksen indeks hanya memakai tiga tingkat abu-abu hangat. Ikon aplikasi dan shortcut digambar dengan **8% chroma** (92% menuju luminance abu-abu), seperti foto berwarna yang dicetak sangat lemah pada e-paper. Bitmap asli tetap disimpan di cache, sehingga warna langsung pulih saat pengguna keluar dari tema Kaleido.
 
 ### Tipografi dan bentuk
 
