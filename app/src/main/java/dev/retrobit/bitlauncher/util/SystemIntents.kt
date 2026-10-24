@@ -1,6 +1,5 @@
 package dev.retrobit.bitlauncher.util
 
-import android.app.StatusBarManager
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
@@ -8,7 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.AlarmClock
 import android.provider.Settings
+import android.widget.Toast
 import dev.retrobit.bitlauncher.data.LaunchableApp
+import dev.retrobit.bitlauncher.notifications.NotificationPanelAccessibilityService
 
 object SystemIntents {
 
@@ -65,8 +66,26 @@ object SystemIntents {
     }
 
     fun expandNotifications(context: Context) {
-        val statusBar = context.getSystemService(Context.STATUS_BAR_SERVICE) as? StatusBarManager
-        runCatching { statusBar?.expandNotificationsPanel() }
+        if (NotificationPanelAccessibilityService.expandNotifications()) return
+        val enabled = NotificationPanelAccessibilityService.isEnabled(context)
+        Toast.makeText(
+            context,
+            if (enabled) "Layanan gestur belum siap; coba lagi" else "Aktifkan gestur notifikasi di Aksesibilitas",
+            Toast.LENGTH_SHORT,
+        ).show()
+        if (!enabled) openNotificationPanelSettings(context)
+    }
+
+    fun isNotificationPanelEnabled(context: Context): Boolean =
+        NotificationPanelAccessibilityService.isEnabled(context)
+
+    fun openNotificationPanelSettings(context: Context) {
+        launchSafely(
+            context,
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            },
+        )
     }
 
     fun openNotificationAccess(context: Context) {

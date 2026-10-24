@@ -60,7 +60,7 @@ Yang bisa dicoba di prototipe:
 - Beralih **Daftar / Kisi** dan jumlah kolom 3–6.
 - **Tekan lama** aplikasi untuk membuka lembar aksi (shortcut, pin, sembunyikan, info, uninstall).
 - **Ketuk** aplikasi untuk melihat umpan balik peluncuran.
-- **Geser ke atas** pada indikator bawah untuk membuka laci; **geser kiri** untuk pengaturan dan **geser kanan** untuk panel notifikasi.
+- **Geser ke atas** pada indikator bawah untuk membuka laci; **geser kiri** untuk pengaturan dan **geser kanan** untuk panel notifikasi (setelah izin Aksesibilitas).
 - **Ketuk dua kali** beranda folio untuk membuka pencarian masthead.
 - **Tekan lama** area kosong beranda untuk menu ala Nova.
 - Pencarian berperingkat, rel alfabet, dan manajer aplikasi tersembunyi (3 aplikasi contoh sudah disembunyikan).
@@ -127,6 +127,7 @@ Prinsipnya: **satu tangan, nol kebisingan.** Folio tampil seperti halaman depan 
 - [x] Manajer aplikasi tersembunyi dengan pencarian
 - [x] Pintasan launcher default dan pemilih wallpaper sistem
 - [x] Pengaturan akses notifikasi dengan penjelasan privasi; isi pesan tidak dibaca/disimpan
+- [x] Gestur panel notifikasi via aksi global Accessibility; tanpa event atau konten layar
 - [x] Ekspor/impor pengaturan ke JSON lewat Storage Access Framework
 
 ### Teknis
@@ -194,6 +195,7 @@ Ini fondasi yang serius, bukan launcher yang sudah selesai. Yang **belum** ada (
 | Icon pack | Parsing `appfilter.xml` + masking ikon |
 | Rel alfabet melompat ke seksi lengket | Saat ini header ikut ter-scroll |
 | Jumlah pesan | Estimasi dari notifikasi aktif, bukan isi database pesan; perlu izin khusus **Akses Notifikasi** |
+| Gestur panel notifikasi | Memerlukan opt-in **Aksesibilitas**; hanya menjalankan `GLOBAL_ACTION_NOTIFICATIONS` |
 | Double-tap untuk matikan layar | Butuh Device Admin / Accessibility, sengaja ditunda |
 | Recents kustom | Tidak mungkin sejak Android 5 (API dihapus) |
 

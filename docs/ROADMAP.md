@@ -70,7 +70,7 @@ Legenda: ✅ sudah ada · 🚧 sedang dikerjakan · 📋 direncanakan · ⛔ tid
 |---|---|---|---|---|
 | Launcher default (RoleManager) | ✅ | ✅ | ✅ | ✅ |
 | Ringkasan jumlah notifikasi | ✅ (via akses) | ✅ (via akses) | — | ✅ (Nova + plugin) |
-| Gestur panel notifikasi | ✅ (`StatusBarManager`) | — | — | ✅ (aksesibilitas) |
+| Gestur panel notifikasi | ✅ (aksi global Accessibility) | — | — | ✅ (aksesibilitas) |
 | Double-tap matikan layar | 📋 | — | — | ✅ (admin) |
 | Recents kustom | ⛔ | — | — | — |
 | Kunci aplikasi biometrik | 📋 | — | — | — |

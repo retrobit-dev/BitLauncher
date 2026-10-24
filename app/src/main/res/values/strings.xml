@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">BitLauncher</string>
     <string name="search_hint">Cari aplikasi</string>
+    <string name="notification_panel_accessibility_title">BitLauncher — gestur notifikasi</string>
+    <string name="notification_panel_accessibility_description">Membuka panel notifikasi saat beranda digeser ke kanan. Tidak membaca, merekam, atau menyimpan konten layar.</string>
 </resources>

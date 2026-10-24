@@ -179,7 +179,7 @@ Material You aktif di Android 12+ kecuali tema AMOLED dipilih (agar hitam tetap 
 | Beranda minimal | Double tap | Buka laci + fokus pencarian |
 | Beranda folio | Geser atas di indikator bawah | Buka laci |
 | Beranda folio | Geser kiri | Buka pengaturan |
-| Beranda folio | Geser kanan | Buka panel notifikasi sistem |
+| Beranda folio | Geser kanan | Buka panel notifikasi sistem (opt-in Aksesibilitas) |
 | Beranda | Ketuk jam | Buka alarm |
 | Favorit | Ketuk | Buka aplikasi |
 | Favorit | Tekan lama | Lembar aksi |
@@ -198,4 +198,5 @@ Gaya minimal mempertahankan alternatif terlihat berupa tombol/pill. Pada folio, 
 - Target sentuh utama ≥ 48 dp (pill 48 dp, tombol lingkaran 48 dp).
 - Ukuran font mengikuti skala sistem (sp), dengan batas `maxLines` + ellipsis agar tidak merusak layout.
 - Getaran bisa dimatikan di pengaturan.
+- Layanan Aksesibilitas khusus gestur hanya menjalankan aksi panel notifikasi; konfigurasinya tidak meminta event atau konten jendela.
 - Belum diuji dengan TalkBack secara menyeluruh — masuk backlog 0.4.

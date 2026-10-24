@@ -65,9 +65,13 @@ fun SettingsScreen(
     var showHiddenApps by remember { mutableStateOf(false) }
     var showNotesPicker by remember { mutableStateOf(false) }
     var isDefaultLauncher by remember { mutableStateOf(SystemIntents.isDefaultLauncher(context)) }
+    var notificationPanelEnabled by remember {
+        mutableStateOf(SystemIntents.isNotificationPanelEnabled(context))
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         isDefaultLauncher = SystemIntents.isDefaultLauncher(context)
+        notificationPanelEnabled = SystemIntents.isNotificationPanelEnabled(context)
     }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -267,6 +271,12 @@ fun SettingsScreen(
 
             item {
                 SettingsCard("Gestur folio") {
+                    ActionRow(
+                        title = "Panel notifikasi",
+                        value = if (notificationPanelEnabled) "Aktif" else "Aktifkan",
+                        description = "Izin Aksesibilitas hanya untuk membuka panel; konten layar tidak dibaca",
+                        onClick = { SystemIntents.openNotificationPanelSettings(context) },
+                    )
                     SettingsSubtitle(
                         "Geser atas di bagian bawah untuk arsip; geser kiri untuk pengaturan; " +
                             "geser kanan untuk notifikasi. Ketuk dua kali untuk pencarian dan tekan lama untuk menu.",
